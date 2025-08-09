@@ -1,6 +1,6 @@
 // デバッグ用今後の勤務希望テンプレート反映
 function reReflectTemplateInfoSheet() {
-  const templateSS = SpreadsheetApp.openById(CONFIG.TEMPLATE_FILE_ID);
+  const templateSS = SpreadsheetApp.openById(TEMPLATE_FILE_ID);
   const templateSheet = templateSS.getSheetByName(FORM_INFO_SHEET_NAME);
   if (!templateSheet) {
     throw new Error(

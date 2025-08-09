@@ -41,9 +41,9 @@ function createNewMember() {
   // ===== 個別ファイルの作成 =====
 
   // シフト希望表個別フォルダを取得
-  const folder = DriveApp.getFolderById(CONFIG.PERSONAL_FORM_FOLDER_ID);
+  const folder = DriveApp.getFolderById(PERSONAL_FORM_FOLDER_ID);
   // テンプレートファイルから提出用ファイルを作成(ファイル名は"シフト希望表_{氏名}")
-  const newFile = DriveApp.getFileById(CONFIG.TEMPLATE_FILE_ID).makeCopy(
+  const newFile = DriveApp.getFileById(TEMPLATE_FILE_ID).makeCopy(
     `${FORM_SHEET_NAME}_${name}`,
     folder
   );

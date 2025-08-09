@@ -1,6 +1,6 @@
 // デバッグ用シフト希望表テンプレート反映
 function reReflectTemplateSheet() {
-  const templateSS = SpreadsheetApp.openById(CONFIG.TEMPLATE_FILE_ID);
+  const templateSS = SpreadsheetApp.openById(TEMPLATE_FILE_ID);
   const templateSheet = templateSS.getSheetByName(FORM_SHEET_NAME);
   if (!templateSheet) {
     throw new Error(

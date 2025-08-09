@@ -6,10 +6,9 @@
 # --- 環境依存・機密 ---
 .env
 .env.*
-config.env.js
-00_config.env.js
 const-env.js
 switch-env
+config/env-config.json
 
 # --- エディタ / OSごみ ---
 .vscode/

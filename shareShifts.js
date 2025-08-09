@@ -4,7 +4,7 @@ function shareShifts() {
   const [ss, manageSheet, templateSheet, allSheets, ui] = getCommonSheets();
 
   // シフト共有用ファイルを取得
-  const shareFile = SpreadsheetApp.openById(CONFIG.SHARE_FILE_ID);
+  const shareFile = SpreadsheetApp.openById(SHARE_FILE_ID);
 
   // シフト日程のデータを取得
   const data = manageSheet
@@ -19,9 +19,9 @@ function shareShifts() {
     .getValues();
 
   // 作成済みシフトPDFフォルダを取得
-  const pdfFolder = DriveApp.getFolderById(CONFIG.SHIFT_PDF_FOLDER_ID);
+  const pdfFolder = DriveApp.getFolderById(SHIFT_PDF_FOLDER_ID);
   // 作成済みシフトSSフォルダを取得
-  const ssFolder = DriveApp.getFolderById(CONFIG.SHIFT_SS_FOLDER_ID);
+  const ssFolder = DriveApp.getFolderById(SHIFT_SS_FOLDER_ID);
 
   // ファイルを作成
   const now = new Date();
@@ -183,7 +183,7 @@ function shareOnlyOneShift() {
   const dateStr = dailySheet.getName();
 
   // シフト共有用ファイルを取得
-  const shareFile = SpreadsheetApp.openById(CONFIG.SHARE_FILE_ID);
+  const shareFile = SpreadsheetApp.openById(SHARE_FILE_ID);
 
   // コピー先に同名シートがあれば削除
   const existingSheet = shareFile.getSheetByName(dateStr);
@@ -228,9 +228,9 @@ function shareOnlyOneShift() {
   // ===== PDF共有の処理 =====
 
   // 作成済みシフトPDFフォルダを取得
-  const pdfFolder = DriveApp.getFolderById(CONFIG.SHIFT_PDF_FOLDER_ID);
+  const pdfFolder = DriveApp.getFolderById(SHIFT_PDF_FOLDER_ID);
   // 作成済みシフトSSフォルダを取得
-  const ssFolder = DriveApp.getFolderById(CONFIG.SHIFT_SS_FOLDER_ID);
+  const ssFolder = DriveApp.getFolderById(SHIFT_SS_FOLDER_ID);
 
   // ファイルを作成
   const now = new Date();

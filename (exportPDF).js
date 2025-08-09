@@ -4,9 +4,9 @@ function exportPDF() {
   const [ss, manageSheet, templateSheet, allSheets, ui] = getCommonSheets();
 
   // 作成済みシフトPDFフォルダを取得
-  const pdfFolder = DriveApp.getFolderById(CONFIG.SHIFT_PDF_FOLDER_ID);
+  const pdfFolder = DriveApp.getFolderById(SHIFT_PDF_FOLDER_ID);
   // 作成済みシフトSSフォルダを取得
-  const ssFolder = DriveApp.getFolderById(CONFIG.SHIFT_SS_FOLDER_ID);
+  const ssFolder = DriveApp.getFolderById(SHIFT_SS_FOLDER_ID);
 
   // 日付形式のシートだけ抽出
   const targetSheets = allSheets.filter((sheet) =>

@@ -1,7 +1,7 @@
-// ===== 各種ファイルID =====
+// ===== 環境共通定数ファイル =====
 //
-// 注意: 環境依存のファイルIDは config.js 経由で取得するようになりました
-// 直接参照する場合は CONFIG.TEMPLATE_FILE_ID などを使用してください
+// 注意: 環境依存の値（ファイルID等）は consts-env.js に分離されました
+// このファイルには全環境で共通の定数のみを記載してください
 
 // ===== シフト管理シート =====
 
@@ -100,10 +100,16 @@ const LESSON_WED = "授業割(水)";
 const LESSON_THU = "授業割(木)";
 const LESSON_FRI = "授業割(金)";
 
-// ===== 環境設定 =====
-//
-// 注意: 環境依存の設定は config.js 経由で取得するようになりました
-// 年の設定は CONFIG.THIS_YEAR を使用してください
+// ===== 環境共通設定 =====
+
+// 年
+const THIS_YEAR = 2025; // 今年（西暦）
+
+// デフォルト開閉室時間
+const DEFAULT_OPEN_HOUR = 8;
+const DEFAULT_OPEN_MINUTE = 0;
+const DEFAULT_CLOSE_HOUR = 22;
+const DEFAULT_CLOSE_MINUTE = 0;
 
 // 時間帯リスト
 const timeList = [
@@ -137,9 +143,7 @@ const timeList = [
   "21:30",
 ];
 
-// デフォルト開閉室時間
-// 注意: 環境依存の設定は config.js 経由で取得するようになりました
-// CONFIG.DEFAULT_OPEN_HOUR, CONFIG.DEFAULT_OPEN_MINUTE などを使用してください
+// デフォルト開閉室時間は上記で定義済み
 
 // ===== 勤務不可背景色設定 ======
 const UNAVAILABLE_COLOR = "#d3d3d3";

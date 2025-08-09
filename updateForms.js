@@ -31,7 +31,7 @@ function updateForms() {
     .setValue(REFLECT_FALSE);
 
   // テンプレートファイルとシフト希望表テンプレートシートを取得
-  const templateFile = SpreadsheetApp.openById(CONFIG.TEMPLATE_FILE_ID);
+  const templateFile = SpreadsheetApp.openById(TEMPLATE_FILE_ID);
   const formTemplateSheet = templateFile.getSheetByName(FORM_SHEET_NAME);
 
   // テンプレートの値と行列数だけ取得してコピー

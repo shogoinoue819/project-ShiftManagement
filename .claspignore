@@ -1,0 +1,13 @@
+# 設定・ビルド関連ファイル（GASには不要）
+config/**
+scripts/**
+**/*.example.js
+01_config.example.js
+02_config.js
+config.test.js
+config.prod.js
+
+# その他の開発用ファイル
+README.md
+package.json
+.gitignore
