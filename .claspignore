@@ -2,12 +2,12 @@
 config/**
 scripts/**
 **/*.example.js
-01_config.example.js
-02_config.js
-config.test.js
-config.prod.js
+
+# 機密情報・環境依存ファイル（GASには不要）
+# 注意: 02_consts-env.js は GAS で実行するため除外しない
 
 # その他の開発用ファイル
 README.md
 package.json
 .gitignore
+.claspignore
