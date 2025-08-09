@@ -1,0 +1,17 @@
+# --- GAS / clasp ---
+.clasp.json
+.clasp-*.json
+.clasprc.json
+
+# --- 環境依存・機密 ---
+.env
+.env.*
+const-env.js
+switch-env
+
+# --- エディタ / OSごみ ---
+.vscode/
+.DS_Store
+
+# --- （使ってる場合だけ）ビルド出力 ---
+dist/

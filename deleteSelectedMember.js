@@ -1,0 +1,79 @@
+// 入力されたメンバーのファイルとシートを削除
+function deleteSelectedMember() {
+  // SSをまとめて取得
+  const [ss, manageSheet, templateSheet, allSheets, ui] = getCommonSheets();
+
+  // 氏名の入力
+  const response = ui.prompt("削除対象の氏名を入力してください", ui.ButtonSet.OK_CANCEL);
+  if (response.getSelectedButton() !== ui.Button.OK) {
+    ui.alert("キャンセルされました");
+    return;
+  }
+  // 空白などをトリミングして入力された氏名を取得
+  const inputName = response.getResponseText().trim();
+  // 未入力ならばアラート
+  if (!inputName) {
+    ui.alert("❌ 氏名が入力されていません");
+    return;
+  }
+
+  // 入力された氏名から個別シートを取得
+  const targetSheet = ss.getSheetByName(inputName);
+  // 取得できれば、削除
+  if (targetSheet) {
+    ss.deleteSheet(targetSheet);
+  }
+
+  // メンバーマップ作成
+  const memberMap = createMemberMap();
+
+  // 各メンバーについて、
+  for (const [id, { name, url }] of Object.entries(memberMap)) {
+    // 氏名が一致すれば、
+    if (name === inputName) {
+      // URLからファイルIDを抽出
+      const match = url.match(/https:\/\/docs\.google\.com\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+      // ファイルIDがあれば、
+      if (match && match[1]) {
+        // ファイルIDを取得
+        const fileId = match[1];
+        // ドライブから、ファイルIDに一致するファイルを探し、削除
+        try {
+          DriveApp.getFileById(fileId).setTrashed(true);
+        // エラー処理
+        } catch (e) {
+          ui.alert(`⚠️ 個別ファイル削除失敗: ${e.message}`);
+        }
+      }
+      // シフト管理シートからその人の行を削除（A列の修正もセットで）
+      const order = getOrderById(id);
+      if (order !== -1) {
+        // A列（ROW_START以降）の日程リストを保存
+        const dateValues = manageSheet.getRange(MANAGE_DATE_ROW_START, MANAGE_DATE_COLUMN, getLastRowInCol(manageSheet, MANAGE_DATE_COLUMN) - MANAGE_DATE_ROW_START + 1, 1).getValues();
+        // 対象の行を deleteRow
+        manageSheet.deleteRow(order + ROW_START);
+        // 日程リストをA列に書き戻し
+        manageSheet.getRange(MANAGE_DATE_ROW_START, MANAGE_DATE_COLUMN, dateValues.length, 1).setValues(dateValues);
+
+        // ===== 前回用管理シート =====
+        // 前回用管理シートを取得
+        const manageSheetPre = ss.getSheetByName(MANAGE_SHEET_PRE);
+        // A列（ROW_START以降）の日程リストを保存
+        const dateValuesPre = manageSheetPre.getRange(MANAGE_DATE_ROW_START, MANAGE_DATE_COLUMN, getLastRowInCol(manageSheetPre, MANAGE_DATE_COLUMN) - MANAGE_DATE_ROW_START + 1, 1).getValues();
+        // 対象の行を deleteRow
+        manageSheetPre.deleteRow(order + ROW_START);
+        // 日程リストをA列に書き戻し
+        manageSheetPre.getRange(MANAGE_DATE_ROW_START, MANAGE_DATE_COLUMN, dateValuesPre.length, 1).setValues(dateValuesPre);
+      }
+
+      ui.alert(`✅「${inputName}」さんの個別ファイルと個別シートを削除しました！`);
+      return;
+    }
+  }
+
+  // 削除対象者がいなかった場合
+  ui.alert(`❌「${inputName}」さんは管理リストに見つかりませんでした。`);
+}
+
+
+
