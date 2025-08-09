@@ -1,9 +1,11 @@
 // デバッグ用今後の勤務希望テンプレート反映
 function reReflectTemplateInfoSheet() {
-  const templateSS = SpreadsheetApp.openById(TEMPLATE_FILE_ID);
+  const templateSS = SpreadsheetApp.openById(CONFIG.TEMPLATE_FILE_ID);
   const templateSheet = templateSS.getSheetByName(FORM_INFO_SHEET_NAME);
   if (!templateSheet) {
-    throw new Error(`❌ テンプレートにシート '${FORM_INFO_SHEET_NAME}' が見つかりません`);
+    throw new Error(
+      `❌ テンプレートにシート '${FORM_INFO_SHEET_NAME}' が見つかりません`
+    );
   }
 
   const memberMap = createMemberMap();
@@ -11,7 +13,6 @@ function reReflectTemplateInfoSheet() {
 
   let index = 0;
   for (const [id, { name, url }] of Object.entries(memberMap)) {
-
     // ===== !前後半スイッチ！ =====
     // 前半
     // if (index >= 30) break; // 30人目以降はスキップ
@@ -46,10 +47,11 @@ function reReflectTemplateInfoSheet() {
       Logger.log(`✅ ${name} さんに「今後の勤務希望」シートを再反映しました`);
       count++;
       index++;
-
     } catch (e) {
       Logger.log(`❌ ${name} さんの処理中にエラー: ${e.message}`);
     }
   }
-  Logger.log(`✅ 完了：${count} 名に「今後の勤務希望」シートを上書き反映しました`);
+  Logger.log(
+    `✅ 完了：${count} 名に「今後の勤務希望」シートを上書き反映しました`
+  );
 }

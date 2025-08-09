@@ -1,0 +1,19 @@
+{
+  "name": "shift-management-gas",
+  "version": "1.0.0",
+  "description": "Google Apps Script シフト管理システム",
+  "scripts": {
+    "push": "echo '⚠️  環境を指定してください: npm run push:prod または npm run push:test'",
+    "push:prod": "echo '📤 本番環境にpush中...' && clasp push --project .clasp.json",
+    "push:test": "echo '🧪 テスト環境にpush中...' && clasp push --project .clasp-test.json",
+    "status": "echo '📋 現在の設定:' && echo '本番: ' && cat .clasp.json && echo 'テスト: ' && cat .clasp-test.json",
+    "config:show": "echo '⚙️  設定を確認するには、GASエディタでshowCurrentConfig()を実行してください'",
+    "setup": "echo '🔧 セットアップ手順:' && echo '1. .clasp-test.json のscriptIdを設定' && echo '2. config.env.js を作成して環境固有の値を設定' && echo '3. npm run push:test または npm run push:prod でpush'"
+  },
+  "keywords": [
+    "google-apps-script",
+    "shift-management"
+  ],
+  "author": "",
+  "license": "MIT"
+}

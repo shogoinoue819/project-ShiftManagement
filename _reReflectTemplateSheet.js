@@ -1,9 +1,11 @@
 // デバッグ用シフト希望表テンプレート反映
 function reReflectTemplateSheet() {
-  const templateSS = SpreadsheetApp.openById(TEMPLATE_FILE_ID);
+  const templateSS = SpreadsheetApp.openById(CONFIG.TEMPLATE_FILE_ID);
   const templateSheet = templateSS.getSheetByName(FORM_SHEET_NAME);
   if (!templateSheet) {
-    throw new Error(`❌ テンプレートにシート '${FORM_SHEET_NAME}' が見つかりません`);
+    throw new Error(
+      `❌ テンプレートにシート '${FORM_SHEET_NAME}' が見つかりません`
+    );
   }
 
   const memberMap = createMemberMap();
@@ -11,11 +13,13 @@ function reReflectTemplateSheet() {
 
   // 提出ステータス列を取得（提出列は SUBMIT 列）
   const lastRow = getLastRowInCol(manageSheet, COLUMN_START);
-  const submitValues = manageSheet.getRange(ROW_START, COLUMN_SUBMIT, lastRow - ROW_START + 1, 1).getValues().flat();
+  const submitValues = manageSheet
+    .getRange(ROW_START, COLUMN_SUBMIT, lastRow - ROW_START + 1, 1)
+    .getValues()
+    .flat();
 
   let index = 0;
   for (const [id, { name, url }] of Object.entries(memberMap)) {
-
     // ===== !前後半スイッチ！ =====
     // 前半
     // if (index >= 30) break; // 30人目以降はスキップ
@@ -54,7 +58,7 @@ function reReflectTemplateSheet() {
       copiedSheet.setName(FORM_SHEET_NAME);
       memberSS.setActiveSheet(copiedSheet);
       memberSS.moveActiveSheet(1); // 位置を調整
-      
+
       // 初期化処理
       copiedSheet.getRange(FORM_ROW_HEAD, FORM_COLUMN_NAME).setValue(name);
       copiedSheet.getRange(FORM_ROW_HEAD, FORM_COLUMN_CHECK).setValue(false);
@@ -62,11 +66,12 @@ function reReflectTemplateSheet() {
       Logger.log(`✅ ${name} さんに「シフト希望表」シートを再反映しました`);
       count++;
       index++;
-
     } catch (e) {
       Logger.log(`❌ ${name} さんの処理中にエラー: ${e.message}`);
       index++;
     }
   }
-  Logger.log(`✅ 完了：${count} 名に「シフト希望表」シートを上書き反映しました`);
+  Logger.log(
+    `✅ 完了：${count} 名に「シフト希望表」シートを上書き反映しました`
+  );
 }

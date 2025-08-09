@@ -1,9 +1,8 @@
 // 個別ファイルのシフト希望表をアップデート
 function updateForms() {
-
   // SSをまとめて取得
   const [ss, manageSheet, templateSheet, allSheets, ui] = getCommonSheets();
-  
+
   // 確認ダイアログを表示
   const confirm = ui.alert(
     "⚠️確認",
@@ -17,19 +16,22 @@ function updateForms() {
     return;
   }
 
-
   // ====== 個別ファイルのシフト希望表をアップデート ======
 
   // メンバーマップを作成
   const memberMap = createMemberMap();
 
   // チェック列をリセット
-  manageSheet.getRange(ROW_START, COLUMN_CHECK, Object.keys(memberMap).length, 1).setValue(false);
+  manageSheet
+    .getRange(ROW_START, COLUMN_CHECK, Object.keys(memberMap).length, 1)
+    .setValue(false);
   // 反映ステータス列をリセット
-  manageSheet.getRange(ROW_START, COLUMN_REFLECT, Object.keys(memberMap).length, 1).setValue(REFLECT_FALSE);
+  manageSheet
+    .getRange(ROW_START, COLUMN_REFLECT, Object.keys(memberMap).length, 1)
+    .setValue(REFLECT_FALSE);
 
   // テンプレートファイルとシフト希望表テンプレートシートを取得
-  const templateFile = SpreadsheetApp.openById(TEMPLATE_FILE_ID);
+  const templateFile = SpreadsheetApp.openById(CONFIG.TEMPLATE_FILE_ID);
   const formTemplateSheet = templateFile.getSheetByName(FORM_SHEET_NAME);
 
   // テンプレートの値と行列数だけ取得してコピー
@@ -52,7 +54,9 @@ function updateForms() {
       let prevSheet = ss.getSheetByName(FORM_PREVIOUS_SHEET_NAME);
       if (prevSheet) {
         prevSheet.setName("TEMP_OLD");
-        prevSheet.getProtections(SpreadsheetApp.ProtectionType.SHEET).forEach(p => p.remove());
+        prevSheet
+          .getProtections(SpreadsheetApp.ProtectionType.SHEET)
+          .forEach((p) => p.remove());
       }
 
       // === ② 現在のシフト希望表を「前回分」にリネーム＆保護 ===
@@ -62,9 +66,7 @@ function updateForms() {
       protectSheet(currSheet, "前回分シートのロック");
 
       // === ③ 新しい提出用シートを作成 ===
-      let newFormSheet = prevSheet 
-        ? prevSheet 
-        : formTemplateSheet.copyTo(ss);
+      let newFormSheet = prevSheet ? prevSheet : formTemplateSheet.copyTo(ss);
       newFormSheet.setName(FORM_SHEET_NAME);
       // 2行目以降のデータを貼り付け（1行目は変更しない）
       const dataOnly = values.slice(1); // 1行目を除く
@@ -80,29 +82,30 @@ function updateForms() {
       const infoSheet = ss.getSheetByName(FORM_INFO_SHEET_NAME);
       if (!infoSheet) throw new Error("❌ 今後の勤務希望シートが存在しません");
       // 🔓 シート保護を解除
-      const protections = infoSheet.getProtections(SpreadsheetApp.ProtectionType.SHEET);
-      protections.forEach(p => p.remove());
+      const protections = infoSheet.getProtections(
+        SpreadsheetApp.ProtectionType.SHEET
+      );
+      protections.forEach((p) => p.remove());
       // リセット
-      infoSheet.getRange("D1").clearContent();           // 希望勤務日数
-      infoSheet.getRange("B5:C7").clearContent();        // 校舎情報
-      infoSheet.getRange("F5:H11").clearContent();       // 基本シフト
-      infoSheet.getRange("K5:P11").clearContent();       // 授業担当
+      infoSheet.getRange("D1").clearContent(); // 希望勤務日数
+      infoSheet.getRange("B5:C7").clearContent(); // 校舎情報
+      infoSheet.getRange("F5:H11").clearContent(); // 基本シフト
+      infoSheet.getRange("K5:P11").clearContent(); // 授業担当
 
       // === ⑤ シート順の整理 ===
       const moveSheet = (sheet, index) => {
         ss.setActiveSheet(sheet);
         ss.moveActiveSheet(index);
       };
-      moveSheet(newFormSheet, 1);   // 提出用
-      moveSheet(infoSheet, 2);      // 今後の勤務希望
-      moveSheet(currSheet, 3);      // 前回分
+      moveSheet(newFormSheet, 1); // 提出用
+      moveSheet(infoSheet, 2); // 今後の勤務希望
+      moveSheet(currSheet, 3); // 前回分
 
       // === ⑥ 初期化処理 ===
       newFormSheet.getRange(FORM_ROW_HEAD, FORM_COLUMN_NAME).setValue(name);
       newFormSheet.getRange(FORM_ROW_HEAD, FORM_COLUMN_CHECK).setValue(false);
 
       Logger.log(`✅ アップデート完了: ${name}`);
-
     } catch (e) {
       Logger.log(`❌ エラー: ${name} - ${e.message}`);
     }
@@ -110,5 +113,3 @@ function updateForms() {
 
   ui.alert("✅ シフト希望表の個別ファイルをすべて更新しました！");
 }
-
-

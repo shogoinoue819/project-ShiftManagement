@@ -1,21 +1,7 @@
 // ===== 各種ファイルID =====
-
-// テンプレートファイルID
-const TEMPLATE_FILE_ID = "1EgSTvXTuu33kGmpeQOloD7W2hSPy3WHykRnSKdDA-_s";
-
-// シフト表共有ファイルID
-const SHARE_FILE_ID = "1CpqkCCMt-CLzKl8bTnfZORRkhWKc_rrN1HpEPZcLkbs";
-
-// 作成済みシフトPDFフォルダID
-const SHIFT_PDF_FOLDER_ID = "12PzpZ71xOQhnq4cinpGLH6vFL51Y83rX";
-
-// 作成済みシフトSSフォルダID
-const SHIFT_SS_FOLDER_ID = "1YSaTPB611Jme7nDIi5sNL0B4Uf3GUU1v";
-
-// シフト希望表個別フォルダID
-const PERSONAL_FORM_FOLDER_ID = "1Gg9p9aEXo1BEstj7DTFa9ba_xeT4mFGs";
-
-
+//
+// 注意: 環境依存のファイルIDは config.js 経由で取得するようになりました
+// 直接参照する場合は CONFIG.TEMPLATE_FILE_ID などを使用してください
 
 // ===== シフト管理シート =====
 
@@ -57,8 +43,6 @@ const SUBMIT_FALSE = "未提出"; // 提出false
 const REFLECT_TRUE = "✅反映済み"; // 反映true
 const REFLECT_FALSE = "未反映"; // 反映false
 
-
-
 // ===== シフト希望表テンプレートファイル =====
 
 // シート名
@@ -67,7 +51,6 @@ const FORM_INFO_SHEET_NAME = "今後の勤務希望";
 const FORM_PREVIOUS_SHEET_NAME = "前回分";
 
 // const FORM_PARSONAL_NAME = "個人用シフト表";
-
 
 // 行列インデックス
 const FORM_ROW_HEAD = 1; // ヘッダー行
@@ -86,9 +69,6 @@ const FORM_COLUMN_CONTACT = 6; // 連絡事項列
 // Boolean文字列
 const STATUS_TRUE = "◯";
 const STATUS_FALSE = "×";
-
-
-
 
 // ===== シフトテンプレートシート =====
 
@@ -111,8 +91,6 @@ const SHIFT_ROW_WORKING = 7; // 勤務時間
 const SHIFT_ROW_START = 9; // シフトの開始行
 const SHIFT_ROW_END = 36; // シフトの終了行
 
-
-
 // ===== 授業割テンプレートシート =====
 
 // シート名
@@ -122,33 +100,49 @@ const LESSON_WED = "授業割(水)";
 const LESSON_THU = "授業割(木)";
 const LESSON_FRI = "授業割(金)";
 
-
-
 // ===== 環境設定 =====
-
-// 年
-const THIS_YEAR = 2025; // 今年（西暦）
+//
+// 注意: 環境依存の設定は config.js 経由で取得するようになりました
+// 年の設定は CONFIG.THIS_YEAR を使用してください
 
 // 時間帯リスト
 const timeList = [
-  "8:00", "8:30", "9:00", "9:30", "10:00", "10:30", "11:00", "11:30",
-  "12:00", "12:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30",
-  "16:00", "16:30", "17:00", "17:30", "18:00", "18:30", "19:00", "19:30",
-  "20:00", "20:30", "21:00", "21:30"
+  "8:00",
+  "8:30",
+  "9:00",
+  "9:30",
+  "10:00",
+  "10:30",
+  "11:00",
+  "11:30",
+  "12:00",
+  "12:30",
+  "13:00",
+  "13:30",
+  "14:00",
+  "14:30",
+  "15:00",
+  "15:30",
+  "16:00",
+  "16:30",
+  "17:00",
+  "17:30",
+  "18:00",
+  "18:30",
+  "19:00",
+  "19:30",
+  "20:00",
+  "20:30",
+  "21:00",
+  "21:30",
 ];
 
 // デフォルト開閉室時間
-const DEFAULT_OPEN_HOUR = 8;
-const DEFAULT_OPEN_MINUTE = 0;
-const DEFAULT_CLOSE_HOUR = 22;
-const DEFAULT_CLOSE_MINUTE = 0;
-
-
+// 注意: 環境依存の設定は config.js 経由で取得するようになりました
+// CONFIG.DEFAULT_OPEN_HOUR, CONFIG.DEFAULT_OPEN_MINUTE などを使用してください
 
 // ===== 勤務不可背景色設定 ======
 const UNAVAILABLE_COLOR = "#d3d3d3";
-
-
 
 // ===== 勤務日数・労働時間計算関数 =====
 
@@ -263,8 +257,3 @@ const WORK_TIMES_4 = `
     })
   )
 `;
-
-
-
-
-

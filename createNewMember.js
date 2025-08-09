@@ -6,7 +6,10 @@ function createNewMember() {
   // ===== 管理者入力 =====
 
   // 氏名の入力
-  const responseName = ui.prompt("追加するメンバーの氏名を入力してください", ui.ButtonSet.OK_CANCEL);
+  const responseName = ui.prompt(
+    "追加するメンバーの氏名を入力してください",
+    ui.ButtonSet.OK_CANCEL
+  );
   if (responseName.getSelectedButton() !== ui.Button.OK) {
     ui.alert("キャンセルされました");
     return;
@@ -35,13 +38,15 @@ function createNewMember() {
   // // 空白などをトリミングして入力されたメールアドレスをセット
   // const email = inputEmail.getResponseText().trim();
 
-
   // ===== 個別ファイルの作成 =====
 
   // シフト希望表個別フォルダを取得
-  const folder = DriveApp.getFolderById(PERSONAL_FORM_FOLDER_ID);
+  const folder = DriveApp.getFolderById(CONFIG.PERSONAL_FORM_FOLDER_ID);
   // テンプレートファイルから提出用ファイルを作成(ファイル名は"シフト希望表_{氏名}")
-  const newFile = DriveApp.getFileById(TEMPLATE_FILE_ID).makeCopy(`${FORM_SHEET_NAME}_${name}`, folder);
+  const newFile = DriveApp.getFileById(CONFIG.TEMPLATE_FILE_ID).makeCopy(
+    `${FORM_SHEET_NAME}_${name}`,
+    folder
+  );
 
   // try {
   //   // 編集権限を付加
@@ -73,8 +78,9 @@ function createNewMember() {
   }
 
   // 既存シートがあれば削除
-  newSS.getSheets().forEach(s => {
-    if (s.getName() !== FORM_SHEET_NAME && s.getName() !== FORM_INFO_SHEET_NAME) newSS.deleteSheet(s);
+  newSS.getSheets().forEach((s) => {
+    if (s.getName() !== FORM_SHEET_NAME && s.getName() !== FORM_INFO_SHEET_NAME)
+      newSS.deleteSheet(s);
   });
 
   // 「前回分」シートを複製して追加(保護も追加)
@@ -91,8 +97,6 @@ function createNewMember() {
   newSS.setActiveSheet(previousSheet);
   newSS.moveActiveSheet(3); // 三番目
 
-  
-
   // ===== 個別シートの作成 =====
 
   // 個別シートを作成
@@ -101,11 +105,9 @@ function createNewMember() {
   const personalUrl = newSS.getUrl();
 
   // 個別シートにデータをimport
-  const endColumnLetter = columnToLetter(FORM_COLUMN_NOTE); 
+  const endColumnLetter = columnToLetter(FORM_COLUMN_NOTE);
   const formula = `=IMPORTRANGE("${personalUrl}", "${FORM_SHEET_NAME}!A1:${endColumnLetter}")`;
   personalSheet.getRange(1, 1).setFormula(formula);
-
-
 
   // ===== メンバーリストに追加 =====
 
@@ -123,15 +125,19 @@ function createNewMember() {
   // 提出ステータスをセット(個別シートとリンク)
   const nameColLetter = columnToLetter(COLUMN_NAME);
   const checkCell = columnToLetter(FORM_COLUMN_CHECK) + FORM_ROW_HEAD;
-  manageSheet.getRange(newRow, COLUMN_SUBMIT).setFormula(
-    `=IF(INDIRECT("'" & ${nameColLetter}${newRow} & "'!${checkCell}") = TRUE, "${SUBMIT_TRUE}", "${SUBMIT_FALSE}")`
-  );
+  manageSheet
+    .getRange(newRow, COLUMN_SUBMIT)
+    .setFormula(
+      `=IF(INDIRECT("'" & ${nameColLetter}${newRow} & "'!${checkCell}") = TRUE, "${SUBMIT_TRUE}", "${SUBMIT_FALSE}")`
+    );
   // チェックボックスをセット
   manageSheet.getRange(newRow, COLUMN_CHECK).setValue(false);
   // 反映ステータスをセット
   manageSheet.getRange(newRow, COLUMN_REFLECT).setValue(REFLECT_FALSE);
   // URLをセット(HYPERLINK形式)
-  manageSheet.getRange(newRow, COLUMN_URL).setFormula(`=HYPERLINK("${personalUrl}", "シートリンク")`);
+  manageSheet
+    .getRange(newRow, COLUMN_URL)
+    .setFormula(`=HYPERLINK("${personalUrl}", "シートリンク")`);
   // 勤務日数①をセット
   manageSheet.getRange(newRow, COLUMN_WORK_DATES_1).setFormula(WORK_DATES_1);
   // 労働時間①をセット
@@ -150,13 +156,12 @@ function createNewMember() {
   manageSheet.getRange(newRow, COLUMN_WORK_TIMES_4).setFormula(WORK_TIMES_4);
   // 勤務日数希望をセット
   const infoCell = columnToLetter(FORM_COLUMN_INFO) + FORM_ROW_HEAD;
-  manageSheet.getRange(newRow, COLUMN_WORK_DATES_REQ).setFormula(
-    `=INDIRECT("'" & ${nameColLetter}${newRow} & "'!${infoCell}")`
-  );
-  
+  manageSheet
+    .getRange(newRow, COLUMN_WORK_DATES_REQ)
+    .setFormula(`=INDIRECT("'" & ${nameColLetter}${newRow} & "'!${infoCell}")`);
+
   // // メアドをセット
   // manageSheet.getRange(newRow, COLUMN_EMAIL).setValue(email);
-
 
   // ===== 前回用管理シート =====
 
@@ -172,41 +177,57 @@ function createNewMember() {
   // 氏名をセット
   manageSheetPre.getRange(newRowPre, COLUMN_NAME).setValue(name);
   // 提出ステータスをセット(個別シートとリンク)
-  manageSheetPre.getRange(newRowPre, COLUMN_SUBMIT).setFormula(
-    `=IF(INDIRECT("'" & ${nameColLetter}${newRowPre} & "'!${checkCell}") = TRUE, "${SUBMIT_TRUE}", "${SUBMIT_FALSE}")`
-  );
+  manageSheetPre
+    .getRange(newRowPre, COLUMN_SUBMIT)
+    .setFormula(
+      `=IF(INDIRECT("'" & ${nameColLetter}${newRowPre} & "'!${checkCell}") = TRUE, "${SUBMIT_TRUE}", "${SUBMIT_FALSE}")`
+    );
   // チェックボックスをセット
   manageSheetPre.getRange(newRowPre, COLUMN_CHECK).setValue(false);
   // 反映ステータスをセット
   manageSheetPre.getRange(newRowPre, COLUMN_REFLECT).setValue(REFLECT_FALSE);
   // URLをセット(HYPERLINK形式)
-  manageSheetPre.getRange(newRowPre, COLUMN_URL).setFormula(`=HYPERLINK("${personalUrl}", "シートリンク")`);
+  manageSheetPre
+    .getRange(newRowPre, COLUMN_URL)
+    .setFormula(`=HYPERLINK("${personalUrl}", "シートリンク")`);
   // 勤務日数①をセット
-  manageSheetPre.getRange(newRowPre, COLUMN_WORK_DATES_1).setFormula(WORK_DATES_1);
+  manageSheetPre
+    .getRange(newRowPre, COLUMN_WORK_DATES_1)
+    .setFormula(WORK_DATES_1);
   // 労働時間①をセット
-  manageSheetPre.getRange(newRowPre, COLUMN_WORK_TIMES_1).setFormula(WORK_TIMES_1);
+  manageSheetPre
+    .getRange(newRowPre, COLUMN_WORK_TIMES_1)
+    .setFormula(WORK_TIMES_1);
   // 勤務日数②をセット
-  manageSheetPre.getRange(newRowPre, COLUMN_WORK_DATES_2).setFormula(WORK_DATES_2);
+  manageSheetPre
+    .getRange(newRowPre, COLUMN_WORK_DATES_2)
+    .setFormula(WORK_DATES_2);
   // 労働時間②をセット
-  manageSheetPre.getRange(newRowPre, COLUMN_WORK_TIMES_2).setFormula(WORK_TIMES_2);
+  manageSheetPre
+    .getRange(newRowPre, COLUMN_WORK_TIMES_2)
+    .setFormula(WORK_TIMES_2);
   // 勤務日数③をセット
-  manageSheetPre.getRange(newRowPre, COLUMN_WORK_DATES_3).setFormula(WORK_DATES_3);
+  manageSheetPre
+    .getRange(newRowPre, COLUMN_WORK_DATES_3)
+    .setFormula(WORK_DATES_3);
   // 労働時間③をセット
-  manageSheetPre.getRange(newRowPre, COLUMN_WORK_TIMES_3).setFormula(WORK_TIMES_3);
+  manageSheetPre
+    .getRange(newRowPre, COLUMN_WORK_TIMES_3)
+    .setFormula(WORK_TIMES_3);
   // 勤務日数④をセット
-  manageSheetPre.getRange(newRowPre, COLUMN_WORK_DATES_4).setFormula(WORK_DATES_4);
+  manageSheetPre
+    .getRange(newRowPre, COLUMN_WORK_DATES_4)
+    .setFormula(WORK_DATES_4);
   // 労働時間④をセット
-  manageSheetPre.getRange(newRowPre, COLUMN_WORK_TIMES_4).setFormula(WORK_TIMES_4);
+  manageSheetPre
+    .getRange(newRowPre, COLUMN_WORK_TIMES_4)
+    .setFormula(WORK_TIMES_4);
   // 勤務日数希望をセット
-  manageSheetPre.getRange(newRowPre, COLUMN_WORK_DATES_REQ).setFormula(
-    `=INDIRECT("'" & ${nameColLetter}${newRowPre} & "'!${infoCell}")`
-  );
-
-
+  manageSheetPre
+    .getRange(newRowPre, COLUMN_WORK_DATES_REQ)
+    .setFormula(
+      `=INDIRECT("'" & ${nameColLetter}${newRowPre} & "'!${infoCell}")`
+    );
 
   ui.alert(`✅「${name}」さんの個別ファイルと個別シートを作成しました！`);
 }
-
-
-
-
