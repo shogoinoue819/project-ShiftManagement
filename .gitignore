@@ -6,7 +6,7 @@
 # --- 環境依存・機密 ---
 .env
 .env.*
-const-env.js
+consts-env.js
 switch-env
 config/env-config.json
 
