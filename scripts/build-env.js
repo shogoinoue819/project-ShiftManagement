@@ -9,7 +9,7 @@ const path = require("path");
 
 function buildEnvConstants(environment) {
   const configPath = path.join(__dirname, "../config/env-config.json");
-  const outputPath = path.join(__dirname, "../consts-env.js");
+  const outputPath = path.join(__dirname, "../02_consts-env.js");
 
   try {
     // 設定ファイルを読み込み
@@ -64,7 +64,7 @@ const CURRENT_ENVIRONMENT = "${environment}";
     // ファイルを書き出し
     fs.writeFileSync(outputPath, constContent);
 
-    console.log(`✅ ${environment} 環境用の consts-env.js を生成しました`);
+    console.log(`✅ ${environment} 環境用の 02_consts-env.js を生成しました`);
     console.log(`📁 出力先: ${outputPath}`);
 
     // 設定内容を表示
