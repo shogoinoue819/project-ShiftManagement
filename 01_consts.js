@@ -3,261 +3,408 @@
 // 注意: 環境依存の値（ファイルID等）は consts-env.js に分離されました
 // このファイルには全環境で共通の定数のみを記載してください
 
-// ===== シフト管理シート =====
+// ===== シート名 =====
+const SHEET_NAMES = {
+  // シフト管理シート
+  SHIFT_MANAGEMENT: "シフト管理",
+  SHIFT_MANAGEMENT_PREVIOUS: "シフト管理<前回分>",
 
-// シート名
-const MANAGE_SHEET = "シフト管理";
-const MANAGE_SHEET_PRE = "シフト管理<前回分>";
+  // シフト希望表テンプレート
+  SHIFT_FORM: "シフト希望表",
+  SHIFT_FORM_INFO: "今後の勤務希望",
+  SHIFT_FORM_PREVIOUS: "前回分",
 
-// 行列インデックス
-const MANAGE_DATE_ROW_START = 4; // 日程リスト開始行
-const MANAGE_DATE_COLUMN = 1; // 日程リスト列
-const MANAGE_COMPLETE_COLUMN = 2; //完成列
-const MANAGE_SHARE_COLUMN = 3; // 共有列
+  // シフトテンプレート
+  SHIFT_TEMPLATE: "シフトテンプレート",
 
-const ROW_START = 4; // メンバーリスト開始行
-const COLUMN_START = 5; // メンバーリスト開始列
-const COLUMN_ID = 5; // ID列
-const COLUMN_NAME = 6; // 氏名列
-const COLUMN_DISPLAYNAME = 7; // 表示名列
-const COLUMN_SUBMIT = 8; // 提出ステータス列
-const COLUMN_CHECK = 9; // チェック列
-const COLUMN_REFLECT = 10; // 反映ステータス列
-const COLUMN_URL = 11; // URL列
-const COLUMN_WORK_DATES_1 = 12; // 勤務日数①列
-const COLUMN_WORK_TIMES_1 = 13; // 労働時間①列
-const COLUMN_WORK_DATES_2 = 14; // 勤務日数②列
-const COLUMN_WORK_TIMES_2 = 15; // 労働時間②列
-const COLUMN_WORK_DATES_3 = 16; // 勤務日数③列
-const COLUMN_WORK_TIMES_3 = 17; // 労働時間③列
-const COLUMN_WORK_DATES_4 = 18; // 勤務日数④列
-const COLUMN_WORK_TIMES_4 = 19; // 労働時間④列
-const COLUMN_WORK_DATES_REQ = 20; // 勤務日数希望列
-const COLUMN_EMAIL = 21; // メアド列
+  // 授業割テンプレート
+  LESSON_TEMPLATES: {
+    MON: "授業割(月)",
+    TUE: "授業割(火)",
+    WED: "授業割(水)",
+    THU: "授業割(木)",
+    FRI: "授業割(金)",
+  },
+};
 
-// Boolean文字列
-const SHARE_TRUE = "✅共有済み"; // 共有true
-const SHARE_FALSE = "未共有"; // 共有false
-const SUBMIT_TRUE = "✅提出済み"; // 提出true
-const SUBMIT_FALSE = "未提出"; // 提出false
-const REFLECT_TRUE = "✅反映済み"; // 反映true
-const REFLECT_FALSE = "未反映"; // 反映false
+// ===== シフト管理シート設定 =====
+const SHIFT_MANAGEMENT_SHEET = {
+  // 日程リスト
+  DATE_LIST: {
+    COL: 1,
+    START_ROW: 4,
+    COMPLETE_COL: 2,
+    SHARE_COL: 3,
+  },
 
-// ===== シフト希望表テンプレートファイル =====
+  // メンバーリスト
+  MEMBER_LIST: {
+    START_ROW: 4,
+    START_COL: 5,
+    ID_COL: 5,
+    NAME_COL: 6,
+    DISPLAY_NAME_COL: 7,
+    SUBMIT_COL: 8,
+    CHECK_COL: 9,
+    REFLECT_COL: 10,
+    URL_COL: 11,
+    WORK_DATES_1_COL: 12,
+    WORK_TIMES_1_COL: 13,
+    WORK_DATES_2_COL: 14,
+    WORK_TIMES_2_COL: 15,
+    WORK_DATES_3_COL: 16,
+    WORK_TIMES_3_COL: 17,
+    WORK_DATES_4_COL: 18,
+    WORK_TIMES_4_COL: 19,
+    WORK_DATES_REQUEST_COL: 20,
+    EMAIL_COL: 21,
+  },
+};
 
-// シート名
-const FORM_SHEET_NAME = "シフト希望表";
-const FORM_INFO_SHEET_NAME = "今後の勤務希望";
-const FORM_PREVIOUS_SHEET_NAME = "前回分";
+// ===== シフト希望表テンプレート設定 =====
+const SHIFT_FORM_TEMPLATE = {
+  // ヘッダー
+  HEADER: {
+    ROW: 1,
+    NAME_COL: 2,
+    INFO_COL: 3,
+    CHECK_COL: 4,
+  },
 
-// const FORM_PARSONAL_NAME = "個人用シフト表";
+  // データ部分
+  DATA: {
+    START_ROW: 4,
+    DATE_COL: 1,
+    STATUS_COL: 2,
+    START_TIME_COL: 3,
+    END_TIME_COL: 4,
+    NOTE_COL: 5,
+    CONTACT_COL: 6,
+  },
+};
 
-// 行列インデックス
-const FORM_ROW_HEAD = 1; // ヘッダー行
-const FORM_COLUMN_NAME = 2; // 氏名列
-const FORM_COLUMN_INFO = 3; // 勤務日数希望列(隠す)
-const FORM_COLUMN_CHECK = 4; // チェック列
+// ===== シフトテンプレートシート設定 =====
+const SHIFT_TEMPLATE_SHEET = {
+  // 基本設定
+  DATE_ROW: 1,
+  DATE_COL: 1,
+  MEMBER_START_COL: 2,
 
-const FORM_ROW_START = 4; // 表の開始行
-const FORM_COLUMN_DATE = 1; // 日程列
-const FORM_COLUMN_STATUS = 2; // ステータス列
-const FORM_COLUMN_START_TIME = 3; // 開始時間列
-const FORM_COLUMN_END_TIME = 4; // 終了時間列
-const FORM_COLUMN_NOTE = 5; // 備考列
-const FORM_COLUMN_CONTACT = 6; // 連絡事項列
-
-// Boolean文字列
-const STATUS_TRUE = "◯";
-const STATUS_FALSE = "×";
-
-// ===== シフトテンプレートシート =====
-
-// シフトテンプレートシート名
-const SHIFT_SHEET_NAME = "シフトテンプレート";
-
-// 行列インデックス
-const SHIFT_ROW_DATE = 1; // 日程行
-const SHIFT_COLUMN_DATE = 1; // 日程列
-
-const SHIFT_COLUMN_START = 2; // メンバーリストの開始列
-
-const SHIFT_ROW_MEMBERS = 1; // メンバーリスト行
-const SHIFT_ROW_START_TIME = 2; // 開始時間行
-const SHIFT_ROW_END_TIME = 3; // 終了時間行
-const SHIFT_ROW_NOTE = 4; // 備考行
-const SHIFT_ROW_WORK_START = 5; // 出勤時間
-const SHIFT_ROW_WORK_END = 6; // 退勤時間
-const SHIFT_ROW_WORKING = 7; // 勤務時間
-const SHIFT_ROW_START = 9; // シフトの開始行
-const SHIFT_ROW_END = 36; // シフトの終了行
-
-// ===== 授業割テンプレートシート =====
-
-// シート名
-const LESSON_MON = "授業割(月)";
-const LESSON_TUE = "授業割(火)";
-const LESSON_WED = "授業割(水)";
-const LESSON_THU = "授業割(木)";
-const LESSON_FRI = "授業割(金)";
+  // 行設定
+  ROWS: {
+    MEMBERS: 1,
+    START_TIME: 2,
+    END_TIME: 3,
+    NOTE: 4,
+    WORK_START: 5,
+    WORK_END: 6,
+    WORKING_TIME: 7,
+    DATA_START: 9,
+    DATA_END: 36,
+  },
+};
 
 // ===== 環境共通設定 =====
+const ENVIRONMENT = {
+  YEAR: 2025,
 
-// 年
-const THIS_YEAR = 2025; // 今年（西暦）
+  // デフォルト開閉室時間
+  DEFAULT_HOURS: {
+    OPEN: {
+      HOUR: 8,
+      MINUTE: 0,
+    },
+    CLOSE: {
+      HOUR: 22,
+      MINUTE: 0,
+    },
+  },
+};
 
-// デフォルト開閉室時間
-const DEFAULT_OPEN_HOUR = 8;
-const DEFAULT_OPEN_MINUTE = 0;
-const DEFAULT_CLOSE_HOUR = 22;
-const DEFAULT_CLOSE_MINUTE = 0;
+// ===== 時間設定 =====
+const TIME_SETTINGS = {
+  // 時間帯リスト
+  TIME_LIST: [
+    "8:00",
+    "8:30",
+    "9:00",
+    "9:30",
+    "10:00",
+    "10:30",
+    "11:00",
+    "11:30",
+    "12:00",
+    "12:30",
+    "13:00",
+    "13:30",
+    "14:00",
+    "14:30",
+    "15:00",
+    "15:30",
+    "16:00",
+    "16:30",
+    "17:00",
+    "17:30",
+    "18:00",
+    "18:30",
+    "19:00",
+    "19:30",
+    "20:00",
+    "20:30",
+    "21:00",
+    "21:30",
+  ],
 
-// 時間帯リスト
-const timeList = [
-  "8:00",
-  "8:30",
-  "9:00",
-  "9:30",
-  "10:00",
-  "10:30",
-  "11:00",
-  "11:30",
-  "12:00",
-  "12:30",
-  "13:00",
-  "13:30",
-  "14:00",
-  "14:30",
-  "15:00",
-  "15:30",
-  "16:00",
-  "16:30",
-  "17:00",
-  "17:30",
-  "18:00",
-  "18:30",
-  "19:00",
-  "19:30",
-  "20:00",
-  "20:30",
-  "21:00",
-  "21:30",
-];
+  // 勤務不可背景色
+  UNAVAILABLE_BACKGROUND_COLOR: "#d3d3d3",
+};
 
-// デフォルト開閉室時間は上記で定義済み
+// ===== ステータス文字列 =====
+const STATUS_STRINGS = {
+  // 共有ステータス
+  SHARE: {
+    TRUE: "✅共有済み",
+    FALSE: "未共有",
+  },
 
-// ===== 勤務不可背景色設定 ======
-const UNAVAILABLE_COLOR = "#d3d3d3";
+  // 提出ステータス
+  SUBMIT: {
+    TRUE: "✅提出済み",
+    FALSE: "未提出",
+  },
+
+  // 反映ステータス
+  REFLECT: {
+    TRUE: "✅反映済み",
+    FALSE: "未反映",
+  },
+
+  // シフト希望ステータス
+  SHIFT_WISH: {
+    TRUE: "◯",
+    FALSE: "×",
+  },
+};
 
 // ===== 勤務日数・労働時間計算関数 =====
+const WORK_CALCULATION_FORMULAS = {
+  // 第1週
+  WEEK_1: {
+    DATES: `
+      SUM(
+        ARRAYFORMULA({
+          IFERROR(N(INDIRECT("'" & TEXT($A$4, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
+          IFERROR(N(INDIRECT("'" & TEXT($A$5, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
+          IFERROR(N(INDIRECT("'" & TEXT($A$6, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
+          IFERROR(N(INDIRECT("'" & TEXT($A$7, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
+          IFERROR(N(INDIRECT("'" & TEXT($A$8, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
+          IFERROR(N(INDIRECT("'" & TEXT($A$9, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
+          IFERROR(N(INDIRECT("'" & TEXT($A$10, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0)
+        })
+      )
+    `,
+    TIMES: `
+      SUM(
+        ARRAYFORMULA({
+          IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$4, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
+          IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$5, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
+          IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$6, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
+          IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$7, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
+          IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$8, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
+          IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$9, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
+          IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$10, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0)
+        })
+      )
+    `,
+  },
 
-const WORK_DATES_1 = `
-  SUM(
-    ARRAYFORMULA({
-      IFERROR(N(INDIRECT("'" & TEXT($A$4, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
-      IFERROR(N(INDIRECT("'" & TEXT($A$5, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
-      IFERROR(N(INDIRECT("'" & TEXT($A$6, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
-      IFERROR(N(INDIRECT("'" & TEXT($A$7, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
-      IFERROR(N(INDIRECT("'" & TEXT($A$8, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
-      IFERROR(N(INDIRECT("'" & TEXT($A$9, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
-      IFERROR(N(INDIRECT("'" & TEXT($A$10, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0)
-    })
-  )
-`;
+  // 第2週
+  WEEK_2: {
+    DATES: `
+      SUM(
+        ARRAYFORMULA({
+          IFERROR(N(INDIRECT("'" & TEXT($A$11, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
+          IFERROR(N(INDIRECT("'" & TEXT($A$12, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
+          IFERROR(N(INDIRECT("'" & TEXT($A$13, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
+          IFERROR(N(INDIRECT("'" & TEXT($A$14, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
+          IFERROR(N(INDIRECT("'" & TEXT($A$15, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
+          IFERROR(N(INDIRECT("'" & TEXT($A$16, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
+          IFERROR(N(INDIRECT("'" & TEXT($A$17, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0)
+        })
+      )
+    `,
+    TIMES: `
+      SUM(
+        ARRAYFORMULA({
+          IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$11, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
+          IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$12, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
+          IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$13, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
+          IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$14, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
+          IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$15, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
+          IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$16, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
+          IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$17, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0)
+        })
+      )
+    `,
+  },
 
-const WORK_TIMES_1 = `
-  SUM(
-    ARRAYFORMULA({
-      IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$4, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
-      IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$5, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
-      IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$6, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
-      IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$7, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
-      IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$8, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
-      IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$9, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
-      IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$10, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0)
-    })
-  )
-`;
+  // 第3週
+  WEEK_3: {
+    DATES: `
+      SUM(
+        ARRAYFORMULA({
+          IFERROR(N(INDIRECT("'" & TEXT($A$18, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
+          IFERROR(N(INDIRECT("'" & TEXT($A$19, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
+          IFERROR(N(INDIRECT("'" & TEXT($A$20, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
+          IFERROR(N(INDIRECT("'" & TEXT($A$21, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
+          IFERROR(N(INDIRECT("'" & TEXT($A$22, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
+          IFERROR(N(INDIRECT("'" & TEXT($A$23, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
+          IFERROR(N(INDIRECT("'" & TEXT($A$24, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0)
+        })
+      )
+    `,
+    TIMES: `
+      SUM(
+        ARRAYFORMULA({
+          IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$18, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
+          IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$19, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
+          IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$20, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
+          IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$21, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
+          IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$22, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
+          IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$23, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
+          IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$24, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0)
+        })
+      )
+    `,
+  },
 
-const WORK_DATES_2 = `
-  SUM(
-    ARRAYFORMULA({
-      IFERROR(N(INDIRECT("'" & TEXT($A$11, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
-      IFERROR(N(INDIRECT("'" & TEXT($A$12, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
-      IFERROR(N(INDIRECT("'" & TEXT($A$13, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
-      IFERROR(N(INDIRECT("'" & TEXT($A$14, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
-      IFERROR(N(INDIRECT("'" & TEXT($A$15, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
-      IFERROR(N(INDIRECT("'" & TEXT($A$16, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
-      IFERROR(N(INDIRECT("'" & TEXT($A$17, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0)
-    })
-  )
-`;
+  // 第4週
+  WEEK_4: {
+    DATES: `
+      SUM(
+        ARRAYFORMULA({
+          IFERROR(N(INDIRECT("'" & TEXT($A$25, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
+          IFERROR(N(INDIRECT("'" & TEXT($A$26, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
+          IFERROR(N(INDIRECT("'" & TEXT($A$27, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
+          IFERROR(N(INDIRECT("'" & TEXT($A$28, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
+          IFERROR(N(INDIRECT("'" & TEXT($A$29, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
+          IFERROR(N(INDIRECT("'" & TEXT($A$30, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
+          IFERROR(N(INDIRECT("'" & TEXT($A$31, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0)
+        })
+      )
+    `,
+    TIMES: `
+      SUM(
+        ARRAYFORMULA({
+          IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$25, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
+          IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$26, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
+          IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$27, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
+          IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$28, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
+          IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$29, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
+          IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$30, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
+          IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$31, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0)
+        })
+      )
+    `,
+  },
+};
 
-const WORK_TIMES_2 = `
-  SUM(
-    ARRAYFORMULA({
-      IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$11, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
-      IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$12, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
-      IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$13, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
-      IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$14, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
-      IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$15, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
-      IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$16, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
-      IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$17, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0)
-    })
-  )
-`;
+// ===== 後方互換性のための定数エイリアス =====
+// 既存のコードが動作するように、古い定数名を新しいオブジェクトのプロパティにマッピング
 
-const WORK_DATES_3 = `
-  SUM(
-    ARRAYFORMULA({
-      IFERROR(N(INDIRECT("'" & TEXT($A$18, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
-      IFERROR(N(INDIRECT("'" & TEXT($A$19, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
-      IFERROR(N(INDIRECT("'" & TEXT($A$20, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
-      IFERROR(N(INDIRECT("'" & TEXT($A$21, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
-      IFERROR(N(INDIRECT("'" & TEXT($A$22, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
-      IFERROR(N(INDIRECT("'" & TEXT($A$23, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
-      IFERROR(N(INDIRECT("'" & TEXT($A$24, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0)
-    })
-  )
-`;
+// シート名
+const MANAGE_SHEET = SHEET_NAMES.SHIFT_MANAGEMENT;
+const MANAGE_SHEET_PRE = SHEET_NAMES.SHIFT_MANAGEMENT_PREVIOUS;
+const FORM_SHEET_NAME = SHEET_NAMES.SHIFT_FORM;
+const FORM_INFO_SHEET_NAME = SHEET_NAMES.SHIFT_FORM_INFO;
+const FORM_PREVIOUS_SHEET_NAME = SHEET_NAMES.SHIFT_FORM_PREVIOUS;
+const SHIFT_SHEET_NAME = SHEET_NAMES.SHIFT_TEMPLATE;
+const LESSON_MON = SHEET_NAMES.LESSON_TEMPLATES.MON;
+const LESSON_TUE = SHEET_NAMES.LESSON_TEMPLATES.TUE;
+const LESSON_WED = SHEET_NAMES.LESSON_TEMPLATES.WED;
+const LESSON_THU = SHEET_NAMES.LESSON_TEMPLATES.THU;
+const LESSON_FRI = SHEET_NAMES.LESSON_TEMPLATES.FRI;
 
-const WORK_TIMES_3 = `
-  SUM(
-    ARRAYFORMULA({
-      IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$18, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
-      IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$19, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
-      IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$20, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
-      IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$21, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
-      IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$22, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
-      IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$23, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
-      IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$24, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0)
-    })
-  )
-`;
+// シフト管理シート
+const MANAGE_DATE_ROW_START = SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW;
+const MANAGE_DATE_COLUMN = SHIFT_MANAGEMENT_SHEET.DATE_LIST.COL;
+const MANAGE_COMPLETE_COLUMN = SHIFT_MANAGEMENT_SHEET.DATE_LIST.COMPLETE_COL;
+const MANAGE_SHARE_COLUMN = SHIFT_MANAGEMENT_SHEET.DATE_LIST.SHARE_COL;
+const ROW_START = SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW;
+const COLUMN_START = SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_COL;
+const COLUMN_ID = SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.ID_COL;
+const COLUMN_NAME = SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.NAME_COL;
+const COLUMN_DISPLAYNAME = SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.DISPLAY_NAME_COL;
+const COLUMN_SUBMIT = SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.SUBMIT_COL;
+const COLUMN_CHECK = SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.CHECK_COL;
+const COLUMN_REFLECT = SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.REFLECT_COL;
+const COLUMN_URL = SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.URL_COL;
+const COLUMN_WORK_DATES_1 = SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_DATES_1_COL;
+const COLUMN_WORK_TIMES_1 = SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_TIMES_1_COL;
+const COLUMN_WORK_DATES_2 = SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_DATES_2_COL;
+const COLUMN_WORK_TIMES_2 = SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_TIMES_2_COL;
+const COLUMN_WORK_DATES_3 = SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_DATES_3_COL;
+const COLUMN_WORK_TIMES_3 = SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_TIMES_3_COL;
+const COLUMN_WORK_DATES_4 = SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_DATES_4_COL;
+const COLUMN_WORK_TIMES_4 = SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_TIMES_4_COL;
+const COLUMN_WORK_DATES_REQ =
+  SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_DATES_REQUEST_COL;
+const COLUMN_EMAIL = SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.EMAIL_COL;
 
-const WORK_DATES_4 = `
-  SUM(
-    ARRAYFORMULA({
-      IFERROR(N(INDIRECT("'" & TEXT($A$25, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
-      IFERROR(N(INDIRECT("'" & TEXT($A$26, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
-      IFERROR(N(INDIRECT("'" & TEXT($A$27, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
-      IFERROR(N(INDIRECT("'" & TEXT($A$28, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
-      IFERROR(N(INDIRECT("'" & TEXT($A$29, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
-      IFERROR(N(INDIRECT("'" & TEXT($A$30, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0),
-      IFERROR(N(INDIRECT("'" & TEXT($A$31, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4)) <> ""), 0)
-    })
-  )
-`;
+// シフト希望表テンプレート
+const FORM_ROW_HEAD = SHIFT_FORM_TEMPLATE.HEADER.ROW;
+const FORM_COLUMN_NAME = SHIFT_FORM_TEMPLATE.HEADER.NAME_COL;
+const FORM_COLUMN_INFO = SHIFT_FORM_TEMPLATE.HEADER.INFO_COL;
+const FORM_COLUMN_CHECK = SHIFT_FORM_TEMPLATE.HEADER.CHECK_COL;
+const FORM_ROW_START = SHIFT_FORM_TEMPLATE.DATA.START_ROW;
+const FORM_COLUMN_DATE = SHIFT_FORM_TEMPLATE.DATA.DATE_COL;
+const FORM_COLUMN_STATUS = SHIFT_FORM_TEMPLATE.DATA.STATUS_COL;
+const FORM_COLUMN_START_TIME = SHIFT_FORM_TEMPLATE.DATA.START_TIME_COL;
+const FORM_COLUMN_END_TIME = SHIFT_FORM_TEMPLATE.DATA.END_TIME_COL;
+const FORM_COLUMN_NOTE = SHIFT_FORM_TEMPLATE.DATA.NOTE_COL;
+const FORM_COLUMN_CONTACT = SHIFT_FORM_TEMPLATE.DATA.CONTACT_COL;
 
-const WORK_TIMES_4 = `
-  SUM(
-    ARRAYFORMULA({
-      IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$25, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
-      IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$26, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
-      IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$27, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
-      IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$28, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
-      IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$29, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
-      IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$30, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0),
-      IFERROR(TIMEVALUE(INDIRECT("'" & TEXT($A$31, "M/d") & "'!" & ADDRESS(7, ROW() - 2, 4))), 0)
-    })
-  )
-`;
+// シフトテンプレートシート
+const SHIFT_ROW_DATE = SHIFT_TEMPLATE_SHEET.DATE_ROW;
+const SHIFT_COLUMN_DATE = SHIFT_TEMPLATE_SHEET.DATE_COL;
+const SHIFT_COLUMN_START = SHIFT_TEMPLATE_SHEET.MEMBER_START_COL;
+const SHIFT_ROW_MEMBERS = SHIFT_TEMPLATE_SHEET.ROWS.MEMBERS;
+const SHIFT_ROW_START_TIME = SHIFT_TEMPLATE_SHEET.ROWS.START_TIME;
+const SHIFT_ROW_END_TIME = SHIFT_TEMPLATE_SHEET.ROWS.END_TIME;
+const SHIFT_ROW_NOTE = SHIFT_TEMPLATE_SHEET.ROWS.NOTE;
+const SHIFT_ROW_WORK_START = SHIFT_TEMPLATE_SHEET.ROWS.WORK_START;
+const SHIFT_ROW_WORK_END = SHIFT_TEMPLATE_SHEET.ROWS.WORK_END;
+const SHIFT_ROW_WORKING = SHIFT_TEMPLATE_SHEET.ROWS.WORKING_TIME;
+const SHIFT_ROW_START = SHIFT_TEMPLATE_SHEET.ROWS.DATA_START;
+const SHIFT_ROW_END = SHIFT_TEMPLATE_SHEET.ROWS.DATA_END;
+
+// 環境共通設定
+const THIS_YEAR = ENVIRONMENT.YEAR;
+const DEFAULT_OPEN_HOUR = ENVIRONMENT.DEFAULT_HOURS.OPEN.HOUR;
+const DEFAULT_OPEN_MINUTE = ENVIRONMENT.DEFAULT_HOURS.OPEN.MINUTE;
+const DEFAULT_CLOSE_HOUR = ENVIRONMENT.DEFAULT_HOURS.CLOSE.HOUR;
+const DEFAULT_CLOSE_MINUTE = ENVIRONMENT.DEFAULT_HOURS.CLOSE.MINUTE;
+
+// 時間設定
+const timeList = TIME_SETTINGS.TIME_LIST;
+const UNAVAILABLE_COLOR = TIME_SETTINGS.UNAVAILABLE_BACKGROUND_COLOR;
+
+// ステータス文字列
+const SHARE_TRUE = STATUS_STRINGS.SHARE.TRUE;
+const SHARE_FALSE = STATUS_STRINGS.SHARE.FALSE;
+const SUBMIT_TRUE = STATUS_STRINGS.SUBMIT.TRUE;
+const SUBMIT_FALSE = STATUS_STRINGS.SUBMIT.FALSE;
+const REFLECT_TRUE = STATUS_STRINGS.REFLECT.TRUE;
+const REFLECT_FALSE = STATUS_STRINGS.REFLECT.FALSE;
+const STATUS_TRUE = STATUS_STRINGS.SHIFT_WISH.TRUE;
+const STATUS_FALSE = STATUS_STRINGS.SHIFT_WISH.FALSE;
+
+// 勤務日数・労働時間計算関数
+const WORK_DATES_1 = WORK_CALCULATION_FORMULAS.WEEK_1.DATES;
+const WORK_TIMES_1 = WORK_CALCULATION_FORMULAS.WEEK_1.TIMES;
+const WORK_DATES_2 = WORK_CALCULATION_FORMULAS.WEEK_2.DATES;
+const WORK_TIMES_2 = WORK_CALCULATION_FORMULAS.WEEK_2.TIMES;
+const WORK_DATES_3 = WORK_CALCULATION_FORMULAS.WEEK_3.DATES;
+const WORK_TIMES_3 = WORK_CALCULATION_FORMULAS.WEEK_3.TIMES;
+const WORK_DATES_4 = WORK_CALCULATION_FORMULAS.WEEK_4.DATES;
+const WORK_TIMES_4 = WORK_CALCULATION_FORMULAS.WEEK_4.TIMES;
