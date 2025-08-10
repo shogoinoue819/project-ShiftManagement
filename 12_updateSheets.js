@@ -41,13 +41,17 @@ function updateSheets() {
     // テンプレートシートをコピーし、日程をシート名にセットしてシフト作成シートを生成
     const newSheet = templateSheet.copyTo(ss).setName(dateStr);
     // A1に日程をセット
-    newSheet.getRange(SHIFT_ROW_DATE, SHIFT_COLUMN_DATE).setValue(date);
+    newSheet
+      .getRange(SHIFT_TEMPLATE_SHEET.DATE_ROW, SHIFT_TEMPLATE_SHEET.DATE_COL)
+      .setValue(date);
 
     // 出退勤自動記録欄の保護
     const protectionRange = newSheet.getRange(
-      SHIFT_ROW_START_TIME,
+      SHIFT_TEMPLATE_SHEET.ROWS.START_TIME,
       1,
-      SHIFT_ROW_WORKING - SHIFT_ROW_START_TIME + 1,
+      SHIFT_TEMPLATE_SHEET.ROWS.WORKING_TIME -
+        SHIFT_TEMPLATE_SHEET.ROWS.START_TIME +
+        1,
       newSheet.getMaxColumns()
     );
     const protection = protectionRange.protect();

@@ -22,7 +22,7 @@ function reflectLessonTemplate() {
     const sheetName = dailySheet.getName();
     // A1から日付を取得
     const date = dailySheet
-      .getRange(SHIFT_ROW_DATE, SHIFT_COLUMN_DATE)
+      .getRange(SHIFT_TEMPLATE_SHEET.DATE_ROW, SHIFT_TEMPLATE_SHEET.DATE_COL)
       .getValue();
     // 日付から曜日を取得
     const dayOfWeek = formatDateToString(date, "E"); // Mon ~ Sun
@@ -35,19 +35,24 @@ function reflectLessonTemplate() {
         return;
       }
       // 取得する列数
-      const numCols = dailySheet.getLastColumn() - SHIFT_COLUMN_START + 1;
+      const numCols =
+        dailySheet.getLastColumn() - SHIFT_TEMPLATE_SHEET.MEMBER_START_COL + 1;
       // 授業割シートのデータ元範囲を取得
       const sourceRange = lessonTemplateSheet.getRange(
-        SHIFT_ROW_START,
-        SHIFT_COLUMN_START,
-        SHIFT_ROW_END - SHIFT_ROW_START + 1,
+        SHIFT_TEMPLATE_SHEET.ROWS.DATA_START,
+        SHIFT_TEMPLATE_SHEET.MEMBER_START_COL,
+        SHIFT_TEMPLATE_SHEET.ROWS.DATA_END -
+          SHIFT_TEMPLATE_SHEET.ROWS.DATA_START +
+          1,
         numCols
       );
       // シフト作成シートの貼り付け先範囲を取得
       const destRange = dailySheet.getRange(
-        SHIFT_ROW_START,
-        SHIFT_COLUMN_START,
-        SHIFT_ROW_END - SHIFT_ROW_START + 1,
+        SHIFT_TEMPLATE_SHEET.ROWS.DATA_START,
+        SHIFT_TEMPLATE_SHEET.MEMBER_START_COL,
+        SHIFT_TEMPLATE_SHEET.ROWS.DATA_END -
+          SHIFT_TEMPLATE_SHEET.ROWS.DATA_START +
+          1,
         numCols
       );
 
@@ -88,11 +93,12 @@ function reflectLessonTemplate() {
 
       // セルの結合
       mergedRanges.forEach((range) => {
-        const rowOffset = range.getRow() - SHIFT_ROW_START;
-        const colOffset = range.getColumn() - SHIFT_COLUMN_START;
+        const rowOffset = range.getRow() - SHIFT_TEMPLATE_SHEET.ROWS.DATA_START;
+        const colOffset =
+          range.getColumn() - SHIFT_TEMPLATE_SHEET.MEMBER_START_COL;
         const targetRange = dailySheet.getRange(
-          SHIFT_ROW_START + rowOffset,
-          SHIFT_COLUMN_START + colOffset,
+          SHIFT_TEMPLATE_SHEET.ROWS.DATA_START + rowOffset,
+          SHIFT_TEMPLATE_SHEET.MEMBER_START_COL + colOffset,
           range.getNumRows(),
           range.getNumColumns()
         );
@@ -101,9 +107,11 @@ function reflectLessonTemplate() {
 
       // ボーダーをセット
       const pastedRange = dailySheet.getRange(
-        SHIFT_ROW_START,
-        SHIFT_COLUMN_START,
-        SHIFT_ROW_END - SHIFT_ROW_START + 1,
+        SHIFT_TEMPLATE_SHEET.ROWS.DATA_START,
+        SHIFT_TEMPLATE_SHEET.MEMBER_START_COL,
+        SHIFT_TEMPLATE_SHEET.ROWS.DATA_END -
+          SHIFT_TEMPLATE_SHEET.ROWS.DATA_START +
+          1,
         numCols
       );
       applyBorders(pastedRange);

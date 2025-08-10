@@ -36,8 +36,8 @@ function linkMemberDisplay() {
 
   // テンプレートシートのメンバー欄を取得
   const targetRange = templateSheet.getRange(
-    SHIFT_ROW_MEMBERS,
-    SHIFT_COLUMN_START,
+    SHIFT_TEMPLATE_SHEET.ROWS.MEMBERS,
+    SHIFT_TEMPLATE_SHEET.MEMBER_START_COL,
     1,
     lastCol - 1
   );
@@ -48,9 +48,11 @@ function linkMemberDisplay() {
   // 灰色背景をクリア
   templateSheet
     .getRange(
-      SHIFT_ROW_START,
-      SHIFT_COLUMN_START,
-      SHIFT_ROW_END - SHIFT_ROW_START + 1,
+      SHIFT_TEMPLATE_SHEET.ROWS.DATA_START,
+      SHIFT_TEMPLATE_SHEET.MEMBER_START_COL,
+      SHIFT_TEMPLATE_SHEET.ROWS.DATA_END -
+        SHIFT_TEMPLATE_SHEET.ROWS.DATA_START +
+        1,
       lastCol - 1
     )
     .setBackground(null);
@@ -58,19 +60,27 @@ function linkMemberDisplay() {
   // テンプレートシートに氏名と背景色をセット
   for (let i = 0; i < names.length; i++) {
     templateSheet
-      .getRange(SHIFT_ROW_MEMBERS, i + SHIFT_COLUMN_START)
+      .getRange(
+        SHIFT_TEMPLATE_SHEET.ROWS.MEMBERS,
+        i + SHIFT_TEMPLATE_SHEET.MEMBER_START_COL
+      )
       .setValue(names[i]);
     templateSheet
-      .getRange(SHIFT_ROW_MEMBERS, i + SHIFT_COLUMN_START)
+      .getRange(
+        SHIFT_TEMPLATE_SHEET.ROWS.MEMBERS,
+        i + SHIFT_TEMPLATE_SHEET.MEMBER_START_COL
+      )
       .setBackground(bgColors[i]);
   }
 
   // 背景を灰色に
   templateSheet
     .getRange(
-      SHIFT_ROW_START,
-      SHIFT_COLUMN_START,
-      SHIFT_ROW_END - SHIFT_ROW_START + 1,
+      SHIFT_TEMPLATE_SHEET.ROWS.DATA_START,
+      SHIFT_TEMPLATE_SHEET.MEMBER_START_COL,
+      SHIFT_TEMPLATE_SHEET.ROWS.DATA_END -
+        SHIFT_TEMPLATE_SHEET.ROWS.DATA_START +
+        1,
       names.length
     )
     .setBackground(UNAVAILABLE_COLOR);
@@ -93,8 +103,8 @@ function linkMemberDisplay() {
     // メンバー欄の内容・背景色をリセット（2列目以降）
     if (lastCol >= 2) {
       const targetRange = sheet.getRange(
-        SHIFT_ROW_MEMBERS,
-        SHIFT_COLUMN_START,
+        SHIFT_TEMPLATE_SHEET.ROWS.MEMBERS,
+        SHIFT_TEMPLATE_SHEET.MEMBER_START_COL,
         1,
         lastCol - 1
       );
@@ -104,52 +114,62 @@ function linkMemberDisplay() {
     // 氏名と背景色を1人ずつ反映
     for (let i = 0; i < names.length; i++) {
       sheet
-        .getRange(SHIFT_ROW_MEMBERS, i + SHIFT_COLUMN_START)
+        .getRange(
+          SHIFT_TEMPLATE_SHEET.ROWS.MEMBERS,
+          i + SHIFT_TEMPLATE_SHEET.MEMBER_START_COL
+        )
         .setValue(names[i]);
       sheet
-        .getRange(SHIFT_ROW_MEMBERS, i + SHIFT_COLUMN_START)
+        .getRange(
+          SHIFT_TEMPLATE_SHEET.ROWS.MEMBERS,
+          i + SHIFT_TEMPLATE_SHEET.MEMBER_START_COL
+        )
         .setBackground(bgColors[i]);
     }
   }
 
   // 出勤・退勤・勤務時間の数式をセット
   for (let i = 0; i < names.length; i++) {
-    const col = i + SHIFT_COLUMN_START;
+    const col = i + SHIFT_TEMPLATE_SHEET.MEMBER_START_COL;
     const colLetter = columnToLetter(col);
 
     // 出勤
     templateSheet
-      .getRange(SHIFT_ROW_WORK_START, col)
+      .getRange(SHIFT_TEMPLATE_SHEET.ROWS.WORK_START, col)
       .setFormula(
         `=IFERROR(TO_TEXT(INDEX(${colLetter}${
-          SHIFT_ROW_START - 1
+          SHIFT_TEMPLATE_SHEET.ROWS.DATA_START - 1
         }:${colLetter}${
-          SHIFT_ROW_END + 1
+          SHIFT_TEMPLATE_SHEET.ROWS.DATA_END + 1
         }, MATCH(TRUE, ISNUMBER(SEARCH(":" , TO_TEXT(${colLetter}${
-          SHIFT_ROW_START - 1
-        }:${colLetter}${SHIFT_ROW_END + 1}))), 0))), "")`
+          SHIFT_TEMPLATE_SHEET.ROWS.DATA_START - 1
+        }:${colLetter}${SHIFT_TEMPLATE_SHEET.ROWS.DATA_END + 1}))), 0))), "")`
       );
 
     // 退勤
     templateSheet
-      .getRange(SHIFT_ROW_WORK_END, col)
+      .getRange(SHIFT_TEMPLATE_SHEET.ROWS.WORK_END, col)
       .setFormula(
         `=IFERROR(TO_TEXT(INDEX(${colLetter}${
-          SHIFT_ROW_START - 1
-        }:${colLetter}${SHIFT_ROW_END + 1}, MAX(FILTER(ROW(${colLetter}${
-          SHIFT_ROW_START - 1
-        }:${colLetter}${SHIFT_ROW_END + 1})-ROW(${colLetter}${
-          SHIFT_ROW_START - 1
+          SHIFT_TEMPLATE_SHEET.ROWS.DATA_START - 1
+        }:${colLetter}${
+          SHIFT_TEMPLATE_SHEET.ROWS.DATA_END + 1
+        }, MAX(FILTER(ROW(${colLetter}${
+          SHIFT_TEMPLATE_SHEET.ROWS.DATA_START - 1
+        }:${colLetter}${
+          SHIFT_TEMPLATE_SHEET.ROWS.DATA_END + 1
+        })-ROW(${colLetter}${
+          SHIFT_TEMPLATE_SHEET.ROWS.DATA_START - 1
         })+1, ISNUMBER(SEARCH(":" , TO_TEXT(${colLetter}${
-          SHIFT_ROW_START - 1
-        }:${colLetter}${SHIFT_ROW_END + 1}))))))), "")`
+          SHIFT_TEMPLATE_SHEET.ROWS.DATA_START - 1
+        }:${colLetter}${SHIFT_TEMPLATE_SHEET.ROWS.DATA_END + 1}))))))), "")`
       );
 
     // 勤務時間
     templateSheet
-      .getRange(SHIFT_ROW_WORKING, col)
+      .getRange(SHIFT_TEMPLATE_SHEET.ROWS.WORKING_TIME, col)
       .setFormula(
-        `=IF(AND(ISNUMBER(TIMEVALUE(${colLetter}${SHIFT_ROW_WORK_END})), ISNUMBER(TIMEVALUE(${colLetter}${SHIFT_ROW_WORK_START}))), TEXT(TIMEVALUE(${colLetter}${SHIFT_ROW_WORK_END}) - TIMEVALUE(${colLetter}${SHIFT_ROW_WORK_START}), "h:mm"), "")`
+        `=IF(AND(ISNUMBER(TIMEVALUE(${colLetter}${SHIFT_TEMPLATE_SHEET.ROWS.WORK_END})), ISNUMBER(TIMEVALUE(${colLetter}${SHIFT_TEMPLATE_SHEET.ROWS.WORK_START}))), TEXT(TIMEVALUE(${colLetter}${SHIFT_TEMPLATE_SHEET.ROWS.WORK_END}) - TIMEVALUE(${colLetter}${SHIFT_TEMPLATE_SHEET.ROWS.WORK_START}), "h:mm"), "")`
       );
   }
 }

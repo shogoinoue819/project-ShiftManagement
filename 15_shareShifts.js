@@ -74,23 +74,31 @@ function shareShiftsFromManageSheet(manageSheetName) {
         const copiedToShare = dailySheet.copyTo(shareFile).setName(sheetName);
         // ビュー調整
         copiedToShare.hideRows(
-          SHIFT_ROW_START_TIME,
-          SHIFT_ROW_NOTE - SHIFT_ROW_START_TIME + 1
+          SHIFT_TEMPLATE_SHEET.ROWS.START_TIME,
+          SHIFT_TEMPLATE_SHEET.ROWS.NOTE -
+            SHIFT_TEMPLATE_SHEET.ROWS.START_TIME +
+            1
         );
         clearBackgrounds(copiedToShare);
 
         // PDF用ワークSSにもコピー
         const copiedToWork = dailySheet.copyTo(workSS).setName(sheetName);
         copiedToWork.hideRows(
-          SHIFT_ROW_START_TIME,
-          SHIFT_ROW_NOTE - SHIFT_ROW_START_TIME + 1
+          SHIFT_TEMPLATE_SHEET.ROWS.START_TIME,
+          SHIFT_TEMPLATE_SHEET.ROWS.NOTE -
+            SHIFT_TEMPLATE_SHEET.ROWS.START_TIME +
+            1
         );
         clearBackgrounds(copiedToWork);
         // 行高1.5倍
-        const h = copiedToWork.getRowHeight(SHIFT_ROW_START);
+        const h = copiedToWork.getRowHeight(
+          SHIFT_TEMPLATE_SHEET.ROWS.DATA_START
+        );
         copiedToWork.setRowHeights(
-          SHIFT_ROW_MEMBERS,
-          SHIFT_ROW_END - SHIFT_ROW_MEMBERS + 1,
+          SHIFT_TEMPLATE_SHEET.ROWS.MEMBERS,
+          SHIFT_TEMPLATE_SHEET.ROWS.DATA_END -
+            SHIFT_TEMPLATE_SHEET.ROWS.MEMBERS +
+            1,
           Math.floor(h * 1.5)
         );
 
@@ -233,8 +241,8 @@ function shareOnlyOneShift() {
 
   const copied = dailySheet.copyTo(shareFile).setName(dateStr);
   copied.hideRows(
-    SHIFT_ROW_START_TIME,
-    SHIFT_ROW_NOTE - SHIFT_ROW_START_TIME + 1
+    SHIFT_TEMPLATE_SHEET.ROWS.START_TIME,
+    SHIFT_TEMPLATE_SHEET.ROWS.NOTE - SHIFT_TEMPLATE_SHEET.ROWS.START_TIME + 1
   );
   clearBackgrounds(copied);
 
@@ -274,14 +282,14 @@ function shareOnlyOneShift() {
 
   const pdfSheet = dailySheet.copyTo(workSS).setName(dateStr);
   pdfSheet.hideRows(
-    SHIFT_ROW_START_TIME,
-    SHIFT_ROW_NOTE - SHIFT_ROW_START_TIME + 1
+    SHIFT_TEMPLATE_SHEET.ROWS.START_TIME,
+    SHIFT_TEMPLATE_SHEET.ROWS.NOTE - SHIFT_TEMPLATE_SHEET.ROWS.START_TIME + 1
   );
   clearBackgrounds(pdfSheet);
-  const h = pdfSheet.getRowHeight(SHIFT_ROW_START);
+  const h = pdfSheet.getRowHeight(SHIFT_TEMPLATE_SHEET.ROWS.DATA_START);
   pdfSheet.setRowHeights(
-    SHIFT_ROW_MEMBERS,
-    SHIFT_ROW_END - SHIFT_ROW_MEMBERS + 1,
+    SHIFT_TEMPLATE_SHEET.ROWS.MEMBERS,
+    SHIFT_TEMPLATE_SHEET.ROWS.DATA_END - SHIFT_TEMPLATE_SHEET.ROWS.MEMBERS + 1,
     Math.floor(h * 1.5)
   );
 
