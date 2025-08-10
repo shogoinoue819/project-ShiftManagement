@@ -308,3 +308,67 @@ const WORK_CALCULATION_FORMULAS = {
     `,
   },
 };
+
+// ===== ユーティリティ関数用定数 =====
+const UTILS_CONSTANTS = {
+  // 列・行の基本設定
+  COLUMNS: {
+    ID_AND_NAME: 2, // ID列と氏名列の2列
+    ID_ONLY: 1, // ID列のみの1列
+    DATE_ONLY: 1, // 日付列のみの1列
+  },
+
+  // 行の基本設定
+  ROWS: {
+    START_INDEX: 1, // 開始行インデックス
+    MIN_INDEX: 1, // 最小行インデックス
+  },
+
+  // 日付・時間の制限値
+  DATE_LIMITS: {
+    MIN_MONTH: 1, // 最小月
+    MAX_MONTH: 12, // 最大月
+    MIN_DAY: 1, // 最小日
+    MAX_DAY: 31, // 最大日
+  },
+
+  // 時間の制限値
+  TIME_LIMITS: {
+    MIN_HOUR: 0, // 最小時
+    MAX_HOUR: 23, // 最大時
+    MIN_MINUTE: 0, // 最小分
+    MAX_MINUTE: 59, // 最大分
+  },
+
+  // 文字・ID生成
+  ID_GENERATION: {
+    MEMBER_ID_LENGTH: 6, // メンバーIDの長さ
+    ALPHABET_START: 65, // アルファベット開始コード（A）
+    ALPHABET_BASE: 26, // アルファベット基数
+  },
+
+  // デフォルト値
+  DEFAULTS: {
+    EMPTY_STRING: "", // 空文字列
+    EMPTY_ARRAY: [], // 空配列
+    EMPTY_OBJECT: {}, // 空オブジェクト
+    NOT_FOUND: -1, // 見つからない場合の値
+    ZERO: 0, // ゼロ値
+  },
+
+  // 色コード
+  COLORS: {
+    WHITE: "#ffffff", // 白色
+    BLACK: "#000000", // 黒色
+  },
+
+  // 日付フォーマット
+  DATE_FORMATS: {
+    DEFAULT: "M/d", // デフォルト日付フォーマット
+  },
+
+  // 正規表現パターン
+  REGEX_PATTERNS: {
+    TIME_FORMAT: /^(\d{1,2}):(\d{2})$/, // 時間形式（H:mm または HH:mm）
+  },
+};
