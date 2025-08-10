@@ -8,7 +8,7 @@ function onOpen() {
     .addItem("④提出済みメンバーを一括チェック", "checkAllSubmittedMembers")
     .addItem("⑤シフト希望を反映", "reflectShiftForms")
     .addItem("⑥授業割テンプレを反映", "reflectLessonTemplate")
-    .addItem("⑦完成したシフトを共有(一括更新)", "shareShifts")
+    .addItem("⑦完成したシフトを共有(一括更新)", "shareShiftsAll")
     .addItem("⑧開いている日程のシフトを更新(限定更新)", "shareOnlyOneShift")
     .addItem("新規メンバーを追加", "createNewMember")
     .addItem("メンバーを削除", "deleteSelectedMember")
