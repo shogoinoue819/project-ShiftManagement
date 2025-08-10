@@ -20,15 +20,20 @@ function shareShiftsFromManageSheet(manageSheetName) {
   const ssFolder = DriveApp.getFolderById(SHIFT_SS_FOLDER_ID);
 
   // 日程リスト取得
-  const last = getLastRowInCol(manageSheet, MANAGE_DATE_COLUMN);
-  if (last < MANAGE_DATE_ROW_START) return 0;
+  const last = getLastRowInCol(
+    manageSheet,
+    SHIFT_MANAGEMENT_SHEET.DATE_LIST.COL
+  );
+  if (last < SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW) return 0;
 
   const data = manageSheet
     .getRange(
-      MANAGE_DATE_ROW_START,
-      MANAGE_DATE_COLUMN,
-      last - MANAGE_DATE_ROW_START + 1,
-      MANAGE_SHARE_COLUMN - MANAGE_DATE_COLUMN + 1
+      SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW,
+      SHIFT_MANAGEMENT_SHEET.DATE_LIST.COL,
+      last - SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW + 1,
+      SHIFT_MANAGEMENT_SHEET.DATE_LIST.SHARE_COL -
+        SHIFT_MANAGEMENT_SHEET.DATE_LIST.COL +
+        1
     )
     .getValues();
 
@@ -91,7 +96,10 @@ function shareShiftsFromManageSheet(manageSheetName) {
 
         // 「共有済」に更新
         manageSheet
-          .getRange(i + MANAGE_DATE_ROW_START, MANAGE_SHARE_COLUMN)
+          .getRange(
+            i + SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW,
+            SHIFT_MANAGEMENT_SHEET.DATE_LIST.SHARE_COL
+          )
           .setValue(SHARE_TRUE);
         sharedCount++;
         Logger.log(`${manageSheetName} / ${dateStr}: 共有完了`);
@@ -177,14 +185,17 @@ function shareShiftsAll() {
  */
 function findDateRow(manageSheet, dateStr) {
   if (!manageSheet) return null;
-  const last = getLastRowInCol(manageSheet, MANAGE_DATE_COLUMN);
-  if (last < MANAGE_DATE_ROW_START) return null;
+  const last = getLastRowInCol(
+    manageSheet,
+    SHIFT_MANAGEMENT_SHEET.DATE_LIST.COL
+  );
+  if (last < SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW) return null;
 
   const values = manageSheet
     .getRange(
-      MANAGE_DATE_ROW_START,
-      MANAGE_DATE_COLUMN,
-      last - MANAGE_DATE_ROW_START + 1,
+      SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW,
+      SHIFT_MANAGEMENT_SHEET.DATE_LIST.COL,
+      last - SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW + 1,
       1
     )
     .getValues()
@@ -195,7 +206,7 @@ function findDateRow(manageSheet, dateStr) {
     const v = values[i];
     const asStr = v instanceof Date ? formatDateToString(v) : String(v);
     if (asStr === dateStr) {
-      return MANAGE_DATE_ROW_START + i; // 絶対行番号で返す
+      return SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW + i; // 絶対行番号で返す
     }
   }
   return null;
@@ -311,12 +322,16 @@ function shareOnlyOneShift() {
   let updated = false;
   const preRow = findDateRow(manageSheetPre, dateStr);
   if (preRow) {
-    manageSheetPre.getRange(preRow, MANAGE_SHARE_COLUMN).setValue(SHARE_TRUE);
+    manageSheetPre
+      .getRange(preRow, SHIFT_MANAGEMENT_SHEET.DATE_LIST.SHARE_COL)
+      .setValue(SHARE_TRUE);
     updated = true;
   } else {
     const currRow = findDateRow(manageSheet, dateStr);
     if (currRow) {
-      manageSheet.getRange(currRow, MANAGE_SHARE_COLUMN).setValue(SHARE_TRUE);
+      manageSheet
+        .getRange(currRow, SHIFT_MANAGEMENT_SHEET.DATE_LIST.SHARE_COL)
+        .setValue(SHARE_TRUE);
       updated = true;
     }
   }

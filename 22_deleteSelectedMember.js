@@ -56,10 +56,10 @@ function deleteSelectedMember() {
         // A列（ROW_START以降）の日程リストを保存
         const dateValues = manageSheet
           .getRange(
-            MANAGE_DATE_ROW_START,
-            MANAGE_DATE_COLUMN,
-            getLastRowInCol(manageSheet, MANAGE_DATE_COLUMN) -
-              MANAGE_DATE_ROW_START +
+            SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW,
+            SHIFT_MANAGEMENT_SHEET.DATE_LIST.COL,
+            getLastRowInCol(manageSheet, SHIFT_MANAGEMENT_SHEET.DATE_LIST.COL) -
+              SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW +
               1,
             1
           )
@@ -69,8 +69,8 @@ function deleteSelectedMember() {
         // 日程リストをA列に書き戻し
         manageSheet
           .getRange(
-            MANAGE_DATE_ROW_START,
-            MANAGE_DATE_COLUMN,
+            SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW,
+            SHIFT_MANAGEMENT_SHEET.DATE_LIST.COL,
             dateValues.length,
             1
           )
@@ -84,10 +84,13 @@ function deleteSelectedMember() {
         // A列（ROW_START以降）の日程リストを保存
         const dateValuesPre = manageSheetPre
           .getRange(
-            MANAGE_DATE_ROW_START,
-            MANAGE_DATE_COLUMN,
-            getLastRowInCol(manageSheetPre, MANAGE_DATE_COLUMN) -
-              MANAGE_DATE_ROW_START +
+            SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW,
+            SHIFT_MANAGEMENT_SHEET.DATE_LIST.COL,
+            getLastRowInCol(
+              manageSheetPre,
+              SHIFT_MANAGEMENT_SHEET.DATE_LIST.COL
+            ) -
+              SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW +
               1,
             1
           )
@@ -97,8 +100,8 @@ function deleteSelectedMember() {
         // 日程リストをA列に書き戻し
         manageSheetPre
           .getRange(
-            MANAGE_DATE_ROW_START,
-            MANAGE_DATE_COLUMN,
+            SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW,
+            SHIFT_MANAGEMENT_SHEET.DATE_LIST.COL,
             dateValuesPre.length,
             1
           )

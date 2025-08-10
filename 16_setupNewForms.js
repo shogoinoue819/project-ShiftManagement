@@ -10,7 +10,10 @@ function setupNewForms() {
 
   // 【追加】日程リストの先頭日付を取得し、ユーザー確認
   const firstDateValue = sheetPre
-    .getRange(MANAGE_DATE_ROW_START, MANAGE_DATE_COLUMN)
+    .getRange(
+      SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW,
+      SHIFT_MANAGEMENT_SHEET.DATE_LIST.COL
+    )
     .getValue();
   if (!(firstDateValue instanceof Date)) {
     throw new Error("❌ 日程リストに日付が正しく設定されていません");

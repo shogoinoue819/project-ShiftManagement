@@ -22,13 +22,23 @@ function reflectDateList() {
   // B列（完了チェック）を FALSE で初期化
   const falseValues = Array(numDates).fill([false]);
   manageSheet
-    .getRange(MANAGE_DATE_ROW_START, MANAGE_COMPLETE_COLUMN, numDates, 1)
+    .getRange(
+      SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW,
+      SHIFT_MANAGEMENT_SHEET.DATE_LIST.COMPLETE_COL,
+      numDates,
+      1
+    )
     .setValues(falseValues);
 
   // C列（共有ステータス）を "未共有" で初期化
   const shareValues = Array(numDates).fill([`${SHARE_FALSE}`]);
   manageSheet
-    .getRange(MANAGE_DATE_ROW_START, MANAGE_SHARE_COLUMN, numDates, 1)
+    .getRange(
+      SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW,
+      SHIFT_MANAGEMENT_SHEET.DATE_LIST.SHARE_COL,
+      numDates,
+      1
+    )
     .setValues(shareValues);
 
   // 不要な行を削除

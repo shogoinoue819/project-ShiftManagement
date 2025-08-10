@@ -107,13 +107,16 @@ function getOrderByDate(date) {
   // 引数がDate型なら "M/d" 形式に変換、文字列ならそのまま使う
   const dateStr = date instanceof Date ? formatDateToString(date, "M/d") : date;
   // 日程リストの最終行を取得
-  const lastRow = getLastRowInCol(manageSheet, MANAGE_DATE_COLUMN);
+  const lastRow = getLastRowInCol(
+    manageSheet,
+    SHIFT_MANAGEMENT_SHEET.DATE_LIST.COL
+  );
   // 日程データを取得
   const dateValues = manageSheet
     .getRange(
-      MANAGE_DATE_ROW_START,
-      MANAGE_DATE_COLUMN,
-      lastRow - MANAGE_DATE_ROW_START + 1,
+      SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW,
+      SHIFT_MANAGEMENT_SHEET.DATE_LIST.COL,
+      lastRow - SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW + 1,
       1
     )
     .getValues();
@@ -197,12 +200,15 @@ function normalizeTimeToDate(baseDate, timeValue) {
 
 // 日程リスト作成
 function getDateList() {
-  const lastRow = getLastRowInCol(manageSheet, MANAGE_DATE_COLUMN);
+  const lastRow = getLastRowInCol(
+    manageSheet,
+    SHIFT_MANAGEMENT_SHEET.DATE_LIST.COL
+  );
   const dateRange = manageSheet
     .getRange(
-      MANAGE_DATE_ROW_START,
-      MANAGE_DATE_COLUMN,
-      lastRow - MANAGE_DATE_ROW_START + 1,
+      SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW,
+      SHIFT_MANAGEMENT_SHEET.DATE_LIST.COL,
+      lastRow - SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW + 1,
       1
     )
     .getValues();
