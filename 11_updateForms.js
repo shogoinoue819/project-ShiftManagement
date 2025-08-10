@@ -23,11 +23,21 @@ function updateForms() {
 
   // チェック列をリセット
   manageSheet
-    .getRange(ROW_START, COLUMN_CHECK, Object.keys(memberMap).length, 1)
+    .getRange(
+      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW,
+      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.CHECK_COL,
+      Object.keys(memberMap).length,
+      1
+    )
     .setValue(false);
   // 反映ステータス列をリセット
   manageSheet
-    .getRange(ROW_START, COLUMN_REFLECT, Object.keys(memberMap).length, 1)
+    .getRange(
+      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW,
+      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.REFLECT_COL,
+      Object.keys(memberMap).length,
+      1
+    )
     .setValue(REFLECT_FALSE);
 
   // テンプレートファイルとシフト希望表テンプレートシートを取得

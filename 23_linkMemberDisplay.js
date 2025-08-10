@@ -4,12 +4,15 @@ function linkMemberDisplay() {
   const [ss, manageSheet, templateSheet, allSheets, ui] = getCommonSheets();
 
   // 最終行を取得
-  const lastRow = getLastRowInCol(manageSheet, COLUMN_START);
+  const lastRow = getLastRowInCol(
+    manageSheet,
+    SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_COL
+  );
   // 表示名リストを取得
   const nameRange = manageSheet.getRange(
-    ROW_START,
-    COLUMN_DISPLAYNAME,
-    lastRow - ROW_START + 1,
+    SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW,
+    SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.DISPLAY_NAME_COL,
+    lastRow - SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW + 1,
     1
   );
   const rawNames = nameRange.getValues().flat();

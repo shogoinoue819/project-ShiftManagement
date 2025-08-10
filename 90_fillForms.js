@@ -21,23 +21,38 @@ function fillForms() {
   ];
 
   // 最終行を取得
-  const lastRow = getLastRowInCol(manageSheet, COLUMN_START);
+  const lastRow = getLastRowInCol(
+    manageSheet,
+    SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_COL
+  );
   // IDと氏名のデータを取得
   const data = manageSheet
     .getRange(
-      ROW_START,
-      COLUMN_ID,
-      lastRow - ROW_START + 1,
-      COLUMN_NAME - COLUMN_ID + 1
+      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW,
+      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.ID_COL,
+      lastRow - SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW + 1,
+      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.NAME_COL -
+        SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.ID_COL +
+        1
     )
     .getValues();
   // URLデータを取得
   const urls = manageSheet
-    .getRange(ROW_START, COLUMN_URL, lastRow - ROW_START + 1, 1)
+    .getRange(
+      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW,
+      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.URL_COL,
+      lastRow - SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW + 1,
+      1
+    )
     .getFormulas();
   // 提出ステータスデータを取得
   const submits = manageSheet
-    .getRange(ROW_START, COLUMN_SUBMIT, lastRow - ROW_START + 1, 1)
+    .getRange(
+      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW,
+      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.SUBMIT_COL,
+      lastRow - SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW + 1,
+      1
+    )
     .getValues();
 
   // メンバーマップ作成(提出ステータス付き)

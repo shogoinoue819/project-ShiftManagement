@@ -65,7 +65,9 @@ function deleteSelectedMember() {
           )
           .getValues();
         // 対象の行を deleteRow
-        manageSheet.deleteRow(order + ROW_START);
+        manageSheet.deleteRow(
+          order + SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW
+        );
         // 日程リストをA列に書き戻し
         manageSheet
           .getRange(
@@ -96,7 +98,9 @@ function deleteSelectedMember() {
           )
           .getValues();
         // 対象の行を deleteRow
-        manageSheetPre.deleteRow(order + ROW_START);
+        manageSheetPre.deleteRow(
+          order + SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW
+        );
         // 日程リストをA列に書き戻し
         manageSheetPre
           .getRange(

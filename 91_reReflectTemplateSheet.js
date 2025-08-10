@@ -12,9 +12,17 @@ function reReflectTemplateSheet() {
   let count = 0;
 
   // 提出ステータス列を取得（提出列は SUBMIT 列）
-  const lastRow = getLastRowInCol(manageSheet, COLUMN_START);
+  const lastRow = getLastRowInCol(
+    manageSheet,
+    SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_COL
+  );
   const submitValues = manageSheet
-    .getRange(ROW_START, COLUMN_SUBMIT, lastRow - ROW_START + 1, 1)
+    .getRange(
+      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW,
+      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.SUBMIT_COL,
+      lastRow - SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW + 1,
+      1
+    )
     .getValues()
     .flat();
 

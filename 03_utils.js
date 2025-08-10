@@ -63,10 +63,18 @@ function generateMemberId() {
 // IDから氏名を取得するメソッド
 function getNameById(id) {
   // 最終行を取得
-  const lastRow = getLastRowInCol(manageSheet, COLUMN_START);
+  const lastRow = getLastRowInCol(
+    manageSheet,
+    SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_COL
+  );
   // メンバーリストからデータを取得[[id, 氏名], ...]
   const data = manageSheet
-    .getRange(ROW_START, COLUMN_ID, lastRow - ROW_START + 1, 2)
+    .getRange(
+      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW,
+      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.ID_COL,
+      lastRow - SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW + 1,
+      2
+    )
     .getValues();
   // 引数IDとIDが一致するデータを探す
   const match = data.find(([vId]) => String(vId) === String(id));
@@ -77,10 +85,18 @@ function getNameById(id) {
 // 氏名からIDを取得するメソッド
 function getIdByName(name) {
   // 最終行を取得
-  const lastRow = getLastRowInCol(manageSheet, COLUMN_START);
+  const lastRow = getLastRowInCol(
+    manageSheet,
+    SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_COL
+  );
   // メンバーリストからデータを取得[[id, 氏名], ...]
   const data = manageSheet
-    .getRange(ROW_START, COLUMN_ID, lastRow - ROW_START + 1, 2)
+    .getRange(
+      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW,
+      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.ID_COL,
+      lastRow - SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW + 1,
+      2
+    )
     .getValues();
   // 引数氏名と氏名が一致するものを探す
   const match = data.find(([, vName]) => String(vName) === String(name));
@@ -91,10 +107,18 @@ function getIdByName(name) {
 // IDからorderを取得するメソッド
 function getOrderById(id) {
   // 最終行を取得
-  const lastRow = getLastRowInCol(manageSheet, COLUMN_START);
+  const lastRow = getLastRowInCol(
+    manageSheet,
+    SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_COL
+  );
   // メンバーリストからデータを取得[[id], ...]
   const data = manageSheet
-    .getRange(ROW_START, COLUMN_ID, lastRow - ROW_START + 1, 1)
+    .getRange(
+      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW,
+      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.ID_COL,
+      lastRow - SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW + 1,
+      1
+    )
     .getValues();
   // IDを検索して、その行インデックス（0始まり）を取得
   const index = data.findIndex(([vId]) => String(vId) === String(id));
@@ -220,14 +244,27 @@ function getDateList() {
 
 // メンバーマップ作成
 function createMemberMap() {
-  const lastRow = getLastRowInCol(manageSheet, COLUMN_START);
+  const lastRow = getLastRowInCol(
+    manageSheet,
+    SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_COL
+  );
   // IDと氏名だけ取得（必要列は2列）
   const data = manageSheet
-    .getRange(ROW_START, COLUMN_ID, lastRow - ROW_START + 1, 2)
+    .getRange(
+      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW,
+      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.ID_COL,
+      lastRow - SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW + 1,
+      2
+    )
     .getValues();
   // URL列をformulasで取得（HYPERLINK保持）
   const urls = manageSheet
-    .getRange(ROW_START, COLUMN_URL, lastRow - ROW_START + 1, 1)
+    .getRange(
+      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW,
+      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.URL_COL,
+      lastRow - SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW + 1,
+      1
+    )
     .getFormulas();
 
   const memberMap = {};
