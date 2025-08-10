@@ -144,29 +144,45 @@ function createNewMember() {
     .getRange(newRow, COLUMN_URL)
     .setFormula(`=HYPERLINK("${personalUrl}", "シートリンク")`);
   // 勤務日数①をセット
-  manageSheet.getRange(newRow, COLUMN_WORK_DATES_1).setFormula(WORK_DATES_1);
+  manageSheet
+    .getRange(newRow, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_DATES_1_COL)
+    .setFormula(WORK_DATES_1);
   // 労働時間①をセット
-  manageSheet.getRange(newRow, COLUMN_WORK_TIMES_1).setFormula(WORK_TIMES_1);
+  manageSheet
+    .getRange(newRow, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_TIMES_1_COL)
+    .setFormula(WORK_TIMES_1);
   // 勤務日数②をセット
-  manageSheet.getRange(newRow, COLUMN_WORK_DATES_2).setFormula(WORK_DATES_2);
+  manageSheet
+    .getRange(newRow, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_DATES_2_COL)
+    .setFormula(WORK_DATES_2);
   // 労働時間②をセット
-  manageSheet.getRange(newRow, COLUMN_WORK_TIMES_2).setFormula(WORK_TIMES_2);
+  manageSheet
+    .getRange(newRow, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_TIMES_2_COL)
+    .setFormula(WORK_TIMES_2);
   // 勤務日数③をセット
-  manageSheet.getRange(newRow, COLUMN_WORK_DATES_3).setFormula(WORK_DATES_3);
+  manageSheet
+    .getRange(newRow, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_DATES_3_COL)
+    .setFormula(WORK_DATES_3);
   // 労働時間③をセット
-  manageSheet.getRange(newRow, COLUMN_WORK_TIMES_3).setFormula(WORK_TIMES_3);
+  manageSheet
+    .getRange(newRow, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_TIMES_3_COL)
+    .setFormula(WORK_TIMES_3);
   // 勤務日数④をセット
-  manageSheet.getRange(newRow, COLUMN_WORK_DATES_4).setFormula(WORK_DATES_4);
+  manageSheet
+    .getRange(newRow, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_DATES_4_COL)
+    .setFormula(WORK_DATES_4);
   // 労働時間④をセット
-  manageSheet.getRange(newRow, COLUMN_WORK_TIMES_4).setFormula(WORK_TIMES_4);
+  manageSheet
+    .getRange(newRow, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_TIMES_4_COL)
+    .setFormula(WORK_TIMES_4);
   // 勤務日数希望をセット
   const infoCell = columnToLetter(FORM_COLUMN_INFO) + FORM_ROW_HEAD;
   manageSheet
-    .getRange(newRow, COLUMN_WORK_DATES_REQ)
+    .getRange(newRow, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_DATES_REQUEST_COL)
     .setFormula(`=INDIRECT("'" & ${nameColLetter}${newRow} & "'!${infoCell}")`);
 
   // // メアドをセット
-  // manageSheet.getRange(newRow, COLUMN_EMAIL).setValue(email);
+  // manageSheet.getRange(newRow, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.EMAIL_COL).setValue(email);
 
   // ===== 前回用管理シート =====
 
@@ -199,39 +215,42 @@ function createNewMember() {
     .setFormula(`=HYPERLINK("${personalUrl}", "シートリンク")`);
   // 勤務日数①をセット
   manageSheetPre
-    .getRange(newRowPre, COLUMN_WORK_DATES_1)
+    .getRange(newRowPre, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_DATES_1_COL)
     .setFormula(WORK_DATES_1);
   // 労働時間①をセット
   manageSheetPre
-    .getRange(newRowPre, COLUMN_WORK_TIMES_1)
+    .getRange(newRowPre, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_TIMES_1_COL)
     .setFormula(WORK_TIMES_1);
   // 勤務日数②をセット
   manageSheetPre
-    .getRange(newRowPre, COLUMN_WORK_DATES_2)
+    .getRange(newRowPre, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_DATES_2_COL)
     .setFormula(WORK_DATES_2);
   // 労働時間②をセット
   manageSheetPre
-    .getRange(newRowPre, COLUMN_WORK_TIMES_2)
+    .getRange(newRowPre, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_TIMES_2_COL)
     .setFormula(WORK_TIMES_2);
   // 勤務日数③をセット
   manageSheetPre
-    .getRange(newRowPre, COLUMN_WORK_DATES_3)
+    .getRange(newRowPre, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_DATES_3_COL)
     .setFormula(WORK_DATES_3);
   // 労働時間③をセット
   manageSheetPre
-    .getRange(newRowPre, COLUMN_WORK_TIMES_3)
+    .getRange(newRowPre, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_TIMES_3_COL)
     .setFormula(WORK_TIMES_3);
   // 勤務日数④をセット
   manageSheetPre
-    .getRange(newRowPre, COLUMN_WORK_DATES_4)
+    .getRange(newRowPre, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_DATES_4_COL)
     .setFormula(WORK_DATES_4);
   // 労働時間④をセット
   manageSheetPre
-    .getRange(newRowPre, COLUMN_WORK_TIMES_4)
+    .getRange(newRowPre, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_TIMES_4_COL)
     .setFormula(WORK_TIMES_4);
   // 勤務日数希望をセット
   manageSheetPre
-    .getRange(newRowPre, COLUMN_WORK_DATES_REQ)
+    .getRange(
+      newRowPre,
+      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_DATES_REQUEST_COL
+    )
     .setFormula(
       `=INDIRECT("'" & ${nameColLetter}${newRowPre} & "'!${infoCell}")`
     );
