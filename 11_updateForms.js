@@ -60,10 +60,17 @@ function updateForms() {
       }
 
       // === ② 現在のシフト希望表を「前回分」にリネーム＆保護 ===
-      const currSheet = ss.getSheetByName(FORM_SHEET_NAME);
-      if (!currSheet) throw new Error("❌ シフト希望表シートが存在しません");
-      currSheet.setName(FORM_PREVIOUS_SHEET_NAME);
-      protectSheet(currSheet, "前回分シートのロック");
+      let currSheet = ss.getSheetByName(FORM_SHEET_NAME);
+      if (!currSheet) {
+        // 現在のシフト希望表が存在しない場合は、テンプレートからコピーして作成
+        currSheet = formTemplateSheet.copyTo(ss);
+        currSheet.setName(FORM_PREVIOUS_SHEET_NAME);
+        protectSheet(currSheet, "前回分シートのロック");
+        Logger.log(`📝 テンプレートから前回分シートを作成: ${name}`);
+      } else {
+        currSheet.setName(FORM_PREVIOUS_SHEET_NAME);
+        protectSheet(currSheet, "前回分シートのロック");
+      }
 
       // === ③ 新しい提出用シートを作成 ===
       let newFormSheet = prevSheet ? prevSheet : formTemplateSheet.copyTo(ss);
@@ -79,13 +86,19 @@ function updateForms() {
       }
 
       // === ④ 「今後の勤務希望」シートの取得 ===
-      const infoSheet = ss.getSheetByName(FORM_INFO_SHEET_NAME);
-      if (!infoSheet) throw new Error("❌ 今後の勤務希望シートが存在しません");
-      // 🔓 シート保護を解除
-      const protections = infoSheet.getProtections(
-        SpreadsheetApp.ProtectionType.SHEET
-      );
-      protections.forEach((p) => p.remove());
+      let infoSheet = ss.getSheetByName(FORM_INFO_SHEET_NAME);
+      if (!infoSheet) {
+        // 今後の勤務希望シートが存在しない場合は、テンプレートからコピーして作成
+        infoSheet = templateSheet.copyTo(ss);
+        infoSheet.setName(FORM_INFO_SHEET_NAME);
+        Logger.log(`📝 テンプレートから今後の勤務希望シートを作成: ${name}`);
+      } else {
+        // 🔓 シート保護を解除
+        const protections = infoSheet.getProtections(
+          SpreadsheetApp.ProtectionType.SHEET
+        );
+        protections.forEach((p) => p.remove());
+      }
       // リセット
       infoSheet.getRange("D1").clearContent(); // 希望勤務日数
       infoSheet.getRange("B5:C7").clearContent(); // 校舎情報
