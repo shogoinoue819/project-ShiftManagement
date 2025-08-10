@@ -1,6 +1,6 @@
 /**
  * 管理シート名を指定して共有処理を実行（前回分/現在分 どちらでも可）
- * @param {string} manageSheetName - 例: MANAGE_SHEET_PRE or MANAGE_SHEET
+ * @param {string} manageSheetName - 例: SHEET_NAMES.SHIFT_MANAGEMENT_PREVIOUS or SHEET_NAMES.SHIFT_MANAGEMENT
  * @return {number} sharedCount - 共有した日数
  */
 function shareShiftsFromManageSheet(manageSheetName) {
@@ -8,14 +8,16 @@ function shareShiftsFromManageSheet(manageSheetName) {
   const [ss, , , allSheets, ui] = getCommonSheets(); // manageSheetは後で取り直す
   const manageSheet = ss.getSheetByName(manageSheetName);
   if (!manageSheet) {
-    ui.alert(`管理シート「${manageSheetName}」が見つかりません。処理を中断します。`);
+    ui.alert(
+      `管理シート「${manageSheetName}」が見つかりません。処理を中断します。`
+    );
     return 0;
   }
 
   // 共有先ファイル・保存フォルダ
   const shareFile = SpreadsheetApp.openById(SHARE_FILE_ID);
   const pdfFolder = DriveApp.getFolderById(SHIFT_PDF_FOLDER_ID);
-  const ssFolder  = DriveApp.getFolderById(SHIFT_SS_FOLDER_ID);
+  const ssFolder = DriveApp.getFolderById(SHIFT_SS_FOLDER_ID);
 
   // 日程リスト取得
   const last = getLastRowInCol(manageSheet, MANAGE_DATE_COLUMN);
@@ -32,7 +34,11 @@ function shareShiftsFromManageSheet(manageSheetName) {
 
   // 共有用の空スプレッドシートを作成（このバッチ分まとめPDF化）
   const now = new Date();
-  const timestamp = Utilities.formatDate(now, "Asia/Tokyo", "yyyy-MM-dd_HH-mm-ss");
+  const timestamp = Utilities.formatDate(
+    now,
+    "Asia/Tokyo",
+    "yyyy-MM-dd_HH-mm-ss"
+  );
   const workSS = SpreadsheetApp.create(`シフト作成日時_${timestamp}`);
   workSS.setSpreadsheetLocale("ja_JP");
   const workId = workSS.getId();
@@ -53,7 +59,8 @@ function shareShiftsFromManageSheet(manageSheetName) {
       try {
         // 元のシート
         const dailySheet = ss.getSheetByName(sheetName);
-        if (!dailySheet) throw new Error(`シート「${sheetName}」が見つかりません`);
+        if (!dailySheet)
+          throw new Error(`シート「${sheetName}」が見つかりません`);
 
         // 共有スプレッドシートへコピー（既存同名があれば置換）
         const exists = shareFile.getSheetByName(sheetName);
@@ -83,10 +90,11 @@ function shareShiftsFromManageSheet(manageSheetName) {
         );
 
         // 「共有済」に更新
-        manageSheet.getRange(i + MANAGE_DATE_ROW_START, MANAGE_SHARE_COLUMN).setValue(SHARE_TRUE);
+        manageSheet
+          .getRange(i + MANAGE_DATE_ROW_START, MANAGE_SHARE_COLUMN)
+          .setValue(SHARE_TRUE);
         sharedCount++;
         Logger.log(`${manageSheetName} / ${dateStr}: 共有完了`);
-
       } catch (e) {
         Logger.log(`エラー (${manageSheetName} / ${sheetName}): ${e.message}`);
       }
@@ -97,9 +105,9 @@ function shareShiftsFromManageSheet(manageSheetName) {
     // 共有先のシートを M/d で抽出→日付ソート→並べ替え
     const sheets = shareFile.getSheets();
     const sorted = sheets
-      .filter(s => /^\d{1,2}\/\d{1,2}$/.test(s.getName()))
-      .map(s => ({ sheet: s, date: formatStringToDate(s.getName()) }))
-      .filter(x => x.date !== null)
+      .filter((s) => /^\d{1,2}\/\d{1,2}$/.test(s.getName()))
+      .map((s) => ({ sheet: s, date: formatStringToDate(s.getName()) }))
+      .filter((x) => x.date !== null)
       .sort((a, b) => a.date - b.date);
 
     sorted.forEach((x, idx) => {
@@ -115,27 +123,30 @@ function shareShiftsFromManageSheet(manageSheetName) {
 
     // PDF化（1ファイルにまとめる）
     const url =
-      'https://docs.google.com/spreadsheets/d/' + workId +
-      '/export?format=pdf' +
-      '&portrait=false' +
-      '&size=A4' +
-      '&fitw=true' +
-      '&scale=4' +
-      '&sheetnames=false' +
-      '&printtitle=false' +
-      '&pagenumbers=false' +
-      '&gridlines=false' +
-      '&fzr=false';
+      "https://docs.google.com/spreadsheets/d/" +
+      workId +
+      "/export?format=pdf" +
+      "&portrait=false" +
+      "&size=A4" +
+      "&fitw=true" +
+      "&scale=4" +
+      "&sheetnames=false" +
+      "&printtitle=false" +
+      "&pagenumbers=false" +
+      "&gridlines=false" +
+      "&fzr=false";
 
     const token = ScriptApp.getOAuthToken();
     const res = UrlFetchApp.fetch(url, {
-      headers: { Authorization: 'Bearer ' + token }
+      headers: { Authorization: "Bearer " + token },
     });
 
     const pdfBlob = res.getBlob().setName(`シフト作成日時_${timestamp}`);
     pdfFolder.createFile(pdfBlob);
 
-    ui.alert(`✅ 「${manageSheetName}」から ${sharedCount} 日分を共有しました。`);
+    ui.alert(
+      `✅ 「${manageSheetName}」から ${sharedCount} 日分を共有しました。`
+    );
   } else {
     // 共有対象なし → ワークSSは削除
     DriveApp.getFileById(workId).setTrashed(true);
@@ -146,18 +157,19 @@ function shareShiftsFromManageSheet(manageSheetName) {
 }
 
 /**
- * ① 前回分（MANAGE_SHEET_PRE）→ ② 現在分（MANAGE_SHEET）の順で共有
+ * ① 前回分（SHIFT_MANAGEMENT_PREVIOUS）→ ② 現在分（SHIFT_MANAGEMENT）の順で共有
  * 両方に対象があるケースは稀だが想定して順次処理する
  */
 function shareShiftsAll() {
-  const totalPre  = shareShiftsFromManageSheet(MANAGE_SHEET_PRE);
-  const totalCurr = shareShiftsFromManageSheet(MANAGE_SHEET);
+  const totalPre = shareShiftsFromManageSheet(
+    SHEET_NAMES.SHIFT_MANAGEMENT_PREVIOUS
+  );
+  const totalCurr = shareShiftsFromManageSheet(SHEET_NAMES.SHIFT_MANAGEMENT);
   const ui = SpreadsheetApp.getUi();
-  ui.alert(`完了：前回分 ${totalPre} 日、現在分 ${totalCurr} 日を共有しました。`);
+  ui.alert(
+    `完了：前回分 ${totalPre} 日、現在分 ${totalCurr} 日を共有しました。`
+  );
 }
-
-
-
 
 /**
  * 管理シート（前回分→現在分の順）で該当日付の行番号を探す
@@ -169,14 +181,19 @@ function findDateRow(manageSheet, dateStr) {
   if (last < MANAGE_DATE_ROW_START) return null;
 
   const values = manageSheet
-    .getRange(MANAGE_DATE_ROW_START, MANAGE_DATE_COLUMN, last - MANAGE_DATE_ROW_START + 1, 1)
+    .getRange(
+      MANAGE_DATE_ROW_START,
+      MANAGE_DATE_COLUMN,
+      last - MANAGE_DATE_ROW_START + 1,
+      1
+    )
     .getValues()
-    .map(v => v[0]);
+    .map((v) => v[0]);
 
   // セルが Date の可能性にも対応
   for (let i = 0; i < values.length; i++) {
     const v = values[i];
-    const asStr = (v instanceof Date) ? formatDateToString(v) : String(v);
+    const asStr = v instanceof Date ? formatDateToString(v) : String(v);
     if (asStr === dateStr) {
       return MANAGE_DATE_ROW_START + i; // 絶対行番号で返す
     }
@@ -204,15 +221,18 @@ function shareOnlyOneShift() {
   if (existing) shareFile.deleteSheet(existing);
 
   const copied = dailySheet.copyTo(shareFile).setName(dateStr);
-  copied.hideRows(SHIFT_ROW_START_TIME, SHIFT_ROW_NOTE - SHIFT_ROW_START_TIME + 1);
+  copied.hideRows(
+    SHIFT_ROW_START_TIME,
+    SHIFT_ROW_NOTE - SHIFT_ROW_START_TIME + 1
+  );
   clearBackgrounds(copied);
 
   // 並べ替え（M/dのシートを日付昇順）
   const sheets = shareFile.getSheets();
   const sorted = sheets
-    .filter(s => /^\d{1,2}\/\d{1,2}$/.test(s.getName()))
-    .map(s => ({ sheet: s, date: formatStringToDate(s.getName()) }))
-    .filter(x => x.date !== null)
+    .filter((s) => /^\d{1,2}\/\d{1,2}$/.test(s.getName()))
+    .map((s) => ({ sheet: s, date: formatStringToDate(s.getName()) }))
+    .filter((x) => x.date !== null)
     .sort((a, b) => a.date - b.date);
 
   sorted.forEach((x, idx) => {
@@ -222,10 +242,14 @@ function shareOnlyOneShift() {
 
   // ====== PDF 共有（1枚） ======
   const pdfFolder = DriveApp.getFolderById(SHIFT_PDF_FOLDER_ID);
-  const ssFolder  = DriveApp.getFolderById(SHIFT_SS_FOLDER_ID);
+  const ssFolder = DriveApp.getFolderById(SHIFT_SS_FOLDER_ID);
 
   const now = new Date();
-  const timestamp = Utilities.formatDate(now, "Asia/Tokyo", "yyyy-MM-dd_HH-mm-ss");
+  const timestamp = Utilities.formatDate(
+    now,
+    "Asia/Tokyo",
+    "yyyy-MM-dd_HH-mm-ss"
+  );
 
   const workSS = SpreadsheetApp.create(`シフト作成日時_${timestamp}`);
   workSS.setSpreadsheetLocale("ja_JP");
@@ -238,7 +262,10 @@ function shareOnlyOneShift() {
   // workSS.deleteSheet(workSS.getSheets()[0]);
 
   const pdfSheet = dailySheet.copyTo(workSS).setName(dateStr);
-  pdfSheet.hideRows(SHIFT_ROW_START_TIME, SHIFT_ROW_NOTE - SHIFT_ROW_START_TIME + 1);
+  pdfSheet.hideRows(
+    SHIFT_ROW_START_TIME,
+    SHIFT_ROW_NOTE - SHIFT_ROW_START_TIME + 1
+  );
   clearBackgrounds(pdfSheet);
   const h = pdfSheet.getRowHeight(SHIFT_ROW_START);
   pdfSheet.setRowHeights(
@@ -254,26 +281,32 @@ function shareOnlyOneShift() {
     workSS.deleteSheet(ws[0]);
   }
 
-  const url = 'https://docs.google.com/spreadsheets/d/' + workId +
-    '/export?format=pdf' +
-    '&portrait=false' +
-    '&size=A4' +
-    '&fitw=true' +
-    '&scale=4' +
-    '&sheetnames=false' +
-    '&printtitle=false' +
-    '&pagenumbers=false' +
-    '&gridlines=false' +
-    '&fzr=false';
+  const url =
+    "https://docs.google.com/spreadsheets/d/" +
+    workId +
+    "/export?format=pdf" +
+    "&portrait=false" +
+    "&size=A4" +
+    "&fitw=true" +
+    "&scale=4" +
+    "&sheetnames=false" +
+    "&printtitle=false" +
+    "&pagenumbers=false" +
+    "&gridlines=false" +
+    "&fzr=false";
 
   const token = ScriptApp.getOAuthToken();
-  const res = UrlFetchApp.fetch(url, { headers: { Authorization: 'Bearer ' + token } });
+  const res = UrlFetchApp.fetch(url, {
+    headers: { Authorization: "Bearer " + token },
+  });
   const pdfBlob = res.getBlob().setName(`シフト作成日時_${timestamp}`);
   pdfFolder.createFile(pdfBlob);
 
   // ====== 共有済みフラグ更新（前回分→現在分） ======
-  const manageSheetPre = ss.getSheetByName(MANAGE_SHEET_PRE);
-  const manageSheet    = ss.getSheetByName(MANAGE_SHEET);
+  const manageSheetPre = ss.getSheetByName(
+    SHEET_NAMES.SHIFT_MANAGEMENT_PREVIOUS
+  );
+  const manageSheet = ss.getSheetByName(SHEET_NAMES.SHIFT_MANAGEMENT);
 
   let updated = false;
   const preRow = findDateRow(manageSheetPre, dateStr);
@@ -289,11 +322,11 @@ function shareOnlyOneShift() {
   }
 
   if (!updated) {
-    Logger.log(`⚠️ 管理シート上に ${dateStr} が見つからず、共有済みフラグを更新できませんでした。`);
+    Logger.log(
+      `⚠️ 管理シート上に ${dateStr} が見つからず、共有済みフラグを更新できませんでした。`
+    );
   }
 
   Logger.log(`${dateStr}: 完了`);
   ui.alert(`✅ ${dateStr} のシフトを共有＆PDF化しました！`);
 }
-
-

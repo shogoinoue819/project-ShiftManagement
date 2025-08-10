@@ -6,7 +6,7 @@ function reflectDateList() {
 
   // テンプレートファイルを取得
   const templateFile = SpreadsheetApp.openById(TEMPLATE_FILE_ID);
-  const targetSheet = templateFile.getSheetByName(FORM_SHEET_NAME);
+  const targetSheet = templateFile.getSheetByName(SHEET_NAMES.SHIFT_FORM);
   if (!targetSheet) {
     throw new Error("❌ シフト希望表_テンプレート シートが見つかりません");
   }

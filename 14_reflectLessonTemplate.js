@@ -1,26 +1,29 @@
 // 曜日別授業割を反映
 function reflectLessonTemplate() {
-
   // SSをまとめて取得
   const [ss, manageSheet, templateSheet, allSheets, ui] = getCommonSheets();
 
   // 曜日とテンプレート名の対応マップ
   const templateMap = {
-    Mon: LESSON_MON,
-    Tue: LESSON_TUE,
-    Wed: LESSON_WED,
-    Thu: LESSON_THU,
-    Fri: LESSON_FRI
+    Mon: SHEET_NAMES.LESSON_TEMPLATES.MON,
+    Tue: SHEET_NAMES.LESSON_TEMPLATES.TUE,
+    Wed: SHEET_NAMES.LESSON_TEMPLATES.WED,
+    Thu: SHEET_NAMES.LESSON_TEMPLATES.THU,
+    Fri: SHEET_NAMES.LESSON_TEMPLATES.FRI,
   };
   // ターゲットはシフト作成シート
-  const targetSheets = allSheets.filter(s => /^\d{1,2}\/\d{1,2}$/.test(s.getName()));
+  const targetSheets = allSheets.filter((s) =>
+    /^\d{1,2}\/\d{1,2}$/.test(s.getName())
+  );
 
   // 各日程のシフト作成シートにおいて、
-  targetSheets.forEach(dailySheet => {
+  targetSheets.forEach((dailySheet) => {
     // シート名を取得
     const sheetName = dailySheet.getName();
     // A1から日付を取得
-    const date = dailySheet.getRange(SHIFT_ROW_DATE, SHIFT_COLUMN_DATE).getValue();
+    const date = dailySheet
+      .getRange(SHIFT_ROW_DATE, SHIFT_COLUMN_DATE)
+      .getValue();
     // 日付から曜日を取得
     const dayOfWeek = formatDateToString(date, "E"); // Mon ~ Sun
     // 月〜金に含まれる場合のみ処理
@@ -34,9 +37,19 @@ function reflectLessonTemplate() {
       // 取得する列数
       const numCols = dailySheet.getLastColumn() - SHIFT_COLUMN_START + 1;
       // 授業割シートのデータ元範囲を取得
-      const sourceRange = lessonTemplateSheet.getRange(SHIFT_ROW_START, SHIFT_COLUMN_START, SHIFT_ROW_END - SHIFT_ROW_START + 1, numCols);
+      const sourceRange = lessonTemplateSheet.getRange(
+        SHIFT_ROW_START,
+        SHIFT_COLUMN_START,
+        SHIFT_ROW_END - SHIFT_ROW_START + 1,
+        numCols
+      );
       // シフト作成シートの貼り付け先範囲を取得
-      const destRange = dailySheet.getRange(SHIFT_ROW_START, SHIFT_COLUMN_START, SHIFT_ROW_END - SHIFT_ROW_START + 1, numCols);
+      const destRange = dailySheet.getRange(
+        SHIFT_ROW_START,
+        SHIFT_COLUMN_START,
+        SHIFT_ROW_END - SHIFT_ROW_START + 1,
+        numCols
+      );
 
       // 授業割シートの結合セル情報を取得
       const mergedRanges = sourceRange.getMergedRanges();
@@ -50,7 +63,7 @@ function reflectLessonTemplate() {
       // 元の背景（上書き対象）を取得
       const currentBackgrounds = destRange.getBackgrounds();
       // 貼り付け用の新背景配列を元の背景からコピー
-      const newBackgrounds = currentBackgrounds.map(row => [...row]);
+      const newBackgrounds = currentBackgrounds.map((row) => [...row]);
 
       // 各セルにおいて、
       for (let i = 0; i < backgrounds.length; i++) {
@@ -74,15 +87,25 @@ function reflectLessonTemplate() {
       // ※setBorder は別途処理が必要（高度）
 
       // セルの結合
-      mergedRanges.forEach(range => {
+      mergedRanges.forEach((range) => {
         const rowOffset = range.getRow() - SHIFT_ROW_START;
         const colOffset = range.getColumn() - SHIFT_COLUMN_START;
-        const targetRange = dailySheet.getRange(SHIFT_ROW_START + rowOffset, SHIFT_COLUMN_START + colOffset, range.getNumRows(), range.getNumColumns());
+        const targetRange = dailySheet.getRange(
+          SHIFT_ROW_START + rowOffset,
+          SHIFT_COLUMN_START + colOffset,
+          range.getNumRows(),
+          range.getNumColumns()
+        );
         targetRange.merge();
       });
 
       // ボーダーをセット
-      const pastedRange = dailySheet.getRange(SHIFT_ROW_START, SHIFT_COLUMN_START, SHIFT_ROW_END - SHIFT_ROW_START + 1, numCols);
+      const pastedRange = dailySheet.getRange(
+        SHIFT_ROW_START,
+        SHIFT_COLUMN_START,
+        SHIFT_ROW_END - SHIFT_ROW_START + 1,
+        numCols
+      );
       applyBorders(pastedRange);
 
       Logger.log(`テンプレートを適用: ${sheetName}`);
@@ -90,7 +113,4 @@ function reflectLessonTemplate() {
   });
 
   ui.alert("✅ 授業割テンプレを反映しました！");
-  
 }
-
-

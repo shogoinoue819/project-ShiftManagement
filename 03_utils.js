@@ -5,9 +5,9 @@ function getCommonSheets() {
   // SSを取得
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   // シフト管理シートを取得
-  const manageSheet = ss.getSheetByName(MANAGE_SHEET);
+  const manageSheet = ss.getSheetByName(SHEET_NAMES.SHIFT_MANAGEMENT);
   // シフトテンプレートシートを取得
-  const templateSheet = ss.getSheetByName(SHIFT_SHEET_NAME);
+  const templateSheet = ss.getSheetByName(SHEET_NAMES.SHIFT_TEMPLATE);
   // 全てのシートを取得
   const allSheets = ss.getSheets();
   // UIを取得
@@ -18,8 +18,6 @@ function getCommonSheets() {
 
 // SSをまとめて取得
 const [ss, manageSheet, templateSheet, allSheets, ui] = getCommonSheets();
-
-
 
 // ===== セル処理 =====
 
@@ -36,7 +34,9 @@ function getLastRowInCol(sheet, col) {
 
 // 特定の行の最終列を取得する関数
 function getLastColInRow(sheet, row) {
-  const values = sheet.getRange(row, 1, 1, sheet.getMaxColumns()).getValues()[0];
+  const values = sheet
+    .getRange(row, 1, 1, sheet.getMaxColumns())
+    .getValues()[0];
   for (let i = values.length - 1; i >= 0; i--) {
     if (values[i] !== "") {
       return i + 1; // インデックスは0スタートなので+1
@@ -45,20 +45,18 @@ function getLastColInRow(sheet, row) {
   return 0; // 空行の場合
 }
 
-
 // ===== ランダムメソッド =====
 
 // ランダムな6桁のメンバーIDを生成するメソッド
 function generateMemberId() {
-  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let randomPart = '';
+  const chars =
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let randomPart = "";
   for (let i = 0; i < 6; i++) {
     randomPart += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return `usr_${randomPart}`;
 }
-
-
 
 // ===== 管理シートリスト処理 =====
 
@@ -67,49 +65,59 @@ function getNameById(id) {
   // 最終行を取得
   const lastRow = getLastRowInCol(manageSheet, COLUMN_START);
   // メンバーリストからデータを取得[[id, 氏名], ...]
-  const data = manageSheet.getRange(ROW_START, COLUMN_ID, lastRow - ROW_START + 1, 2).getValues(); 
+  const data = manageSheet
+    .getRange(ROW_START, COLUMN_ID, lastRow - ROW_START + 1, 2)
+    .getValues();
   // 引数IDとIDが一致するデータを探す
   const match = data.find(([vId]) => String(vId) === String(id));
   // 一致したデータの氏名、なければnullを返す
   return match ? match[1] : null;
 }
 
-
 // 氏名からIDを取得するメソッド
 function getIdByName(name) {
   // 最終行を取得
   const lastRow = getLastRowInCol(manageSheet, COLUMN_START);
   // メンバーリストからデータを取得[[id, 氏名], ...]
-  const data = manageSheet.getRange(ROW_START, COLUMN_ID, lastRow - ROW_START + 1, 2).getValues();
+  const data = manageSheet
+    .getRange(ROW_START, COLUMN_ID, lastRow - ROW_START + 1, 2)
+    .getValues();
   // 引数氏名と氏名が一致するものを探す
   const match = data.find(([, vName]) => String(vName) === String(name));
   // 一致したデータのID、なければnullを返す
   return match ? match[0] : null;
 }
 
-
 // IDからorderを取得するメソッド
 function getOrderById(id) {
   // 最終行を取得
   const lastRow = getLastRowInCol(manageSheet, COLUMN_START);
   // メンバーリストからデータを取得[[id], ...]
-  const data = manageSheet.getRange(ROW_START, COLUMN_ID, lastRow - ROW_START + 1, 1).getValues();
+  const data = manageSheet
+    .getRange(ROW_START, COLUMN_ID, lastRow - ROW_START + 1, 1)
+    .getValues();
   // IDを検索して、その行インデックス（0始まり）を取得
   const index = data.findIndex(([vId]) => String(vId) === String(id));
   //見つからなければ -1 を返す（見つかれば 0,1,2...）
   return index;
 }
 
-
 // 日程リストからorderを取得
 function getOrderByDate(date) {
   // 引数がDate型なら "M/d" 形式に変換、文字列ならそのまま使う
-  const dateStr = (date instanceof Date) ? formatDateToString(date, "M/d") : date;
+  const dateStr = date instanceof Date ? formatDateToString(date, "M/d") : date;
   // 日程リストの最終行を取得
   const lastRow = getLastRowInCol(manageSheet, MANAGE_DATE_COLUMN);
   // 日程データを取得
-  const dateValues = manageSheet.getRange(MANAGE_DATE_ROW_START, MANAGE_DATE_COLUMN, lastRow - MANAGE_DATE_ROW_START + 1, 1).getValues();
-  
+  const dateValues = manageSheet
+    .getRange(
+      MANAGE_DATE_ROW_START,
+      MANAGE_DATE_COLUMN,
+      lastRow - MANAGE_DATE_ROW_START + 1,
+      1
+    )
+    .getValues();
+
   // 日程リストで一致した日付のorderを取得
   const index = dateValues.findIndex(([d]) => {
     if (!(d instanceof Date)) return false;
@@ -118,8 +126,6 @@ function getOrderByDate(date) {
   });
   return index; // 0から始まるorder、見つからなければ -1
 }
-
-
 
 // ===== フォーマッター =====
 
@@ -140,7 +146,6 @@ function formatStringToDate(str) {
   }
 }
 
-
 // 列番号からアルファベットへ変換
 function columnToLetter(column) {
   let temp = "";
@@ -152,7 +157,6 @@ function columnToLetter(column) {
   }
   return letter;
 }
-
 
 // 時間を日付に連結させる
 function normalizeTimeToDate(baseDate, timeValue) {
@@ -189,40 +193,46 @@ function normalizeTimeToDate(baseDate, timeValue) {
   return null;
 }
 
-
-
 // ===== 汎用メソッド =====
 
 // 日程リスト作成
 function getDateList() {
   const lastRow = getLastRowInCol(manageSheet, MANAGE_DATE_COLUMN);
-  const dateRange = manageSheet.getRange(MANAGE_DATE_ROW_START, MANAGE_DATE_COLUMN, lastRow - MANAGE_DATE_ROW_START + 1, 1).getValues();
+  const dateRange = manageSheet
+    .getRange(
+      MANAGE_DATE_ROW_START,
+      MANAGE_DATE_COLUMN,
+      lastRow - MANAGE_DATE_ROW_START + 1,
+      1
+    )
+    .getValues();
   return dateRange
     .flat()
-    .filter(date => date instanceof Date)
-    .map(date => [date]);
+    .filter((date) => date instanceof Date)
+    .map((date) => [date]);
 }
-
 
 // メンバーマップ作成
 function createMemberMap() {
   const lastRow = getLastRowInCol(manageSheet, COLUMN_START);
   // IDと氏名だけ取得（必要列は2列）
-  const data = manageSheet.getRange(ROW_START, COLUMN_ID, lastRow - ROW_START + 1, 2).getValues();
+  const data = manageSheet
+    .getRange(ROW_START, COLUMN_ID, lastRow - ROW_START + 1, 2)
+    .getValues();
   // URL列をformulasで取得（HYPERLINK保持）
-  const urls = manageSheet.getRange(ROW_START, COLUMN_URL, lastRow - ROW_START + 1, 1).getFormulas();
+  const urls = manageSheet
+    .getRange(ROW_START, COLUMN_URL, lastRow - ROW_START + 1, 1)
+    .getFormulas();
 
   const memberMap = {};
   data.forEach(([id, name], i) => {
     memberMap[id] = {
       name,
-      url: urls[i][0]
+      url: urls[i][0],
     };
   });
   return memberMap; // { id1: { name: ..., url: ... }, ... }
 }
-
-
 
 // ===== 背景処理 =====
 
@@ -246,21 +256,28 @@ function clearBackgrounds(sheet) {
   range.setBackgrounds(backgrounds);
 }
 
-
 // ボーダーをセット
 function applyBorders(range) {
   // 結合範囲を取得
   const mergedRanges = range.getMergedRanges();
   // 結合範囲の各セルにおいて
-  mergedRanges.forEach(merged => {
+  mergedRanges.forEach((merged) => {
     // 背景が灰色または白でない場合にだけ枠線を適用
     const bg = merged.getBackground();
     if (bg !== UNAVAILABLE_COLOR && bg !== "#ffffff" && bg !== null) {
-      merged.setBorder(true, true, true, true, true, true, "#000000", SpreadsheetApp.BorderStyle.SOLID);
+      merged.setBorder(
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        "#000000",
+        SpreadsheetApp.BorderStyle.SOLID
+      );
     }
   });
 }
-
 
 // ===== シート処理 =====
 

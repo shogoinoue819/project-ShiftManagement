@@ -17,17 +17,28 @@ function fillForms() {
     ["18:00", "22:00"],
     ["16:00", "22:00"],
     [null, null],
-    [null, null]
+    [null, null],
   ];
 
   // 最終行を取得
   const lastRow = getLastRowInCol(manageSheet, COLUMN_START);
   // IDと氏名のデータを取得
-  const data = manageSheet.getRange(ROW_START, COLUMN_ID, lastRow - ROW_START + 1, COLUMN_NAME - COLUMN_ID + 1).getValues();
+  const data = manageSheet
+    .getRange(
+      ROW_START,
+      COLUMN_ID,
+      lastRow - ROW_START + 1,
+      COLUMN_NAME - COLUMN_ID + 1
+    )
+    .getValues();
   // URLデータを取得
-  const urls = manageSheet.getRange(ROW_START, COLUMN_URL, lastRow - ROW_START + 1, 1).getFormulas();
+  const urls = manageSheet
+    .getRange(ROW_START, COLUMN_URL, lastRow - ROW_START + 1, 1)
+    .getFormulas();
   // 提出ステータスデータを取得
-  const submits = manageSheet.getRange(ROW_START, COLUMN_SUBMIT, lastRow - ROW_START + 1, 1).getValues();
+  const submits = manageSheet
+    .getRange(ROW_START, COLUMN_SUBMIT, lastRow - ROW_START + 1, 1)
+    .getValues();
 
   // メンバーマップ作成(提出ステータス付き)
   const memberMap = {};
@@ -35,7 +46,7 @@ function fillForms() {
     memberMap[id] = {
       name,
       url: urls[i][0],
-      submit: submits[i][0]
+      submit: submits[i][0],
     };
   });
 
@@ -53,7 +64,7 @@ function fillForms() {
       const fileId = match[1];
       const file = SpreadsheetApp.openById(fileId);
       // シフト希望表シートを取得
-      const sheet = file.getSheetByName(FORM_SHEET_NAME);
+      const sheet = file.getSheetByName(SHEET_NAMES.SHIFT_FORM);
       if (!sheet) {
         Logger.log(`⚠️ シートが見つかりません: ${name}`);
         continue;
@@ -63,13 +74,17 @@ function fillForms() {
       // 表開始行以降の全ての行において
       for (let r = FORM_ROW_START; r <= lastRow; r++) {
         // 希望ステータスをランダムにセット
-        const status = statusOptions[Math.floor(Math.random() * statusOptions.length)];
+        const status =
+          statusOptions[Math.floor(Math.random() * statusOptions.length)];
         sheet.getRange(r, FORM_COLUMN_STATUS).setValue(status);
         //　希望ステータスが◯なら
         if (status === STATUS_TRUE) {
           // 開始時間と終了時間をランダムにセット
-          const [start, end] = timeOptions[Math.floor(Math.random() * timeOptions.length)];
-          sheet.getRange(r, FORM_COLUMN_START_TIME, 1, 2).setValues([[start, end]]);
+          const [start, end] =
+            timeOptions[Math.floor(Math.random() * timeOptions.length)];
+          sheet
+            .getRange(r, FORM_COLUMN_START_TIME, 1, 2)
+            .setValues([[start, end]]);
         } else {
           sheet.getRange(r, FORM_COLUMN_START_TIME, 1, 2).clearContent();
         }

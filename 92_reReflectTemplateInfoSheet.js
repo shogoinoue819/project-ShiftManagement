@@ -1,10 +1,10 @@
 // デバッグ用今後の勤務希望テンプレート反映
 function reReflectTemplateInfoSheet() {
   const templateSS = SpreadsheetApp.openById(TEMPLATE_FILE_ID);
-  const templateSheet = templateSS.getSheetByName(FORM_INFO_SHEET_NAME);
+  const templateSheet = templateSS.getSheetByName(SHEET_NAMES.SHIFT_FORM_INFO);
   if (!templateSheet) {
     throw new Error(
-      `❌ テンプレートにシート '${FORM_INFO_SHEET_NAME}' が見つかりません`
+      `❌ テンプレートにシート '${SHEET_NAMES.SHIFT_FORM_INFO}' が見つかりません`
     );
   }
 
@@ -33,14 +33,16 @@ function reReflectTemplateInfoSheet() {
       const memberSS = SpreadsheetApp.openById(fileId);
 
       // 既存の「今後の勤務希望」シートを削除
-      const existingSheet = memberSS.getSheetByName(FORM_INFO_SHEET_NAME);
+      const existingSheet = memberSS.getSheetByName(
+        SHEET_NAMES.SHIFT_FORM_INFO
+      );
       if (existingSheet) {
         memberSS.deleteSheet(existingSheet);
       }
 
       // コピーしてリネーム
       const copiedSheet = templateSheet.copyTo(memberSS);
-      copiedSheet.setName(FORM_INFO_SHEET_NAME);
+      copiedSheet.setName(SHEET_NAMES.SHIFT_FORM_INFO);
       memberSS.setActiveSheet(copiedSheet);
       memberSS.moveActiveSheet(2); // 位置を調整
 

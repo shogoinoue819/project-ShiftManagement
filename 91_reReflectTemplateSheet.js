@@ -1,10 +1,10 @@
 // デバッグ用シフト希望表テンプレート反映
 function reReflectTemplateSheet() {
   const templateSS = SpreadsheetApp.openById(TEMPLATE_FILE_ID);
-  const templateSheet = templateSS.getSheetByName(FORM_SHEET_NAME);
+  const templateSheet = templateSS.getSheetByName(SHEET_NAMES.SHIFT_FORM);
   if (!templateSheet) {
     throw new Error(
-      `❌ テンプレートにシート '${FORM_SHEET_NAME}' が見つかりません`
+      `❌ テンプレートにシート '${SHEET_NAMES.SHIFT_FORM}' が見つかりません`
     );
   }
 
@@ -48,14 +48,14 @@ function reReflectTemplateSheet() {
       const memberSS = SpreadsheetApp.openById(fileId);
 
       // 既存の「シフト希望表」シートを削除
-      const existingSheet = memberSS.getSheetByName(FORM_SHEET_NAME);
+      const existingSheet = memberSS.getSheetByName(SHEET_NAMES.SHIFT_FORM);
       if (existingSheet) {
         memberSS.deleteSheet(existingSheet);
       }
 
       // コピーしてリネーム
       const copiedSheet = templateSheet.copyTo(memberSS);
-      copiedSheet.setName(FORM_SHEET_NAME);
+      copiedSheet.setName(SHEET_NAMES.SHIFT_FORM);
       memberSS.setActiveSheet(copiedSheet);
       memberSS.moveActiveSheet(1); // 位置を調整
 

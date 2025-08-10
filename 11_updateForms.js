@@ -32,7 +32,7 @@ function updateForms() {
 
   // テンプレートファイルとシフト希望表テンプレートシートを取得
   const templateFile = SpreadsheetApp.openById(TEMPLATE_FILE_ID);
-  const formTemplateSheet = templateFile.getSheetByName(FORM_SHEET_NAME);
+  const formTemplateSheet = templateFile.getSheetByName(SHEET_NAMES.SHIFT_FORM);
 
   // テンプレートの値と行列数だけ取得してコピー
   const templateRange = formTemplateSheet.getDataRange();
@@ -51,7 +51,7 @@ function updateForms() {
       const ss = SpreadsheetApp.openById(fileId);
 
       // === ① 「前回分」シートの処理 ===
-      let prevSheet = ss.getSheetByName(FORM_PREVIOUS_SHEET_NAME);
+      let prevSheet = ss.getSheetByName(SHEET_NAMES.SHIFT_FORM_PREVIOUS);
       if (prevSheet) {
         prevSheet.setName("TEMP_OLD");
         prevSheet
@@ -60,21 +60,21 @@ function updateForms() {
       }
 
       // === ② 現在のシフト希望表を「前回分」にリネーム＆保護 ===
-      let currSheet = ss.getSheetByName(FORM_SHEET_NAME);
+      let currSheet = ss.getSheetByName(SHEET_NAMES.SHIFT_FORM);
       if (!currSheet) {
         // 現在のシフト希望表が存在しない場合は、テンプレートからコピーして作成
         currSheet = formTemplateSheet.copyTo(ss);
-        currSheet.setName(FORM_PREVIOUS_SHEET_NAME);
+        currSheet.setName(SHEET_NAMES.SHIFT_FORM_PREVIOUS);
         protectSheet(currSheet, "前回分シートのロック");
         Logger.log(`📝 テンプレートから前回分シートを作成: ${name}`);
       } else {
-        currSheet.setName(FORM_PREVIOUS_SHEET_NAME);
+        currSheet.setName(SHEET_NAMES.SHIFT_FORM_PREVIOUS);
         protectSheet(currSheet, "前回分シートのロック");
       }
 
       // === ③ 新しい提出用シートを作成 ===
       let newFormSheet = prevSheet ? prevSheet : formTemplateSheet.copyTo(ss);
-      newFormSheet.setName(FORM_SHEET_NAME);
+      newFormSheet.setName(SHEET_NAMES.SHIFT_FORM);
       // 2行目以降のデータを貼り付け（1行目は変更しない）
       const dataOnly = values.slice(1); // 1行目を除く
       const dataNumRows = dataOnly.length;
@@ -86,11 +86,11 @@ function updateForms() {
       }
 
       // === ④ 「今後の勤務希望」シートの取得 ===
-      let infoSheet = ss.getSheetByName(FORM_INFO_SHEET_NAME);
+      let infoSheet = ss.getSheetByName(SHEET_NAMES.SHIFT_FORM_INFO);
       if (!infoSheet) {
         // 今後の勤務希望シートが存在しない場合は、テンプレートからコピーして作成
         infoSheet = templateSheet.copyTo(ss);
-        infoSheet.setName(FORM_INFO_SHEET_NAME);
+        infoSheet.setName(SHEET_NAMES.SHIFT_FORM_INFO);
         Logger.log(`📝 テンプレートから今後の勤務希望シートを作成: ${name}`);
       } else {
         // 🔓 シート保護を解除

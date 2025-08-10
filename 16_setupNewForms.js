@@ -1,7 +1,7 @@
 function setupNewForms() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheetNow = ss.getSheetByName(MANAGE_SHEET);
-  const sheetPre = ss.getSheetByName(MANAGE_SHEET_PRE);
+  const sheetNow = ss.getSheetByName(SHEET_NAMES.SHIFT_MANAGEMENT);
+  const sheetPre = ss.getSheetByName(SHEET_NAMES.SHIFT_MANAGEMENT_PREVIOUS);
   const TEMP_NAME = "TEMP_OLD";
 
   if (!sheetNow || !sheetPre) {
@@ -9,11 +9,17 @@ function setupNewForms() {
   }
 
   // 【追加】日程リストの先頭日付を取得し、ユーザー確認
-  const firstDateValue = sheetPre.getRange(MANAGE_DATE_ROW_START, MANAGE_DATE_COLUMN).getValue();
+  const firstDateValue = sheetPre
+    .getRange(MANAGE_DATE_ROW_START, MANAGE_DATE_COLUMN)
+    .getValue();
   if (!(firstDateValue instanceof Date)) {
     throw new Error("❌ 日程リストに日付が正しく設定されていません");
   }
-  const formattedDate = Utilities.formatDate(firstDateValue, Session.getScriptTimeZone(), "yyyy/MM/dd");
+  const formattedDate = Utilities.formatDate(
+    firstDateValue,
+    Session.getScriptTimeZone(),
+    "yyyy/MM/dd"
+  );
 
   const ui = SpreadsheetApp.getUi();
   const response = ui.alert(
@@ -29,12 +35,14 @@ function setupNewForms() {
 
   // シート名を一時リネーム
   sheetPre.setName(TEMP_NAME);
-  sheetNow.setName(MANAGE_SHEET_PRE);
-  ss.getSheetByName(TEMP_NAME).setName(MANAGE_SHEET);
+  sheetNow.setName(SHEET_NAMES.SHIFT_MANAGEMENT_PREVIOUS);
+  ss.getSheetByName(TEMP_NAME).setName(SHEET_NAMES.SHIFT_MANAGEMENT);
 
-  // シートの順序を調整（左から順に MANAGE_SHEET → MANAGE_SHEET_PRE）
-  const manageSheet = ss.getSheetByName(MANAGE_SHEET);
-  const manageSheetPre = ss.getSheetByName(MANAGE_SHEET_PRE);
+  // シートの順序を調整（左から順に SHIFT_MANAGEMENT → SHIFT_MANAGEMENT_PREVIOUS）
+  const manageSheet = ss.getSheetByName(SHEET_NAMES.SHIFT_MANAGEMENT);
+  const manageSheetPre = ss.getSheetByName(
+    SHEET_NAMES.SHIFT_MANAGEMENT_PREVIOUS
+  );
   ss.setActiveSheet(manageSheet);
   ss.moveActiveSheet(1); // 一番左へ
   ss.setActiveSheet(manageSheetPre);

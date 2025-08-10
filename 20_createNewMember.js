@@ -44,7 +44,7 @@ function createNewMember() {
   const folder = DriveApp.getFolderById(PERSONAL_FORM_FOLDER_ID);
   // テンプレートファイルから提出用ファイルを作成(ファイル名は"シフト希望表_{氏名}")
   const newFile = DriveApp.getFileById(TEMPLATE_FILE_ID).makeCopy(
-    `${FORM_SHEET_NAME}_${name}`,
+    `${SHEET_NAMES.SHIFT_FORM}_${name}`,
     folder
   );
 
@@ -60,33 +60,38 @@ function createNewMember() {
   // 提出用ファイルのSSを取得
   const newSS = SpreadsheetApp.openById(newFile.getId());
   // シフト希望表シートの作成とリネーム
-  const newSheet = newSS.getSheetByName(FORM_SHEET_NAME);
+  const newSheet = newSS.getSheetByName(SHEET_NAMES.SHIFT_FORM);
   if (newSheet) {
-    newSheet.setName(FORM_SHEET_NAME);
+    newSheet.setName(SHEET_NAMES.SHIFT_FORM);
   } else {
-    throw new Error(`❌ シート '${FORM_SHEET_NAME}' が見つかりません。`);
+    throw new Error(`❌ シート '${SHEET_NAMES.SHIFT_FORM}' が見つかりません。`);
   }
   // シートに氏名を記入
   newSheet.getRange(FORM_ROW_HEAD, FORM_COLUMN_NAME).setValue(name);
 
   // 勤務希望表シートの作成とリネーム
-  const infoSheet = newSS.getSheetByName(FORM_INFO_SHEET_NAME);
+  const infoSheet = newSS.getSheetByName(SHEET_NAMES.SHIFT_FORM_INFO);
   if (infoSheet) {
-    infoSheet.setName(FORM_INFO_SHEET_NAME);
+    infoSheet.setName(SHEET_NAMES.SHIFT_FORM_INFO);
   } else {
-    throw new Error(`❌ シート '${FORM_INFO_SHEET_NAME}' が見つかりません。`);
+    throw new Error(
+      `❌ シート '${SHEET_NAMES.SHIFT_FORM_INFO}' が見つかりません。`
+    );
   }
 
   // 既存シートがあれば削除
   newSS.getSheets().forEach((s) => {
-    if (s.getName() !== FORM_SHEET_NAME && s.getName() !== FORM_INFO_SHEET_NAME)
+    if (
+      s.getName() !== SHEET_NAMES.SHIFT_FORM &&
+      s.getName() !== SHEET_NAMES.SHIFT_FORM_INFO
+    )
       newSS.deleteSheet(s);
   });
 
   // 「前回分」シートを複製して追加(保護も追加)
-  const originalSheet = newSS.getSheetByName(FORM_SHEET_NAME);
+  const originalSheet = newSS.getSheetByName(SHEET_NAMES.SHIFT_FORM);
   const previousSheet = originalSheet.copyTo(newSS);
-  previousSheet.setName(FORM_PREVIOUS_SHEET_NAME);
+  previousSheet.setName(SHEET_NAMES.SHIFT_FORM_PREVIOUS);
   protectSheet(previousSheet);
 
   // シートの並び順を調整する（original → info → previous）
@@ -106,7 +111,7 @@ function createNewMember() {
 
   // 個別シートにデータをimport
   const endColumnLetter = columnToLetter(FORM_COLUMN_NOTE);
-  const formula = `=IMPORTRANGE("${personalUrl}", "${FORM_SHEET_NAME}!A1:${endColumnLetter}")`;
+  const formula = `=IMPORTRANGE("${personalUrl}", "${SHEET_NAMES.SHIFT_FORM}!A1:${endColumnLetter}")`;
   personalSheet.getRange(1, 1).setFormula(formula);
 
   // ===== メンバーリストに追加 =====
@@ -166,7 +171,9 @@ function createNewMember() {
   // ===== 前回用管理シート =====
 
   // 前回用管理シートを取得
-  const manageSheetPre = ss.getSheetByName(MANAGE_SHEET_PRE);
+  const manageSheetPre = ss.getSheetByName(
+    SHEET_NAMES.SHIFT_MANAGEMENT_PREVIOUS
+  );
   // 最終行を取得
   const lastRowPre = getLastRowInCol(manageSheetPre, COLUMN_START);
   // 新規メンバーを追加する行を最終行の1つ下としてセット
