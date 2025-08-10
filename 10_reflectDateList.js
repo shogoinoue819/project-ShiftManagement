@@ -36,7 +36,7 @@ function reflectDateList() {
     .setValues(falseValues);
 
   // C列（共有ステータス）を "未共有" で初期化
-  const shareValues = Array(numDates).fill([`${SHARE_FALSE}`]);
+  const shareValues = Array(numDates).fill([`${STATUS_STRINGS.SHARE.FALSE}`]);
   manageSheet
     .getRange(
       SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW,

@@ -38,7 +38,7 @@ function updateForms() {
       Object.keys(memberMap).length,
       1
     )
-    .setValue(REFLECT_FALSE);
+    .setValue(STATUS_STRINGS.REFLECT.FALSE);
 
   // テンプレートファイルとシフト希望表テンプレートシートを取得
   const templateFile = SpreadsheetApp.openById(TEMPLATE_FILE_ID);

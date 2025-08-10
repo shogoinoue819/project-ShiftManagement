@@ -170,7 +170,7 @@ function checkAllSubmittedMembers() {
           SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_COL
       ];
     // 提出済みかつチェックされていなければ、
-    if (submitStatus === SUBMIT_TRUE && isChecked !== true) {
+    if (submitStatus === STATUS_STRINGS.SUBMIT.TRUE && isChecked !== true) {
       // ロック処理
       lockSelectedMember(SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW + i);
       // シートにチェックを入れる

@@ -57,7 +57,7 @@ function shareShiftsFromManageSheet(manageSheetName) {
     const [date, isComplete, isShare] = row;
 
     // 完成済み & 未共有のみ対象
-    if (isComplete === true && isShare === SHARE_FALSE) {
+    if (isComplete === true && isShare === STATUS_STRINGS.SHARE.FALSE) {
       const dateStr = formatDateToString(date);
       const sheetName = dateStr;
 
@@ -108,7 +108,7 @@ function shareShiftsFromManageSheet(manageSheetName) {
             i + SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW,
             SHIFT_MANAGEMENT_SHEET.DATE_LIST.SHARE_COL
           )
-          .setValue(SHARE_TRUE);
+          .setValue(STATUS_STRINGS.SHARE.TRUE);
         sharedCount++;
         Logger.log(`${manageSheetName} / ${dateStr}: 共有完了`);
       } catch (e) {
@@ -332,14 +332,14 @@ function shareOnlyOneShift() {
   if (preRow) {
     manageSheetPre
       .getRange(preRow, SHIFT_MANAGEMENT_SHEET.DATE_LIST.SHARE_COL)
-      .setValue(SHARE_TRUE);
+      .setValue(STATUS_STRINGS.SHARE.TRUE);
     updated = true;
   } else {
     const currRow = findDateRow(manageSheet, dateStr);
     if (currRow) {
       manageSheet
         .getRange(currRow, SHIFT_MANAGEMENT_SHEET.DATE_LIST.SHARE_COL)
-        .setValue(SHARE_TRUE);
+        .setValue(STATUS_STRINGS.SHARE.TRUE);
       updated = true;
     }
   }

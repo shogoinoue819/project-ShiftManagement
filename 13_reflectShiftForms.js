@@ -49,7 +49,9 @@ function reflectShiftForms() {
     }))
     .filter(
       ({ submit, check, reflect }) =>
-        submit === SUBMIT_TRUE && check === true && reflect === REFLECT_FALSE
+        submit === STATUS_STRINGS.SUBMIT.TRUE &&
+        check === true &&
+        reflect === STATUS_STRINGS.REFLECT.FALSE
     )
     .slice(0, 15); // ← 上限制限
 
@@ -89,14 +91,16 @@ function reflectShiftForms() {
       // 希望ステータスを取得
       const status = rowData[SHIFT_FORM_TEMPLATE.DATA.STATUS_COL - 1];
       // ◯でないなら、ここで終了
-      if (status != STATUS_TRUE) return;
+      if (status != STATUS_STRINGS.SHIFT_WISH.TRUE) return;
 
       // 開始時間と終了時間を取得
       const start = rowData[SHIFT_FORM_TEMPLATE.DATA.START_TIME_COL - 1];
       const end = rowData[SHIFT_FORM_TEMPLATE.DATA.END_TIME_COL - 1];
 
       // 背景色の配列
-      const bgArray = Array(timeList.length).fill(UNAVAILABLE_COLOR);
+      const bgArray = Array(TIME_SETTINGS.TIME_LIST.length).fill(
+        TIME_SETTINGS.UNAVAILABLE_BACKGROUND_COLOR
+      );
 
       // 書式によって分類
       const formatTime = (value) => {
@@ -131,8 +135,8 @@ function reflectShiftForms() {
           base.getFullYear(),
           base.getMonth(),
           base.getDate(),
-          DEFAULT_OPEN_HOUR,
-          DEFAULT_OPEN_MINUTE
+          ENVIRONMENT.DEFAULT_HOURS.OPEN.HOUR,
+          ENVIRONMENT.DEFAULT_HOURS.OPEN.MINUTE
         );
       const endTime =
         normalizeTimeToDate(base, end) ||
@@ -140,12 +144,12 @@ function reflectShiftForms() {
           base.getFullYear(),
           base.getMonth(),
           base.getDate(),
-          DEFAULT_CLOSE_HOUR,
-          DEFAULT_CLOSE_MINUTE
+          ENVIRONMENT.DEFAULT_HOURS.CLOSE.HOUR,
+          ENVIRONMENT.DEFAULT_HOURS.CLOSE.MINUTE
         );
 
       // 各時間帯において、
-      timeList.forEach((t, ti) => {
+      TIME_SETTINGS.TIME_LIST.forEach((t, ti) => {
         // セルの時間帯を取得
         const [h, m] = t.split(":").map(Number);
         const cellTime = new Date(
@@ -165,7 +169,7 @@ function reflectShiftForms() {
         .getRange(
           SHIFT_TEMPLATE_SHEET.ROWS.DATA_START,
           personalCol,
-          timeList.length,
+          TIME_SETTINGS.TIME_LIST.length,
           1
         )
         .setBackgrounds(bgArray.map((c) => [c]));
@@ -180,7 +184,7 @@ function reflectShiftForms() {
         order + SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW,
         SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.REFLECT_COL
       )
-      .setValue(REFLECT_TRUE);
+      .setValue(STATUS_STRINGS.REFLECT.TRUE);
   });
 
   Logger.log("✅ シフト希望の色反映が完了しました。");

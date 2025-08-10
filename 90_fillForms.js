@@ -4,7 +4,11 @@ function fillForms() {
   const [ss, manageSheet, templateSheet, allSheets, ui] = getCommonSheets();
 
   // 希望ステータスのオプション
-  const statusOptions = [STATUS_TRUE, STATUS_TRUE, STATUS_FALSE];
+  const statusOptions = [
+    STATUS_STRINGS.SHIFT_WISH.TRUE,
+    STATUS_STRINGS.SHIFT_WISH.TRUE,
+    STATUS_STRINGS.SHIFT_WISH.FALSE,
+  ];
   // 希望時間のオプション
   const timeOptions = [
     ["13:00", "指定なし"],
@@ -68,7 +72,7 @@ function fillForms() {
   // 全てのメンバーにおいて
   for (const [id, { name, url, submit }] of Object.entries(memberMap)) {
     // 提出済みであれば終了
-    if (submit !== SUBMIT_FALSE || !url) continue;
+    if (submit !== STATUS_STRINGS.SUBMIT.FALSE || !url) continue;
     // URLから個別ファイルを取得
     const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
     if (!match || !match[1]) {
@@ -93,7 +97,7 @@ function fillForms() {
           statusOptions[Math.floor(Math.random() * statusOptions.length)];
         sheet.getRange(r, SHIFT_FORM_TEMPLATE.DATA.STATUS_COL).setValue(status);
         //　希望ステータスが◯なら
-        if (status === STATUS_TRUE) {
+        if (status === STATUS_STRINGS.SHIFT_WISH.TRUE) {
           // 開始時間と終了時間をランダムにセット
           const [start, end] =
             timeOptions[Math.floor(Math.random() * timeOptions.length)];

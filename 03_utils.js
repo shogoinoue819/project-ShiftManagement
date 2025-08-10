@@ -290,7 +290,7 @@ function clearBackgrounds(sheet) {
     for (let j = 0; j < backgrounds[i].length; j++) {
       const bgColor = backgrounds[i][j];
       // 背景色が勤務不可背景色ならば、
-      if (bgColor === UNAVAILABLE_COLOR) {
+      if (bgColor === TIME_SETTINGS.UNAVAILABLE_BACKGROUND_COLOR) {
         // 背景色をnullにする
         backgrounds[i][j] = null;
       }
@@ -307,7 +307,11 @@ function applyBorders(range) {
   mergedRanges.forEach((merged) => {
     // 背景が灰色または白でない場合にだけ枠線を適用
     const bg = merged.getBackground();
-    if (bg !== UNAVAILABLE_COLOR && bg !== "#ffffff" && bg !== null) {
+    if (
+      bg !== TIME_SETTINGS.UNAVAILABLE_BACKGROUND_COLOR &&
+      bg !== "#ffffff" &&
+      bg !== null
+    ) {
       merged.setBorder(
         true,
         true,

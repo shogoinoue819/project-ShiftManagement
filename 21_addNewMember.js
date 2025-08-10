@@ -63,7 +63,7 @@ function addNewMember() {
         SHIFT_TEMPLATE_SHEET.ROWS.DATA_START +
         1
     )
-    .setBackground(UNAVAILABLE_COLOR);
+    .setBackground(TIME_SETTINGS.UNAVAILABLE_BACKGROUND_COLOR);
 
   // 6. 出勤・退勤・勤務時間の数式をセット
   const colLetter = columnToLetter(newCol);
@@ -122,7 +122,7 @@ function addNewMember() {
             SHIFT_TEMPLATE_SHEET.ROWS.DATA_START +
             1
         )
-        .setBackground(UNAVAILABLE_COLOR);
+        .setBackground(TIME_SETTINGS.UNAVAILABLE_BACKGROUND_COLOR);
 
       // 数式セット
       const colLetter = columnToLetter(newCol);

@@ -83,7 +83,7 @@ function linkMemberDisplay() {
         1,
       names.length
     )
-    .setBackground(UNAVAILABLE_COLOR);
+    .setBackground(TIME_SETTINGS.UNAVAILABLE_BACKGROUND_COLOR);
 
   // 授業割テンプレートシートにも反映
   const templateMap = {

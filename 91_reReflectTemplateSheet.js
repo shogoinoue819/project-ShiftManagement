@@ -37,9 +37,9 @@ function reReflectTemplateSheet() {
       continue; // 前半30人はスキップ
     }
 
-    // SUBMIT_FALSE 以外はスキップ
+    // 未提出以外はスキップ
     const submit = submitValues[index];
-    if (submit !== SUBMIT_FALSE) {
+    if (submit !== STATUS_STRINGS.SUBMIT.FALSE) {
       index++;
       continue;
     }

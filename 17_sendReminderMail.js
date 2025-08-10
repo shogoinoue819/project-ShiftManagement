@@ -39,7 +39,7 @@ function sendReminderMail() {
       .getRange(row, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.URL_COL)
       .getFormula();
     // 未提出かつメアドとURLがあれば、
-    if (status === SUBMIT_FALSE && email && url) {
+    if (status === STATUS_STRINGS.SUBMIT.FALSE && email && url) {
       try {
         // メール本文を生成（URL付き）
         const body = `${BASE_BODY}\n\n以下のリンクから提出してください：\n${url}`;
