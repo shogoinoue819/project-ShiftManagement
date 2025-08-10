@@ -125,8 +125,18 @@ function updateForms() {
       moveSheet(currSheet, 3); // 前回分
 
       // === ⑥ 初期化処理 ===
-      newFormSheet.getRange(FORM_ROW_HEAD, FORM_COLUMN_NAME).setValue(name);
-      newFormSheet.getRange(FORM_ROW_HEAD, FORM_COLUMN_CHECK).setValue(false);
+      newFormSheet
+        .getRange(
+          SHIFT_FORM_TEMPLATE.HEADER.ROW,
+          SHIFT_FORM_TEMPLATE.HEADER.NAME_COL
+        )
+        .setValue(name);
+      newFormSheet
+        .getRange(
+          SHIFT_FORM_TEMPLATE.HEADER.ROW,
+          SHIFT_FORM_TEMPLATE.HEADER.CHECK_COL
+        )
+        .setValue(false);
 
       Logger.log(`✅ アップデート完了: ${name}`);
     } catch (e) {

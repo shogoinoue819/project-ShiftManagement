@@ -87,24 +87,31 @@ function fillForms() {
       // 最終行を取得
       const lastRow = sheet.getLastRow();
       // 表開始行以降の全ての行において
-      for (let r = FORM_ROW_START; r <= lastRow; r++) {
+      for (let r = SHIFT_FORM_TEMPLATE.DATA.START_ROW; r <= lastRow; r++) {
         // 希望ステータスをランダムにセット
         const status =
           statusOptions[Math.floor(Math.random() * statusOptions.length)];
-        sheet.getRange(r, FORM_COLUMN_STATUS).setValue(status);
+        sheet.getRange(r, SHIFT_FORM_TEMPLATE.DATA.STATUS_COL).setValue(status);
         //　希望ステータスが◯なら
         if (status === STATUS_TRUE) {
           // 開始時間と終了時間をランダムにセット
           const [start, end] =
             timeOptions[Math.floor(Math.random() * timeOptions.length)];
           sheet
-            .getRange(r, FORM_COLUMN_START_TIME, 1, 2)
+            .getRange(r, SHIFT_FORM_TEMPLATE.DATA.START_TIME_COL, 1, 2)
             .setValues([[start, end]]);
         } else {
-          sheet.getRange(r, FORM_COLUMN_START_TIME, 1, 2).clearContent();
+          sheet
+            .getRange(r, SHIFT_FORM_TEMPLATE.DATA.START_TIME_COL, 1, 2)
+            .clearContent();
         }
         // 提出チェックをつける
-        sheet.getRange(FORM_ROW_HEAD, FORM_COLUMN_CHECK).setValue(true);
+        sheet
+          .getRange(
+            SHIFT_FORM_TEMPLATE.HEADER.ROW,
+            SHIFT_FORM_TEMPLATE.HEADER.CHECK_COL
+          )
+          .setValue(true);
       }
 
       Logger.log(`✅ テスト用記入完了: ${name}`);

@@ -16,7 +16,12 @@ function reflectDateList() {
 
   // A列に日付をセット
   targetSheet
-    .getRange(FORM_ROW_START, FORM_COLUMN_DATE, numDates, 1)
+    .getRange(
+      SHIFT_FORM_TEMPLATE.DATA.START_ROW,
+      SHIFT_FORM_TEMPLATE.DATA.DATE_COL,
+      numDates,
+      1
+    )
     .setValues(dateList);
 
   // B列（完了チェック）を FALSE で初期化
@@ -43,7 +48,7 @@ function reflectDateList() {
 
   // 不要な行を削除
   const maxRow = targetSheet.getMaxRows();
-  const deleteStart = FORM_ROW_START + numDates;
+  const deleteStart = SHIFT_FORM_TEMPLATE.DATA.START_ROW + numDates;
   if (deleteStart <= maxRow) {
     const numToDelete = maxRow - deleteStart + 1;
     targetSheet.deleteRows(deleteStart, numToDelete);

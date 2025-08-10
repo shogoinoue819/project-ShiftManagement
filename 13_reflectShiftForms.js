@@ -67,7 +67,7 @@ function reflectShiftForms() {
       .getRange(SHIFT_ROW_DATE, SHIFT_COLUMN_DATE)
       .getValue();
     // シフト希望表のその日程の行を取得
-    const dateRow = getOrderByDate(date) + FORM_ROW_START;
+    const dateRow = getOrderByDate(date) + SHIFT_FORM_TEMPLATE.DATA.START_ROW;
 
     // フィルタリングされたメンバーにおいて、
     filtered.forEach(({ id, name, order }) => {
@@ -78,20 +78,20 @@ function reflectShiftForms() {
       if (!personalSheet) return;
       // その日程のデータを取得
       const rowData = personalSheet
-        .getRange(dateRow, 1, 1, FORM_COLUMN_NOTE)
+        .getRange(dateRow, 1, 1, SHIFT_FORM_TEMPLATE.DATA.NOTE_COL)
         .getValues()[0];
 
       // 備考だけ先に取得してセット
-      const note = rowData[FORM_COLUMN_NOTE - 1];
+      const note = rowData[SHIFT_FORM_TEMPLATE.DATA.NOTE_COL - 1];
       dailySheet.getRange(SHIFT_ROW_NOTE, personalCol).setValue(note);
       // 希望ステータスを取得
-      const status = rowData[FORM_COLUMN_STATUS - 1];
+      const status = rowData[SHIFT_FORM_TEMPLATE.DATA.STATUS_COL - 1];
       // ◯でないなら、ここで終了
       if (status != STATUS_TRUE) return;
 
       // 開始時間と終了時間を取得
-      const start = rowData[FORM_COLUMN_START_TIME - 1];
-      const end = rowData[FORM_COLUMN_END_TIME - 1];
+      const start = rowData[SHIFT_FORM_TEMPLATE.DATA.START_TIME_COL - 1];
+      const end = rowData[SHIFT_FORM_TEMPLATE.DATA.END_TIME_COL - 1];
 
       // 背景色の配列
       const bgArray = Array(timeList.length).fill(UNAVAILABLE_COLOR);

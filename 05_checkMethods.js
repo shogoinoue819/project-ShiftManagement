@@ -6,7 +6,10 @@ function onEdit(e) {
   const col = range.getColumn();
 
   // チェック欄でチェックされた場合
-  if (col === COLUMN_CHECK && row >= ROW_START) {
+  if (
+    col === SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.CHECK_COL &&
+    row >= SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW
+  ) {
     if (e.value === "TRUE") {
       lockSelectedMember(row);
     } else if (e.value === "FALSE") {
@@ -22,8 +25,12 @@ function lockSelectedMember(row) {
   const [ss, manageSheet, templateSheet, allSheets, ui] = getCommonSheets();
 
   // 氏名とURLを取得
-  const name = manageSheet.getRange(row, COLUMN_NAME).getValue();
-  const url = manageSheet.getRange(row, COLUMN_URL).getFormula();
+  const name = manageSheet
+    .getRange(row, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.NAME_COL)
+    .getValue();
+  const url = manageSheet
+    .getRange(row, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.URL_COL)
+    .getFormula();
 
   // URLからファイルIDを抽出
   const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
@@ -77,8 +84,12 @@ function unlockSelectedMember(row) {
   const [ss, manageSheet, templateSheet, allSheets, ui] = getCommonSheets();
 
   // 氏名とURLを取得
-  const name = manageSheet.getRange(row, COLUMN_NAME).getValue();
-  const url = manageSheet.getRange(row, COLUMN_URL).getFormula();
+  const name = manageSheet
+    .getRange(row, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.NAME_COL)
+    .getValue();
+  const url = manageSheet
+    .getRange(row, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.URL_COL)
+    .getFormula();
 
   const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
   if (!match || !match[1]) {
@@ -127,14 +138,19 @@ function checkAllSubmittedMembers() {
   const [ss, manageSheet, templateSheet, allSheets, ui] = getCommonSheets();
 
   // 最終行を取得
-  const lastRow = getLastRowInCol(manageSheet, COLUMN_START);
+  const lastRow = getLastRowInCol(
+    manageSheet,
+    SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_COL
+  );
   // メンバーリストからデータを取得[[id, name, shiftName, submit, check, reflect], ...]
   const data = manageSheet
     .getRange(
-      ROW_START,
-      COLUMN_START,
-      lastRow - ROW_START + 1,
-      COLUMN_REFLECT - COLUMN_START + 1
+      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW,
+      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_COL,
+      lastRow - SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW + 1,
+      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.REFLECT_COL -
+        SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_COL +
+        1
     )
     .getValues();
 
@@ -143,14 +159,27 @@ function checkAllSubmittedMembers() {
   // データの各メンバーにおいて、
   data.forEach((row, i) => {
     // 提出ステータスとチェックを取得
-    const submitStatus = row[COLUMN_SUBMIT - COLUMN_START];
-    const isChecked = row[COLUMN_CHECK - COLUMN_START];
+    const submitStatus =
+      row[
+        SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.SUBMIT_COL -
+          SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_COL
+      ];
+    const isChecked =
+      row[
+        SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.CHECK_COL -
+          SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_COL
+      ];
     // 提出済みかつチェックされていなければ、
     if (submitStatus === SUBMIT_TRUE && isChecked !== true) {
       // ロック処理
-      lockSelectedMember(ROW_START + i);
+      lockSelectedMember(SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW + i);
       // シートにチェックを入れる
-      manageSheet.getRange(ROW_START + i, COLUMN_CHECK).setValue(true);
+      manageSheet
+        .getRange(
+          SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW + i,
+          SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.CHECK_COL
+        )
+        .setValue(true);
       // 人数を1人増やす
       count++;
     }

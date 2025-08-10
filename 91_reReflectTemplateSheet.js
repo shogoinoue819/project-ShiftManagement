@@ -68,8 +68,18 @@ function reReflectTemplateSheet() {
       memberSS.moveActiveSheet(1); // 位置を調整
 
       // 初期化処理
-      copiedSheet.getRange(FORM_ROW_HEAD, FORM_COLUMN_NAME).setValue(name);
-      copiedSheet.getRange(FORM_ROW_HEAD, FORM_COLUMN_CHECK).setValue(false);
+      copiedSheet
+        .getRange(
+          SHIFT_FORM_TEMPLATE.HEADER.ROW,
+          SHIFT_FORM_TEMPLATE.HEADER.NAME_COL
+        )
+        .setValue(name);
+      copiedSheet
+        .getRange(
+          SHIFT_FORM_TEMPLATE.HEADER.ROW,
+          SHIFT_FORM_TEMPLATE.HEADER.CHECK_COL
+        )
+        .setValue(false);
 
       Logger.log(`✅ ${name} さんに「シフト希望表」シートを再反映しました`);
       count++;

@@ -53,7 +53,7 @@ function deleteSelectedMember() {
       // シフト管理シートからその人の行を削除（A列の修正もセットで）
       const order = getOrderById(id);
       if (order !== -1) {
-        // A列（ROW_START以降）の日程リストを保存
+        // A列（SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW以降）の日程リストを保存
         const dateValues = manageSheet
           .getRange(
             SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW,
@@ -83,7 +83,7 @@ function deleteSelectedMember() {
         const manageSheetPre = ss.getSheetByName(
           SHEET_NAMES.SHIFT_MANAGEMENT_PREVIOUS
         );
-        // A列（ROW_START以降）の日程リストを保存
+        // A列（SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW以降）の日程リストを保存
         const dateValuesPre = manageSheetPre
           .getRange(
             SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW,

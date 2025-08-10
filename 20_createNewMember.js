@@ -67,7 +67,12 @@ function createNewMember() {
     throw new Error(`❌ シート '${SHEET_NAMES.SHIFT_FORM}' が見つかりません。`);
   }
   // シートに氏名を記入
-  newSheet.getRange(FORM_ROW_HEAD, FORM_COLUMN_NAME).setValue(name);
+  newSheet
+    .getRange(
+      SHIFT_FORM_TEMPLATE.HEADER.ROW,
+      SHIFT_FORM_TEMPLATE.HEADER.NAME_COL
+    )
+    .setValue(name);
 
   // 勤務希望表シートの作成とリネーム
   const infoSheet = newSS.getSheetByName(SHEET_NAMES.SHIFT_FORM_INFO);
@@ -110,38 +115,53 @@ function createNewMember() {
   const personalUrl = newSS.getUrl();
 
   // 個別シートにデータをimport
-  const endColumnLetter = columnToLetter(FORM_COLUMN_NOTE);
+  const endColumnLetter = columnToLetter(SHIFT_FORM_TEMPLATE.DATA.NOTE_COL);
   const formula = `=IMPORTRANGE("${personalUrl}", "${SHEET_NAMES.SHIFT_FORM}!A1:${endColumnLetter}")`;
   personalSheet.getRange(1, 1).setFormula(formula);
 
   // ===== メンバーリストに追加 =====
 
   // 最終行を取得
-  const lastRow = getLastRowInCol(manageSheet, COLUMN_START);
+  const lastRow = getLastRowInCol(
+    manageSheet,
+    SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_COL
+  );
   // 新規メンバーを追加する行を最終行の1つ下としてセット
   const newRow = lastRow + 1;
 
   // IDを生成
   const uniqueId = generateMemberId();
   // IDをセット
-  manageSheet.getRange(newRow, COLUMN_ID).setValue(uniqueId);
-  // 氏名をセット
-  manageSheet.getRange(newRow, COLUMN_NAME).setValue(name);
-  // 提出ステータスをセット(個別シートとリンク)
-  const nameColLetter = columnToLetter(COLUMN_NAME);
-  const checkCell = columnToLetter(FORM_COLUMN_CHECK) + FORM_ROW_HEAD;
   manageSheet
-    .getRange(newRow, COLUMN_SUBMIT)
+    .getRange(newRow, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.ID_COL)
+    .setValue(uniqueId);
+  // 氏名をセット
+  manageSheet
+    .getRange(newRow, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.NAME_COL)
+    .setValue(name);
+  // 提出ステータスをセット(個別シートとリンク)
+  const nameColLetter = columnToLetter(
+    SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.NAME_COL
+  );
+  const checkCell =
+    columnToLetter(SHIFT_FORM_TEMPLATE.HEADER.CHECK_COL) +
+    SHIFT_FORM_TEMPLATE.HEADER.ROW;
+  manageSheet
+    .getRange(newRow, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.SUBMIT_COL)
     .setFormula(
       `=IF(INDIRECT("'" & ${nameColLetter}${newRow} & "'!${checkCell}") = TRUE, "${SUBMIT_TRUE}", "${SUBMIT_FALSE}")`
     );
   // チェックボックスをセット
-  manageSheet.getRange(newRow, COLUMN_CHECK).setValue(false);
+  manageSheet
+    .getRange(newRow, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.CHECK_COL)
+    .setValue(false);
   // 反映ステータスをセット
-  manageSheet.getRange(newRow, COLUMN_REFLECT).setValue(REFLECT_FALSE);
+  manageSheet
+    .getRange(newRow, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.REFLECT_COL)
+    .setValue(REFLECT_FALSE);
   // URLをセット(HYPERLINK形式)
   manageSheet
-    .getRange(newRow, COLUMN_URL)
+    .getRange(newRow, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.URL_COL)
     .setFormula(`=HYPERLINK("${personalUrl}", "シートリンク")`);
   // 勤務日数①をセット
   manageSheet
@@ -176,7 +196,9 @@ function createNewMember() {
     .getRange(newRow, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_TIMES_4_COL)
     .setFormula(WORK_TIMES_4);
   // 勤務日数希望をセット
-  const infoCell = columnToLetter(FORM_COLUMN_INFO) + FORM_ROW_HEAD;
+  const infoCell =
+    columnToLetter(SHIFT_FORM_TEMPLATE.HEADER.INFO_COL) +
+    SHIFT_FORM_TEMPLATE.HEADER.ROW;
   manageSheet
     .getRange(newRow, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_DATES_REQUEST_COL)
     .setFormula(`=INDIRECT("'" & ${nameColLetter}${newRow} & "'!${infoCell}")`);
@@ -191,27 +213,38 @@ function createNewMember() {
     SHEET_NAMES.SHIFT_MANAGEMENT_PREVIOUS
   );
   // 最終行を取得
-  const lastRowPre = getLastRowInCol(manageSheetPre, COLUMN_START);
+  const lastRowPre = getLastRowInCol(
+    manageSheetPre,
+    SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_COL
+  );
   // 新規メンバーを追加する行を最終行の1つ下としてセット
   const newRowPre = lastRowPre + 1;
 
   // IDをセット
-  manageSheetPre.getRange(newRowPre, COLUMN_ID).setValue(uniqueId);
+  manageSheetPre
+    .getRange(newRowPre, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.ID_COL)
+    .setValue(uniqueId);
   // 氏名をセット
-  manageSheetPre.getRange(newRowPre, COLUMN_NAME).setValue(name);
+  manageSheetPre
+    .getRange(newRowPre, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.NAME_COL)
+    .setValue(name);
   // 提出ステータスをセット(個別シートとリンク)
   manageSheetPre
-    .getRange(newRowPre, COLUMN_SUBMIT)
+    .getRange(newRowPre, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.SUBMIT_COL)
     .setFormula(
       `=IF(INDIRECT("'" & ${nameColLetter}${newRowPre} & "'!${checkCell}") = TRUE, "${SUBMIT_TRUE}", "${SUBMIT_FALSE}")`
     );
   // チェックボックスをセット
-  manageSheetPre.getRange(newRowPre, COLUMN_CHECK).setValue(false);
+  manageSheetPre
+    .getRange(newRowPre, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.CHECK_COL)
+    .setValue(false);
   // 反映ステータスをセット
-  manageSheetPre.getRange(newRowPre, COLUMN_REFLECT).setValue(REFLECT_FALSE);
+  manageSheetPre
+    .getRange(newRowPre, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.REFLECT_COL)
+    .setValue(REFLECT_FALSE);
   // URLをセット(HYPERLINK形式)
   manageSheetPre
-    .getRange(newRowPre, COLUMN_URL)
+    .getRange(newRowPre, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.URL_COL)
     .setFormula(`=HYPERLINK("${personalUrl}", "シートリンク")`);
   // 勤務日数①をセット
   manageSheetPre
