@@ -27,7 +27,7 @@ function fillForms() {
   ];
 
   // 最終行を取得
-  const lastRow = getLastRowInCol(
+  const lastRow = getLastRowInColumn(
     manageSheet,
     SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_COL
   );

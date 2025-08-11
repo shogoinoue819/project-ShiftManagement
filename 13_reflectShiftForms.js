@@ -6,7 +6,7 @@ function reflectShiftForms() {
   const templateSheet = getTemplateSheet();
   const ui = getUI();
   // 最終行を取得
-  const lastRow = getLastRowInCol(
+  const lastRow = getLastRowInColumn(
     manageSheet,
     SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_COL
   );
@@ -72,7 +72,8 @@ function reflectShiftForms() {
       .getRange(SHIFT_TEMPLATE_SHEET.DATE_ROW, SHIFT_TEMPLATE_SHEET.DATE_COL)
       .getValue();
     // シフト希望表のその日程の行を取得
-    const dateRow = getOrderByDate(date) + SHIFT_FORM_TEMPLATE.DATA.START_ROW;
+    const dateRow =
+      getDateOrderByDate(date) + SHIFT_FORM_TEMPLATE.DATA.START_ROW;
 
     // フィルタリングされたメンバーにおいて、
     filtered.forEach(({ id, name, order }) => {

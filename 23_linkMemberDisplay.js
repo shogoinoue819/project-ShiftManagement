@@ -7,7 +7,7 @@ function linkMemberDisplay() {
   const ui = getUI();
 
   // 最終行を取得
-  const lastRow = getLastRowInCol(
+  const lastRow = getLastRowInColumn(
     manageSheet,
     SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_COL
   );
@@ -134,7 +134,7 @@ function linkMemberDisplay() {
   // 出勤・退勤・勤務時間の数式をセット
   for (let i = 0; i < names.length; i++) {
     const col = i + SHIFT_TEMPLATE_SHEET.MEMBER_START_COL;
-    const colLetter = columnToLetter(col);
+    const colLetter = convertColumnToLetter(col);
 
     // 出勤
     templateSheet

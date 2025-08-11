@@ -13,7 +13,7 @@ function sendReminderMail() {
   `;
 
   // 最終行取得
-  const lastRow = getLastRowInCol(
+  const lastRow = getLastRowInColumn(
     manageSheet,
     SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_COL
   );

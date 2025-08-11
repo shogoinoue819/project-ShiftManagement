@@ -21,7 +21,7 @@ function addNewMember() {
   }
 
   // 2. 管理シートから表示名と背景色を取得
-  const lastRow = getLastRowInCol(
+  const lastRow = getLastRowInColumn(
     manageSheet,
     SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_COL
   );
@@ -47,7 +47,7 @@ function addNewMember() {
   Logger.log(`${bgColor}`);
 
   // 3. テンプレートシートの現在の最終列を取得（+1で新列に）
-  const newCol = getLastColInRow(templateSheet, 1) + 1;
+  const newCol = getLastColumnInRow(templateSheet, 1) + 1;
 
   // 4. 表示名と背景色を追加
   templateSheet
@@ -69,7 +69,7 @@ function addNewMember() {
     .setBackground(TIME_SETTINGS.UNAVAILABLE_BACKGROUND_COLOR);
 
   // 6. 出勤・退勤・勤務時間の数式をセット
-  const colLetter = columnToLetter(newCol);
+  const colLetter = convertColumnToLetter(newCol);
   templateSheet
     .getRange(SHIFT_TEMPLATE_SHEET.ROWS.WORK_START, newCol)
     .setFormula(
@@ -128,7 +128,7 @@ function addNewMember() {
         .setBackground(TIME_SETTINGS.UNAVAILABLE_BACKGROUND_COLOR);
 
       // 数式セット
-      const colLetter = columnToLetter(newCol);
+      const colLetter = convertColumnToLetter(newCol);
       sheet
         .getRange(SHIFT_TEMPLATE_SHEET.ROWS.WORK_START, newCol)
         .setFormula(

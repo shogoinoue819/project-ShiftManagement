@@ -12,7 +12,7 @@ function reReflectTemplateSheet() {
   let count = 0;
 
   // 提出ステータス列を取得（提出列は SUBMIT 列）
-  const lastRow = getLastRowInCol(
+  const lastRow = getLastRowInColumn(
     manageSheet,
     SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_COL
   );

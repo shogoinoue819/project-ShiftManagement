@@ -22,7 +22,7 @@ function shareShiftsFromManageSheet(manageSheetName) {
   const ssFolder = DriveApp.getFolderById(SHIFT_SS_FOLDER_ID);
 
   // 日程リスト取得
-  const last = getLastRowInCol(
+  const last = getLastRowInColumn(
     manageSheet,
     SHIFT_MANAGEMENT_SHEET.DATE_LIST.COL
   );
@@ -195,7 +195,7 @@ function shareShiftsAll() {
  */
 function findDateRow(manageSheet, dateStr) {
   if (!manageSheet) return null;
-  const last = getLastRowInCol(
+  const last = getLastRowInColumn(
     manageSheet,
     SHIFT_MANAGEMENT_SHEET.DATE_LIST.COL
   );

@@ -118,14 +118,16 @@ function createNewMember() {
   const personalUrl = newSS.getUrl();
 
   // 個別シートにデータをimport
-  const endColumnLetter = columnToLetter(SHIFT_FORM_TEMPLATE.DATA.NOTE_COL);
+  const endColumnLetter = convertColumnToLetter(
+    SHIFT_FORM_TEMPLATE.DATA.NOTE_COL
+  );
   const formula = `=IMPORTRANGE("${personalUrl}", "${SHEET_NAMES.SHIFT_FORM}!A1:${endColumnLetter}")`;
   personalSheet.getRange(1, 1).setFormula(formula);
 
   // ===== メンバーリストに追加 =====
 
   // 最終行を取得
-  const lastRow = getLastRowInCol(
+  const lastRow = getLastRowInColumn(
     manageSheet,
     SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_COL
   );
@@ -133,7 +135,7 @@ function createNewMember() {
   const newRow = lastRow + 1;
 
   // IDを生成
-  const uniqueId = generateMemberId();
+  const uniqueId = generateRandomMemberId();
   // IDをセット
   manageSheet
     .getRange(newRow, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.ID_COL)
@@ -143,11 +145,11 @@ function createNewMember() {
     .getRange(newRow, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.NAME_COL)
     .setValue(name);
   // 提出ステータスをセット(個別シートとリンク)
-  const nameColLetter = columnToLetter(
+  const nameColLetter = convertColumnToLetter(
     SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.NAME_COL
   );
   const checkCell =
-    columnToLetter(SHIFT_FORM_TEMPLATE.HEADER.CHECK_COL) +
+    convertColumnToLetter(SHIFT_FORM_TEMPLATE.HEADER.CHECK_COL) +
     SHIFT_FORM_TEMPLATE.HEADER.ROW;
   manageSheet
     .getRange(newRow, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.SUBMIT_COL)
@@ -200,7 +202,7 @@ function createNewMember() {
     .setFormula(WORK_CALCULATION_FORMULAS.WEEK_4.TIMES);
   // 勤務日数希望をセット
   const infoCell =
-    columnToLetter(SHIFT_FORM_TEMPLATE.HEADER.INFO_COL) +
+    convertColumnToLetter(SHIFT_FORM_TEMPLATE.HEADER.INFO_COL) +
     SHIFT_FORM_TEMPLATE.HEADER.ROW;
   manageSheet
     .getRange(newRow, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_DATES_REQUEST_COL)
@@ -216,7 +218,7 @@ function createNewMember() {
     SHEET_NAMES.SHIFT_MANAGEMENT_PREVIOUS
   );
   // 最終行を取得
-  const lastRowPre = getLastRowInCol(
+  const lastRowPre = getLastRowInColumn(
     manageSheetPre,
     SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_COL
   );

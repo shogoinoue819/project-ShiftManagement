@@ -61,7 +61,10 @@ function deleteSelectedMember() {
           .getRange(
             SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW,
             SHIFT_MANAGEMENT_SHEET.DATE_LIST.COL,
-            getLastRowInCol(manageSheet, SHIFT_MANAGEMENT_SHEET.DATE_LIST.COL) -
+            getLastRowInColumn(
+              manageSheet,
+              SHIFT_MANAGEMENT_SHEET.DATE_LIST.COL
+            ) -
               SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW +
               1,
             1
@@ -91,7 +94,7 @@ function deleteSelectedMember() {
           .getRange(
             SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW,
             SHIFT_MANAGEMENT_SHEET.DATE_LIST.COL,
-            getLastRowInCol(
+            getLastRowInColumn(
               manageSheetPre,
               SHIFT_MANAGEMENT_SHEET.DATE_LIST.COL
             ) -

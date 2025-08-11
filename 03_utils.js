@@ -180,22 +180,6 @@ function getLastColumnInRow(sheet, row) {
 }
 
 /**
- * getLastRowInColumnのエイリアス関数
- *
- * 後方互換性のため、getLastRowInColという名前でも呼び出せるようにしています。
- * 実際の処理はgetLastRowInColumn関数に委譲されます。
- *
- * @param {Sheet} sheet - 対象のシート
- * @param {number} col - 対象の列番号（1から開始）
- * @returns {number} 最終行番号（データが存在しない場合は0）
- *
- * @see getLastRowInColumn
- */
-function getLastRowInCol(sheet, col) {
-  return getLastRowInColumn(sheet, col);
-}
-
-/**
  * シートと列の妥当性を検証
  *
  * @param {Sheet} sheet - 検証対象のシート
@@ -906,67 +890,6 @@ function convertColumnToLetter(column) {
   }
 
   return convertColumnToLetterInternal(column);
-}
-
-/**
- * convertColumnToLetterのエイリアス関数
- *
- * 後方互換性のため、columnToLetterという名前でも呼び出せるようにしています。
- * 実際の処理はconvertColumnToLetter関数に委譲されます。
- *
- * @param {number} column - 対象の列番号（1から開始）
- * @returns {string} 列のアルファベット表現（例: "A", "B", "AA"）
- *
- * @see convertColumnToLetter
- */
-function columnToLetter(column) {
-  return convertColumnToLetter(column);
-}
-
-/**
- * getLastColumnInRowのエイリアス関数
- *
- * 後方互換性のため、getLastColInRowという名前でも呼び出せるようにしています。
- * 実際の処理はgetLastColumnInRow関数に委譲されます。
- *
- * @param {Sheet} sheet - 対象のシート
- * @param {number} row - 対象の行番号（1から開始）
- * @returns {number} 最終列番号（データが存在しない場合は0）
- *
- * @see getLastColumnInRow
- */
-function getLastColInRow(sheet, row) {
-  return getLastColumnInRow(sheet, row);
-}
-
-/**
- * getDateOrderByDateのエイリアス関数
- *
- * 後方互換性のため、getOrderByDateという名前でも呼び出せるようにしています。
- * 実際の処理はgetDateOrderByDate関数に委譲されます。
- *
- * @param {Date|string} date - 対象の日付（Date型または文字列）
- * @param {Sheet} sheet - 対象のシート（オプション）
- * @returns {number} 日付の順序番号（見つからない場合は-1）
- *
- * @see getDateOrderByDate
- */
-function getOrderByDate(date, sheet) {
-  return getDateOrderByDate(date, sheet);
-}
-
-/**
- * generateRandomMemberIdのエイリアス関数
- *
- * 後方互換性のため、generateMemberIdという名前でも呼び出せるようにしています。
- * 実際の処理はgenerateRandomMemberId関数に委譲されます。
- *
- * @returns {string} "usr_" + 6桁のランダム文字列
- *
- * @see generateRandomMemberId
- */
-function generateMemberId() {
-  return generateRandomMemberId();
 }
 
 // 時間を日付に連結させる
