@@ -1,7 +1,9 @@
 // 未提出者にリマインダーメールを送信
 function sendReminderMail() {
   // SSをまとめて取得
-  const [ss, manageSheet, templateSheet, allSheets, ui] = getCommonSheets();
+  const ss = getSpreadsheet();
+  const manageSheet = getManageSheet();
+  const ui = getUI();
 
   // タイトルと本文
   const SUBJECT = "シフト希望提出のお願い";

@@ -1,7 +1,10 @@
 // 曜日別授業割を反映
 function reflectLessonTemplate() {
   // SSをまとめて取得
-  const [ss, manageSheet, templateSheet, allSheets, ui] = getCommonSheets();
+  const ss = getSpreadsheet();
+  const manageSheet = getManageSheet();
+  const templateSheet = getTemplateSheet();
+  const ui = getUI();
 
   // 曜日とテンプレート名の対応マップ
   const templateMap = {

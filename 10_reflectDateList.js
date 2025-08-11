@@ -12,7 +12,9 @@ function reflectDateList() {
   }
 
   // SSをまとめて取得
-  const [ss, manageSheet, templateSheet, allSheets, ui] = getCommonSheets();
+  const ss = getSpreadsheet();
+  const manageSheet = getManageSheet();
+  const ui = getUI();
 
   // A列に日付をセット
   targetSheet

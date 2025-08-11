@@ -1,7 +1,10 @@
 // 新規メンバー作成
 function createNewMember() {
   // SSをまとめて取得
-  const [ss, manageSheet, templateSheet, allSheets, ui] = getCommonSheets();
+  const ss = getSpreadsheet();
+  const manageSheet = getManageSheet();
+  const templateSheet = getTemplateSheet();
+  const ui = getUI();
 
   // ===== 管理者入力 =====
 

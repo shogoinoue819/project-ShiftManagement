@@ -1,7 +1,9 @@
 // テスト用フォーム入力
 function fillForms() {
   // SSをまとめて取得
-  const [ss, manageSheet, templateSheet, allSheets, ui] = getCommonSheets();
+  const ss = getSpreadsheet();
+  const manageSheet = getManageSheet();
+  const ui = getUI();
 
   // 希望ステータスのオプション
   const statusOptions = [

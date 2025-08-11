@@ -1,7 +1,10 @@
 // シフト希望を反映
 function reflectShiftForms() {
   // SSを取得
-  const [ss, manageSheet, templateSheet, allSheets, ui] = getCommonSheets();
+  const ss = getSpreadsheet();
+  const manageSheet = getManageSheet();
+  const templateSheet = getTemplateSheet();
+  const ui = getUI();
   // 最終行を取得
   const lastRow = getLastRowInCol(
     manageSheet,

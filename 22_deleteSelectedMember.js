@@ -1,7 +1,10 @@
 // 入力されたメンバーのファイルとシートを削除
 function deleteSelectedMember() {
   // SSをまとめて取得
-  const [ss, manageSheet, templateSheet, allSheets, ui] = getCommonSheets();
+  const ss = getSpreadsheet();
+  const manageSheet = getManageSheet();
+  const templateSheet = getTemplateSheet();
+  const ui = getUI();
 
   // 氏名の入力
   const response = ui.prompt(

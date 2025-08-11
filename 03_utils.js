@@ -5,36 +5,24 @@
 // ===== 1. シート・UI取得 =====
 
 /**
- * スプレッドシートとUIの共通オブジェクトを一括取得
+ * 共通で使用されるシート・UIオブジェクトをまとめて取得
  *
- * この関数は、シフト管理システムで頻繁に使用される以下のオブジェクトを
- * 一度の呼び出しで取得し、パフォーマンスを向上させます。
+ * 後方互換性のため、従来の5つの値を配列で返す形式も維持しています。
+ * パフォーマンスを重視する場合は、個別の関数を使用することを推奨します。
  *
- * @param {SpreadsheetApp} [spreadsheet] - 対象のスプレッドシート（テスト用）
+ * @param {Spreadsheet|null} spreadsheet - 対象のスプレッドシート（テスト時用、省略時はアクティブなSS）
  * @returns {Array} [ss, manageSheet, templateSheet, allSheets, ui]
- *   - ss: アクティブなスプレッドシート
- *   - manageSheet: シフト管理シート
- *   - templateSheet: シフトテンプレートシート
- *   - allSheets: 全シートの配列
- *   - ui: スプレッドシートUI
  *
  * @example
- * // 基本的な使用方法
+ * // 従来の使用方法（5つ全て取得）
  * const [ss, manageSheet, templateSheet, allSheets, ui] = getCommonSheets();
  *
- * // 個別のオブジェクトを使用
- * if (manageSheet) {
- *   const data = manageSheet.getDataRange().getValues();
- * }
+ * // 個別取得の推奨方法
+ * const ss = getSpreadsheet();
+ * const manageSheet = getManageSheet();
+ * const ui = getUI();
  *
- * // テスト用：特定のスプレッドシートを指定
- * const testSheets = getCommonSheets(mockSpreadsheet);
- *
- * @note
- * - この関数はモジュール読み込み時に一度だけ実行される
- * - シートが存在しない場合はnullが返される可能性がある
- * - 使用前に各オブジェクトの存在確認を推奨
- * - テスト時は外部依存を最小化するため、パラメータでスプレッドシートを指定可能
+ * @see getSpreadsheet, getManageSheet, getTemplateSheet, getAllSheets, getUI
  */
 function getCommonSheets(spreadsheet = null) {
   // SSを取得（テスト時はパラメータを使用）
@@ -49,6 +37,58 @@ function getCommonSheets(spreadsheet = null) {
   const ui = SpreadsheetApp.getUi();
 
   return [ss, manageSheet, templateSheet, allSheets, ui];
+}
+
+/**
+ * スプレッドシートオブジェクトを取得
+ *
+ * @param {Spreadsheet|null} spreadsheet - 対象のスプレッドシート（テスト時用、省略時はアクティブなSS）
+ * @returns {Spreadsheet} スプレッドシートオブジェクト
+ */
+function getSpreadsheet(spreadsheet = null) {
+  return spreadsheet || SpreadsheetApp.getActiveSpreadsheet();
+}
+
+/**
+ * シフト管理シートを取得
+ *
+ * @param {Spreadsheet|null} spreadsheet - 対象のスプレッドシート（テスト時用、省略時はアクティブなSS）
+ * @returns {Sheet|null} シフト管理シート（存在しない場合はnull）
+ */
+function getManageSheet(spreadsheet = null) {
+  const ss = getSpreadsheet(spreadsheet);
+  return ss.getSheetByName(SHEET_NAMES.SHIFT_MANAGEMENT);
+}
+
+/**
+ * シフトテンプレートシートを取得
+ *
+ * @param {Spreadsheet|null} spreadsheet - 対象のスプレッドシート（テスト時用、省略時はアクティブなSS）
+ * @returns {Sheet|null} シフトテンプレートシート（存在しない場合はnull）
+ */
+function getTemplateSheet(spreadsheet = null) {
+  const ss = getSpreadsheet(spreadsheet);
+  return ss.getSheetByName(SHEET_NAMES.SHIFT_TEMPLATE);
+}
+
+/**
+ * 全てのシートを取得
+ *
+ * @param {Spreadsheet|null} spreadsheet - 対象のスプレッドシート（テスト時用、省略時はアクティブなSS）
+ * @returns {Sheet[]} 全てのシートの配列
+ */
+function getAllSheets(spreadsheet = null) {
+  const ss = getSpreadsheet(spreadsheet);
+  return ss.getSheets();
+}
+
+/**
+ * UIオブジェクトを取得
+ *
+ * @returns {Ui} UIオブジェクト
+ */
+function getUI() {
+  return SpreadsheetApp.getUi();
 }
 
 // SSをまとめて取得（本番環境用）

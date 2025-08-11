@@ -1,7 +1,9 @@
 // 個別ファイルのシフト希望表をアップデート
 function updateForms() {
   // SSをまとめて取得
-  const [ss, manageSheet, templateSheet, allSheets, ui] = getCommonSheets();
+  const ss = getSpreadsheet();
+  const manageSheet = getManageSheet();
+  const ui = getUI();
 
   // 確認ダイアログを表示
   const confirm = ui.alert(

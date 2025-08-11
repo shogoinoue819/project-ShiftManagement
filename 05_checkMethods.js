@@ -22,7 +22,9 @@ function onEdit(e) {
 // 選択されたメンバーをロック
 function lockSelectedMember(row) {
   // SSをまとめて取得
-  const [ss, manageSheet, templateSheet, allSheets, ui] = getCommonSheets();
+  const ss = getSpreadsheet();
+  const manageSheet = getManageSheet();
+  const ui = getUI();
 
   // 氏名とURLを取得
   const name = manageSheet
@@ -81,7 +83,9 @@ function lockSelectedMember(row) {
 
 // 選択されたメンバーのロックを解除
 function unlockSelectedMember(row) {
-  const [ss, manageSheet, templateSheet, allSheets, ui] = getCommonSheets();
+  const ss = getSpreadsheet();
+  const manageSheet = getManageSheet();
+  const ui = getUI();
 
   // 氏名とURLを取得
   const name = manageSheet
@@ -135,7 +139,9 @@ function unlockSelectedMember(row) {
 // 提出済みのメンバーを全てチェックする
 function checkAllSubmittedMembers() {
   // SSをまとめて取得
-  const [ss, manageSheet, templateSheet, allSheets, ui] = getCommonSheets();
+  const ss = getSpreadsheet();
+  const manageSheet = getManageSheet();
+  const ui = getUI();
 
   // 最終行を取得
   const lastRow = getLastRowInCol(

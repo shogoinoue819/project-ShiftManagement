@@ -5,7 +5,9 @@
  */
 function shareShiftsFromManageSheet(manageSheetName) {
   // 共有に必要な共通オブジェクト取得
-  const [ss, , , allSheets, ui] = getCommonSheets(); // manageSheetは後で取り直す
+  const ss = getSpreadsheet();
+  const allSheets = getAllSheets();
+  const ui = getUI(); // manageSheetは後で取り直す
   const manageSheet = ss.getSheetByName(manageSheetName);
   if (!manageSheet) {
     ui.alert(
