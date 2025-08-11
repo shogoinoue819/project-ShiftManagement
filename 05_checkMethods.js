@@ -179,6 +179,21 @@ function checkAllSubmittedMembers() {
     return;
   }
 
+  // 各対象メンバーをロック（先にロック処理を実行）
+  const successfulRows = [];
+  rowsToCheck.forEach((rowIndex) => {
+    const success = lockSelectedMember(rowIndex);
+    if (success) {
+      successfulRows.push(rowIndex);
+    }
+  });
+
+  // ロックに成功した行のみチェックを設定
+  if (successfulRows.length === 0) {
+    ui.alert(`❌ ロック処理に失敗したため、チェックを設定できませんでした`);
+    return;
+  }
+
   // 一括でチェックを設定（パフォーマンス改善）
   const checkRange = manageSheet.getRange(
     SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW,
@@ -188,8 +203,8 @@ function checkAllSubmittedMembers() {
   );
   const checkValues = checkRange.getValues();
 
-  // 対象行のみチェックを設定
-  rowsToCheck.forEach((rowIndex) => {
+  // ロックに成功した行のみチェックを設定
+  successfulRows.forEach((rowIndex) => {
     const relativeRow = rowIndex - startRow;
     checkValues[relativeRow][0] = true;
   });
@@ -197,10 +212,15 @@ function checkAllSubmittedMembers() {
   // 一括更新
   checkRange.setValues(checkValues);
 
-  // 各対象メンバーをロック
-  rowsToCheck.forEach((rowIndex) => {
-    lockSelectedMember(rowIndex);
-  });
-
-  ui.alert(`✅ 提出済みのメンバー${rowsToCheck.length}人をチェックしました`);
+  if (successfulRows.length === rowsToCheck.length) {
+    ui.alert(
+      `✅ 提出済みのメンバー${successfulRows.length}人をチェックしました`
+    );
+  } else {
+    ui.alert(
+      `⚠️ 提出済みのメンバー${successfulRows.length}人をチェックしました（${
+        rowsToCheck.length - successfulRows.length
+      }人はロック処理に失敗）`
+    );
+  }
 }
