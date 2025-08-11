@@ -948,6 +948,68 @@ function buildMemberMap(memberData, urlData) {
   return memberMap; // { id1: { name: ..., url: ... }, ... }
 }
 
+/**
+ * メンバー情報を取得する
+ *
+ * 指定された行からメンバーの名前とファイルIDを取得します。
+ * URLからファイルIDを抽出し、オブジェクトとして返します。
+ *
+ * @param {number} row - メンバーリストの行番号
+ * @param {Sheet} [sheet=manageSheet] - 対象のシート（省略時は管理シート）
+ * @returns {Object|null} メンバー情報 {name: string, fileId: string} または null（失敗時）
+ *
+ * @example
+ * // 基本的な使用方法
+ * const memberInfo = getMemberInfo(5);
+ * if (memberInfo) {
+ *   console.log(`名前: ${memberInfo.name}, ファイルID: ${memberInfo.fileId}`);
+ * }
+ *
+ * // 特定のシートから取得
+ * const memberInfo = getMemberInfo(5, otherSheet);
+ *
+ * // エラーハンドリング付きで実行
+ * const memberInfo = getMemberInfo(5);
+ * if (!memberInfo) {
+ *   console.error("メンバー情報の取得に失敗しました");
+ *   return;
+ * }
+ */
+function getMemberInfo(row, sheet = manageSheet) {
+  if (!sheet) {
+    console.warn("getMemberInfo: シートが指定されていません");
+    return null;
+  }
+
+  try {
+    // 氏名とURLを取得
+    const name = sheet
+      .getRange(row, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.NAME_COL)
+      .getValue();
+    const url = sheet
+      .getRange(row, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.URL_COL)
+      .getFormula();
+
+    // URLからファイルIDを抽出
+    const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+    if (!match || !match[1]) {
+      console.warn(`getMemberInfo: URL抽出失敗: ${name}`);
+      return null;
+    }
+
+    return {
+      name: name,
+      fileId: match[1],
+    };
+  } catch (e) {
+    console.error("getMemberInfo: エラーが発生しました", {
+      error: e.message,
+      row: row,
+    });
+    return null;
+  }
+}
+
 // ===== 4. 日付・時間処理 =====
 
 /**
@@ -1568,5 +1630,119 @@ function protectSheet(sheet, description = "シートの保護") {
     }
   } catch (e) {
     console.error("protectSheet: エラーが発生しました", { error: e.message });
+  }
+}
+
+/**
+ * 特定のシートを保護する
+ *
+ * 指定されたスプレッドシート内の特定のシートを保護します。
+ * 既存の保護がある場合は一旦解除してから新しく保護を設定します。
+ *
+ * @param {Spreadsheet} spreadsheet - 対象のスプレッドシート
+ * @param {string} sheetName - 保護するシート名
+ * @param {string} description - 保護の説明文
+ * @param {string} [memberName=""] - メンバー名（ログ用）
+ * @returns {boolean} 保護が成功したかどうか
+ *
+ * @example
+ * // 基本的な使用方法
+ * const success = protectSheetByName(targetFile, "シフト希望表", "チェックによるロック");
+ *
+ * // メンバー名付きで実行
+ * const success = protectSheetByName(targetFile, "シフト希望表", "チェックによるロック", "田中太郎");
+ *
+ * // エラーハンドリング付きで実行
+ * if (!protectSheetByName(targetFile, "シフト希望表", "保護")) {
+ *   console.error("シートの保護に失敗しました");
+ * }
+ */
+function protectSheetByName(
+  spreadsheet,
+  sheetName,
+  description,
+  memberName = ""
+) {
+  const sheet = spreadsheet.getSheetByName(sheetName);
+  if (!sheet) {
+    console.warn(
+      `protectSheetByName: ${sheetName}が見つかりません${
+        memberName ? `: ${memberName}` : ""
+      }`
+    );
+    return false;
+  }
+
+  try {
+    // 既存の保護がある場合のみ削除（パフォーマンス改善）
+    const protections = sheet.getProtections(
+      SpreadsheetApp.ProtectionType.SHEET
+    );
+    if (protections.length > 0) {
+      protections.forEach((p) => p.remove());
+    }
+
+    // 新しく保護を設定
+    protectSheet(sheet, description);
+    return true;
+  } catch (e) {
+    console.error(
+      `protectSheetByName: エラーが発生しました${
+        memberName ? ` (${memberName})` : ""
+      }`,
+      { error: e.message }
+    );
+    return false;
+  }
+}
+
+/**
+ * 特定のシートの保護を解除する
+ *
+ * 指定されたスプレッドシート内の特定のシートの保護を解除します。
+ *
+ * @param {Spreadsheet} spreadsheet - 対象のスプレッドシート
+ * @param {string} sheetName - 保護を解除するシート名
+ * @param {string} [memberName=""] - メンバー名（ログ用）
+ * @returns {boolean} 保護解除が成功したかどうか
+ *
+ * @example
+ * // 基本的な使用方法
+ * const success = unprotectSheetByName(targetFile, "シフト希望表");
+ *
+ * // メンバー名付きで実行
+ * const success = unprotectSheetByName(targetFile, "シフト希望表", "田中太郎");
+ *
+ * // エラーハンドリング付きで実行
+ * if (!unprotectSheetByName(targetFile, "シフト希望表")) {
+ *   console.error("シートの保護解除に失敗しました");
+ * }
+ */
+function unprotectSheetByName(spreadsheet, sheetName, memberName = "") {
+  const sheet = spreadsheet.getSheetByName(sheetName);
+  if (!sheet) {
+    console.warn(
+      `unprotectSheetByName: ${sheetName}が見つかりません${
+        memberName ? `: ${memberName}` : ""
+      }`
+    );
+    return false;
+  }
+
+  try {
+    // 保護を削除
+    const protections = sheet.getProtections(
+      SpreadsheetApp.ProtectionType.SHEET
+    );
+    protections.forEach((p) => p.remove());
+    return true;
+  } catch (e) {
+    console.error(
+      `unprotectSheetByName: エラーが発生しました${
+        memberName ? ` (${memberName})` : ""
+      }`,
+      { error: e.message }
+    );
+    return false;
   }
 }

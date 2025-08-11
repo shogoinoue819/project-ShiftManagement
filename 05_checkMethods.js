@@ -16,123 +16,114 @@ function onEdit(e) {
       unlockSelectedMember(row);
     }
   }
-  Logger.log(`onEdit 発火: row=${row}, col=${col}, value=${value}`);
+  Logger.log(`onEdit 発火: row=${row}, col=${col}, value=${e.value}`);
 }
 
-// 選択されたメンバーをロック
-function lockSelectedMember(row) {
-  // SSをまとめて取得
-  const ss = getSpreadsheet();
-  const manageSheet = getManageSheet();
-  const ui = getUI();
-
-  // 氏名とURLを取得
-  const name = manageSheet
-    .getRange(row, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.NAME_COL)
-    .getValue();
-  const url = manageSheet
-    .getRange(row, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.URL_COL)
-    .getFormula();
-
-  // URLからファイルIDを抽出
-  const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
-  if (!match || !match[1]) {
-    Logger.log(`⚠️ URL抽出失敗: ${name}`);
-    return null;
-  }
-  // ファイルIDを取得
-  const fileId = match[1];
-
+// シート保護の共通処理
+function protectMemberSheets(fileId, memberName, isLock) {
   try {
     // ファイルIDから提出用SSを取得
     const targetFile = SpreadsheetApp.openById(fileId);
 
-    // シフト希望表シートのロック
-    const targetSheet = targetFile.getSheetByName(SHEET_NAMES.SHIFT_FORM);
-    if (targetSheet) {
-      // 既存の保護がある場合は一旦解除
-      const protections = targetSheet.getProtections(
-        SpreadsheetApp.ProtectionType.SHEET
+    if (isLock) {
+      // ロック処理
+      const formSuccess = protectSheetByName(
+        targetFile,
+        SHEET_NAMES.SHIFT_FORM,
+        "チェックによるロック",
+        memberName
       );
-      protections.forEach((p) => p.remove());
-      // 新しく保護を設定
-      protectSheet(targetSheet, "チェックによるロック");
+      const infoSuccess = protectSheetByName(
+        targetFile,
+        SHEET_NAMES.SHIFT_FORM_INFO,
+        "チェックによるロック（今後の勤務希望）",
+        memberName
+      );
+
+      if (formSuccess && infoSuccess) {
+        Logger.log(`🔒 ${memberName} をロックしました`);
+      } else {
+        Logger.log(`⚠️ ${memberName} のロックが部分的に失敗しました`);
+        return false;
+      }
     } else {
-      Logger.log(`⚠️ シフト希望表が見つかりません: ${name}`);
+      // アンロック処理
+      const formSuccess = unprotectSheetByName(
+        targetFile,
+        SHEET_NAMES.SHIFT_FORM,
+        memberName
+      );
+      const infoSuccess = unprotectSheetByName(
+        targetFile,
+        SHEET_NAMES.SHIFT_FORM_INFO,
+        memberName
+      );
+
+      if (formSuccess && infoSuccess) {
+        Logger.log(`🔓 ${memberName} のロックを解除しました`);
+      } else {
+        Logger.log(`⚠️ ${memberName} のロック解除が部分的に失敗しました`);
+        return false;
+      }
     }
 
-    // 今後の勤務希望シートのロック
-    const infoSheet = targetFile.getSheetByName(SHEET_NAMES.SHIFT_FORM_INFO);
-    if (infoSheet) {
-      // 既存の保護がある場合は解除（情報シート）
-      const infoProtections = infoSheet.getProtections(
-        SpreadsheetApp.ProtectionType.SHEET
-      );
-      infoProtections.forEach((p) => p.remove());
-      // 新しく保護を設定（情報シート）
-      protectSheet(infoSheet, "チェックによるロック（今後の勤務希望）");
-    } else {
-      Logger.log(`⚠️ 情報シートが見つかりません: ${name}`);
-    }
-
-    Logger.log(`🔒 ${name} をロックしました`);
+    return true;
   } catch (e) {
-    Logger.log(`❌ ロック失敗: ${name} - ${e}`);
+    Logger.log(
+      `❌ ${isLock ? "ロック" : "アンロック"}失敗: ${memberName} - ${e}`
+    );
+    return false;
+  }
+}
+
+// 選択されたメンバーをロック
+function lockSelectedMember(row) {
+  try {
+    const memberInfo = getMemberInfo(row);
+    if (!memberInfo) {
+      Logger.log(`⚠️ メンバー情報の取得に失敗: 行${row}`);
+      return false;
+    }
+
+    const success = protectMemberSheets(
+      memberInfo.fileId,
+      memberInfo.name,
+      true
+    );
+    if (!success) {
+      Logger.log(`⚠️ メンバーロックに失敗: ${memberInfo.name}`);
+    }
+    return success;
+  } catch (e) {
+    Logger.log(`❌ ロック処理でエラーが発生: 行${row} - ${e}`);
+    return false;
   }
 }
 
 // 選択されたメンバーのロックを解除
 function unlockSelectedMember(row) {
-  const ss = getSpreadsheet();
-  const manageSheet = getManageSheet();
-  const ui = getUI();
-
-  // 氏名とURLを取得
-  const name = manageSheet
-    .getRange(row, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.NAME_COL)
-    .getValue();
-  const url = manageSheet
-    .getRange(row, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.URL_COL)
-    .getFormula();
-
-  const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
-  if (!match || !match[1]) {
-    Logger.log(`⚠️ URL抽出失敗: ${name}`);
-    return null;
-  }
-  const fileId = match[1];
-
   try {
-    // ファイルIDから提出用スプレッドシートを取得
-    const targetFile = SpreadsheetApp.openById(fileId);
-
-    // フォームシート（シフト希望表）を取得
-    const targetSheet = targetFile.getSheetByName(SHEET_NAMES.SHIFT_FORM);
-    if (!targetSheet) {
-      Logger.log(`⚠️ シフト希望表が見つかりません: ${name}`);
-      return;
+    const memberInfo = getMemberInfo(row);
+    if (!memberInfo) {
+      Logger.log(`⚠️ メンバー情報の取得に失敗: 行${row}`);
+      return false;
     }
-    // 情報シート（フォーム情報）を取得
-    const infoSheet = targetFile.getSheetByName(SHEET_NAMES.SHIFT_FORM_INFO);
-    if (!infoSheet) {
-      Logger.log(`⚠️ 情報シートが見つかりません: ${name}`);
-      return;
-    }
-    // シフト希望表の保護を削除
-    const protections1 = targetSheet.getProtections(
-      SpreadsheetApp.ProtectionType.SHEET
-    );
-    protections1.forEach((p) => p.remove());
-    // 情報シートの保護を削除
-    const protections2 = infoSheet.getProtections(
-      SpreadsheetApp.ProtectionType.SHEET
-    );
-    protections2.forEach((p) => p.remove());
 
-    Logger.log(`🔓 ${name} のロックを解除しました`);
-    ui.alert(`🔓 ${name}さんのロックを解除しました`);
+    const success = protectMemberSheets(
+      memberInfo.fileId,
+      memberInfo.name,
+      false
+    );
+    if (success) {
+      const ui = getUI();
+      ui.alert(`🔓 ${memberInfo.name}さんのロックを解除しました`);
+    } else {
+      Logger.log(`⚠️ メンバーロック解除に失敗: ${memberInfo.name}`);
+    }
+    return success;
   } catch (e) {
-    Logger.log(`❌ アンロック失敗: ${name} - ${e}`);
+    Logger.log(`❌ ロック解除処理でエラーが発生: 行${row} - ${e}`);
+    return false;
   }
 }
 
@@ -148,52 +139,68 @@ function checkAllSubmittedMembers() {
     manageSheet,
     SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_COL
   );
-  // メンバーリストからデータを取得[[id, name, shiftName, submit, check, reflect], ...]
+
+  // データが存在しない場合
+  if (lastRow < SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW) {
+    ui.alert(`❌ メンバーデータが存在しません`);
+    return;
+  }
+
+  // 必要な列のみを取得（パフォーマンス改善）
+  const startRow = SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW;
+  const rowCount = lastRow - startRow + 1;
+
+  // 提出ステータスとチェック状態の列のみを取得
+  const submitCol = SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.SUBMIT_COL;
+  const checkCol = SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.CHECK_COL;
+
   const data = manageSheet
-    .getRange(
-      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW,
-      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_COL,
-      lastRow - SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW + 1,
-      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.REFLECT_COL -
-        SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_COL +
-        1
-    )
+    .getRange(startRow, submitCol, rowCount, 2) // submit列とcheck列のみ
     .getValues();
 
   // 人数カウンター
   let count = 0;
-  // データの各メンバーにおいて、
+  const rowsToCheck = [];
+
+  // データの各メンバーにおいて、提出済みかつ未チェックの行を特定
   data.forEach((row, i) => {
-    // 提出ステータスとチェックを取得
-    const submitStatus =
-      row[
-        SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.SUBMIT_COL -
-          SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_COL
-      ];
-    const isChecked =
-      row[
-        SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.CHECK_COL -
-          SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_COL
-      ];
-    // 提出済みかつチェックされていなければ、
+    const submitStatus = row[0]; // submit列
+    const isChecked = row[1]; // check列
+
+    // 提出済みかつチェックされていなければ、対象行として記録
     if (submitStatus === STATUS_STRINGS.SUBMIT.TRUE && isChecked !== true) {
-      // ロック処理
-      lockSelectedMember(SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW + i);
-      // シートにチェックを入れる
-      manageSheet
-        .getRange(
-          SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW + i,
-          SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.CHECK_COL
-        )
-        .setValue(true);
-      // 人数を1人増やす
-      count++;
+      rowsToCheck.push(startRow + i);
     }
   });
 
-  if (count === 0) {
+  // 対象行がない場合
+  if (rowsToCheck.length === 0) {
     ui.alert(`❌ 新たにチェックできるメンバーはいません`);
-  } else {
-    ui.alert(`✅ 提出済みのメンバー${count}人をチェックしました`);
+    return;
   }
+
+  // 一括でチェックを設定（パフォーマンス改善）
+  const checkRange = manageSheet.getRange(
+    SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW,
+    checkCol,
+    rowCount,
+    1
+  );
+  const checkValues = checkRange.getValues();
+
+  // 対象行のみチェックを設定
+  rowsToCheck.forEach((rowIndex) => {
+    const relativeRow = rowIndex - startRow;
+    checkValues[relativeRow][0] = true;
+  });
+
+  // 一括更新
+  checkRange.setValues(checkValues);
+
+  // 各対象メンバーをロック
+  rowsToCheck.forEach((rowIndex) => {
+    lockSelectedMember(rowIndex);
+  });
+
+  ui.alert(`✅ 提出済みのメンバー${rowsToCheck.length}人をチェックしました`);
 }
