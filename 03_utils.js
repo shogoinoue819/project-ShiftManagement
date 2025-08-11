@@ -250,6 +250,356 @@ function findLastNonEmptyColumn(values) {
 // ===== 3. メンバー管理 =====
 
 /**
+ * メンバー管理システム
+ *
+ * メンバーID、氏名、URL、ステータスなどの情報を統一的に管理し、
+ * パフォーマンスを最適化した検索・取得機能を提供します。
+ *
+ * 特徴:
+ * - データの一括取得とキャッシュ
+ * - 高速な検索（Map使用）
+ * - 統一されたインターフェース
+ * - メモリ効率の最適化
+ */
+class MemberManager {
+  constructor(sheet = manageSheet) {
+    this.sheet = sheet;
+    this.memberData = null;
+    this.memberMap = null;
+    this.idToIndexMap = null;
+    this.nameToIdMap = null;
+    this.lastUpdate = null;
+    this.isInitialized = false;
+  }
+
+  /**
+   * メンバーデータを初期化・更新
+   *
+   * @param {boolean} [forceRefresh=false] - 強制更新フラグ
+   * @returns {boolean} 初期化の成功/失敗
+   */
+  initialize(forceRefresh = false) {
+    try {
+      // シートの妥当性チェック
+      if (!this.sheet) {
+        console.warn("MemberManager: 管理シートが取得できません");
+        return false;
+      }
+
+      // 強制更新でない場合、既存データの有効性をチェック
+      if (!forceRefresh && this.isValidCache()) {
+        return true;
+      }
+
+      // データの取得と初期化
+      const success = this.refreshData();
+      if (success) {
+        this.lastUpdate = new Date();
+        this.isInitialized = true;
+      }
+
+      return success;
+    } catch (error) {
+      console.error("MemberManager.initialize: エラーが発生しました", {
+        error: error.message,
+      });
+      return false;
+    }
+  }
+
+  /**
+   * キャッシュの有効性をチェック
+   *
+   * @returns {boolean} キャッシュが有効かどうか
+   */
+  isValidCache() {
+    return (
+      this.isInitialized &&
+      this.memberData &&
+      this.memberMap &&
+      this.lastUpdate &&
+      new Date() - this.lastUpdate < 300000
+    ); // 5分以内
+  }
+
+  /**
+   * メンバーデータを更新
+   *
+   * @returns {boolean} 更新の成功/失敗
+   */
+  refreshData() {
+    try {
+      const lastRow = getLastRowInColumn(
+        this.sheet,
+        SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_COL
+      );
+
+      // データが存在しない場合
+      if (!this.hasValidMemberData(lastRow)) {
+        this.clearData();
+        return false;
+      }
+
+      // 一括でデータを取得
+      const memberData = this.fetchMemberListData(lastRow);
+      const urlData = this.fetchMemberUrlData(lastRow);
+
+      // データの構築
+      this.buildMemberData(memberData, urlData);
+      return true;
+    } catch (error) {
+      console.error("MemberManager.refreshData: エラーが発生しました", {
+        error: error.message,
+      });
+      this.clearData();
+      return false;
+    }
+  }
+
+  /**
+   * メンバーデータの存在確認
+   *
+   * @param {number} lastRow - 最終行番号
+   * @returns {boolean} データの存在確認結果
+   */
+  hasValidMemberData(lastRow) {
+    return lastRow >= SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW;
+  }
+
+  /**
+   * メンバーリストデータの取得
+   *
+   * @param {number} lastRow - 最終行番号
+   * @returns {Array<Array>} メンバーデータの2次元配列
+   */
+  fetchMemberListData(lastRow) {
+    const startRow = SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW;
+    const rowCount = lastRow - startRow + 1;
+
+    if (rowCount <= 0) {
+      return [];
+    }
+
+    return this.sheet
+      .getRange(
+        startRow,
+        SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.ID_COL,
+        rowCount,
+        UTILS_CONSTANTS.COLUMNS.ID_AND_NAME
+      )
+      .getValues();
+  }
+
+  /**
+   * メンバーURLデータの取得
+   *
+   * @param {number} lastRow - 最終行番号
+   * @returns {Array<Array>} URLデータの2次元配列
+   */
+  fetchMemberUrlData(lastRow) {
+    const startRow = SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW;
+    const rowCount = lastRow - startRow + 1;
+
+    if (rowCount <= 0) {
+      return [];
+    }
+
+    return this.sheet
+      .getRange(
+        startRow,
+        SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.URL_COL,
+        rowCount,
+        UTILS_CONSTANTS.COLUMNS.ID_ONLY
+      )
+      .getFormulas();
+  }
+
+  /**
+   * メンバーデータの構築
+   *
+   * @param {Array<Array>} memberData - メンバーデータ
+   * @param {Array<Array>} urlData - URLデータ
+   */
+  buildMemberData(memberData, urlData) {
+    this.memberData = memberData;
+    this.memberMap = {};
+    this.idToIndexMap = new Map();
+    this.nameToIdMap = new Map();
+
+    const length = Math.min(memberData.length, urlData.length);
+
+    for (let i = 0; i < length; i++) {
+      const [id, name] = memberData[i];
+      if (id && name) {
+        // メンバーマップの構築
+        this.memberMap[id] = {
+          name,
+          url: urlData[i][0] || UTILS_CONSTANTS.DEFAULTS.EMPTY_STRING,
+          order: i,
+        };
+
+        // 高速検索用のマップを構築
+        this.idToIndexMap.set(String(id), i);
+        this.nameToIdMap.set(String(name), id);
+      }
+    }
+  }
+
+  /**
+   * データをクリア
+   */
+  clearData() {
+    this.memberData = null;
+    this.memberMap = null;
+    this.idToIndexMap = null;
+    this.nameToIdMap = null;
+    this.isInitialized = false;
+  }
+
+  /**
+   * IDから氏名を取得
+   *
+   * @param {string} id - メンバーID
+   * @returns {string|null} メンバー氏名、見つからない場合はnull
+   */
+  getNameById(id) {
+    if (!this.ensureInitialized() || !id) {
+      return null;
+    }
+
+    const member = this.memberMap[id];
+    return member ? member.name : null;
+  }
+
+  /**
+   * 氏名からIDを取得
+   *
+   * @param {string} name - メンバー氏名
+   * @returns {string|null} メンバーID、見つからない場合はnull
+   */
+  getIdByName(name) {
+    if (!this.ensureInitialized() || !name) {
+      return null;
+    }
+
+    return this.nameToIdMap.get(String(name)) || null;
+  }
+
+  /**
+   * IDからorderを取得
+   *
+   * @param {string} id - メンバーID
+   * @returns {number} メンバーの順序（0から開始、見つからない場合は-1）
+   */
+  getOrderById(id) {
+    if (!this.ensureInitialized() || !id) {
+      return UTILS_CONSTANTS.DEFAULTS.NOT_FOUND;
+    }
+
+    const index = this.idToIndexMap.get(String(id));
+    return index !== undefined ? index : UTILS_CONSTANTS.DEFAULTS.NOT_FOUND;
+  }
+
+  /**
+   * メンバー情報を取得
+   *
+   * @param {string} id - メンバーID
+   * @returns {Object|null} メンバー情報、見つからない場合はnull
+   */
+  getMemberInfo(id) {
+    if (!this.ensureInitialized() || !id) {
+      return null;
+    }
+
+    return this.memberMap[id] || null;
+  }
+
+  /**
+   * 全メンバーのリストを取得
+   *
+   * @returns {Array<Object>} 全メンバーの情報配列
+   */
+  getAllMembers() {
+    if (!this.ensureInitialized()) {
+      return [];
+    }
+
+    return Object.values(this.memberMap);
+  }
+
+  /**
+   * メンバー数を取得
+   *
+   * @returns {number} メンバー数
+   */
+  getMemberCount() {
+    if (!this.ensureInitialized()) {
+      return 0;
+    }
+
+    return Object.keys(this.memberMap).length;
+  }
+
+  /**
+   * 初期化の確認
+   *
+   * @returns {boolean} 初期化済みかどうか
+   */
+  ensureInitialized() {
+    if (!this.isInitialized) {
+      return this.initialize();
+    }
+    return true;
+  }
+
+  /**
+   * メンバーの存在確認
+   *
+   * @param {string} id - メンバーID
+   * @returns {boolean} 存在するかどうか
+   */
+  exists(id) {
+    if (!this.ensureInitialized() || !id) {
+      return false;
+    }
+
+    return id in this.memberMap;
+  }
+
+  /**
+   * メンバー名の存在確認
+   *
+   * @param {string} name - メンバー氏名
+   * @returns {boolean} 存在するかどうか
+   */
+  existsByName(name) {
+    if (!this.ensureInitialized() || !name) {
+      return false;
+    }
+
+    return this.nameToIdMap.has(String(name));
+  }
+}
+
+// グローバルなメンバーマネージャーインスタンス
+let globalMemberManager = null;
+
+/**
+ * グローバルメンバーマネージャーを取得
+ *
+ * @param {Sheet} [sheet=manageSheet] - 対象シート（テスト用）
+ * @returns {MemberManager} メンバーマネージャーインスタンス
+ */
+function getMemberManager(sheet = manageSheet) {
+  if (!globalMemberManager || globalMemberManager.sheet !== sheet) {
+    globalMemberManager = new MemberManager(sheet);
+  }
+  return globalMemberManager;
+}
+
+// ===== 後方互換性のための関数 =====
+
+/**
  * ランダムな6桁のメンバーIDを生成
  *
  * 英数字を組み合わせたユニークなメンバーIDを生成します。
@@ -327,6 +677,7 @@ function generateRandomMemberId() {
  *
  * @see getMemberNameById, getMemberIdByName, getMemberOrderById
  * @see UTILS_CONSTANTS.COLUMNS
+ * @deprecated 新しいMemberManagerクラスの使用を推奨
  */
 function getMemberListData(
   columns = UTILS_CONSTANTS.COLUMNS.ID_AND_NAME,
@@ -411,6 +762,7 @@ function fetchMemberListData(lastRow, columns, sheet) {
  * @param {string} id - メンバーID
  * @param {Sheet} [sheet=manageSheet] - 対象シート（テスト用）
  * @returns {string|null} メンバー氏名、見つからない場合はnull
+ * @deprecated 新しいMemberManagerクラスの使用を推奨
  */
 function getMemberNameById(id, sheet = manageSheet) {
   // パラメータの検証
@@ -419,8 +771,8 @@ function getMemberNameById(id, sheet = manageSheet) {
     return null;
   }
 
-  const data = getMemberListData(UTILS_CONSTANTS.COLUMNS.ID_AND_NAME, sheet); // ID列と氏名列を取得
-  return findMemberNameById(data, id);
+  const memberManager = getMemberManager(sheet);
+  return memberManager.getNameById(id);
 }
 
 /**
@@ -429,6 +781,7 @@ function getMemberNameById(id, sheet = manageSheet) {
  * @param {string} name - メンバー氏名
  * @param {Sheet} [sheet=manageSheet] - 対象シート（テスト用）
  * @returns {string|null} メンバーID、見つからない場合はnull
+ * @deprecated 新しいMemberManagerクラスの使用を推奨
  */
 function getMemberIdByName(name, sheet = manageSheet) {
   // パラメータの検証
@@ -436,8 +789,8 @@ function getMemberIdByName(name, sheet = manageSheet) {
     return null;
   }
 
-  const data = getMemberListData(UTILS_CONSTANTS.COLUMNS.ID_AND_NAME, sheet); // ID列と氏名列を取得
-  return findMemberIdByName(data, name);
+  const memberManager = getMemberManager(sheet);
+  return memberManager.getIdByName(name);
 }
 
 /**
@@ -446,6 +799,7 @@ function getMemberIdByName(name, sheet = manageSheet) {
  * @param {string} id - メンバーID
  * @param {Sheet} [sheet=manageSheet] - 対象シート（テスト用）
  * @returns {number} メンバーの順序（0から開始、見つからない場合は-1）
+ * @deprecated 新しいMemberManagerクラスの使用を推奨
  */
 function getMemberOrderById(id, sheet = manageSheet) {
   // パラメータの検証
@@ -454,8 +808,8 @@ function getMemberOrderById(id, sheet = manageSheet) {
     return UTILS_CONSTANTS.DEFAULTS.NOT_FOUND;
   }
 
-  const data = getMemberListData(UTILS_CONSTANTS.COLUMNS.ID_ONLY, sheet); // ID列のみ取得
-  return findMemberOrderById(data, id);
+  const memberManager = getMemberManager(sheet);
+  return memberManager.getOrderById(id);
 }
 
 /**
@@ -531,6 +885,7 @@ function findMemberOrderById(data, id) {
  *
  * @param {Sheet} [sheet=manageSheet] - 対象シート（テスト用）
  * @returns {Object} メンバーIDをキーとしたオブジェクト
+ * @deprecated 新しいMemberManagerクラスの使用を推奨
  */
 function createMemberMap(sheet = manageSheet) {
   if (!sheet) {
@@ -538,24 +893,8 @@ function createMemberMap(sheet = manageSheet) {
     return UTILS_CONSTANTS.DEFAULTS.EMPTY_OBJECT;
   }
 
-  const lastRow = getLastRowInColumn(
-    sheet,
-    SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_COL
-  );
-
-  // データが存在しない場合
-  if (!hasValidMemberData(lastRow)) {
-    return UTILS_CONSTANTS.DEFAULTS.EMPTY_OBJECT;
-  }
-
-  const memberData = fetchMemberListData(
-    lastRow,
-    UTILS_CONSTANTS.COLUMNS.ID_AND_NAME,
-    sheet
-  );
-  const urlData = fetchMemberUrlData(lastRow, sheet);
-
-  return buildMemberMap(memberData, urlData);
+  const memberManager = getMemberManager(sheet);
+  return memberManager.memberMap || UTILS_CONSTANTS.DEFAULTS.EMPTY_OBJECT;
 }
 
 /**

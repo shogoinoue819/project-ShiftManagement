@@ -21,7 +21,19 @@ function updateForms() {
   // ====== 個別ファイルのシフト希望表をアップデート ======
 
   // メンバーマップを作成
-  const memberMap = createMemberMap();
+  const memberManager = getMemberManager();
+  // 初期化を確実に行う
+  if (!memberManager.ensureInitialized()) {
+    ui.alert("❌ メンバーデータの初期化に失敗しました");
+    return;
+  }
+  const memberMap = memberManager.memberMap;
+
+  // メンバーマップの妥当性チェック
+  if (!memberMap || Object.keys(memberMap).length === 0) {
+    ui.alert("❌ メンバーデータが取得できませんでした");
+    return;
+  }
 
   // チェック列をリセット
   manageSheet

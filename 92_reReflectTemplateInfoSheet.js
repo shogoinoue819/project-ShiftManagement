@@ -8,7 +8,17 @@ function reReflectTemplateInfoSheet() {
     );
   }
 
-  const memberMap = createMemberMap();
+  const memberManager = getMemberManager();
+  // 初期化を確実に行う
+  if (!memberManager.ensureInitialized()) {
+    throw new Error("❌ メンバーデータの初期化に失敗しました");
+  }
+  const memberMap = memberManager.memberMap;
+
+  // メンバーマップの妥当性チェック
+  if (!memberMap || Object.keys(memberMap).length === 0) {
+    throw new Error("❌ メンバーデータが取得できませんでした");
+  }
   let count = 0;
 
   let index = 0;
