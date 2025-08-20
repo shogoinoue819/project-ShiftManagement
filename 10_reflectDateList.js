@@ -1,7 +1,12 @@
 // テンプレートファイルに日程リストを反映
 function reflectDateList() {
+  // SSをまとめて取得
+  const ss = getSpreadsheet();
+  const manageSheet = getManageSheet();
+  const ui = getUI();
+
   // 日程リストの取得
-  const dateList = getDateList(); // [[8/25(月)], [8/26(火)], ...] の形式で取得される想定
+  const dateList = getDateList(manageSheet); // [[8/25(月)], [8/26(火)], ...] の形式で取得される想定
   const numDates = dateList.length;
 
   // テンプレートファイルを取得
@@ -10,11 +15,6 @@ function reflectDateList() {
   if (!targetSheet) {
     throw new Error("❌ シフト希望表_テンプレート シートが見つかりません");
   }
-
-  // SSをまとめて取得
-  const ss = getSpreadsheet();
-  const manageSheet = getManageSheet();
-  const ui = getUI();
 
   // A列に日付をセット
   targetSheet

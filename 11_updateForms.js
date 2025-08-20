@@ -53,7 +53,8 @@ function confirmUpdateOperation(ui) {
 
 // メンバーデータの初期化と検証
 function initializeAndValidateMembers(ui) {
-  const memberManager = getMemberManager();
+  const manageSheet = getManageSheet();
+  const memberManager = getMemberManager(manageSheet);
 
   // 初期化を確実に行う
   if (!memberManager.ensureInitialized()) {

@@ -71,7 +71,7 @@ function reflectShiftForms() {
     logWithErrorHandling(`処理対象メンバー数: ${filtered.length}`);
 
     // ターゲットはシフト作成シート（manageSheetの日付リストに基づく）
-    const dateList = getDateList();
+    const dateList = getDateList(manageSheet);
     const targetSheets = dateList
       .map((row) => {
         const date = row[0];
@@ -92,11 +92,12 @@ function reflectShiftForms() {
         .getValue();
       // シフト希望表のその日程の行を取得
       const dateRow =
-        getDateOrderByDate(date) + SHIFT_FORM_TEMPLATE.DATA.START_ROW;
+        getDateOrderByDate(date, manageSheet) +
+        SHIFT_FORM_TEMPLATE.DATA.START_ROW;
 
       // フィルタリングされたメンバーにおいて、
       filtered.forEach((member) => {
-        processMemberShift(dailySheet, member, date, ss);
+        processMemberShift(dailySheet, member, date, ss, manageSheet);
       });
 
       logWithErrorHandling(`${dateStr}の色反映が完了しました`);
@@ -192,7 +193,7 @@ function formatTimeValue(value) {
 }
 
 // ヘルパー関数: 個別メンバーのシフト反映処理
-function processMemberShift(dailySheet, member, date, ss) {
+function processMemberShift(dailySheet, member, date, ss, manageSheet) {
   const { name, order } = member;
   const personalCol = order + SHIFT_TEMPLATE_SHEET.MEMBER_START_COL;
 
@@ -201,7 +202,8 @@ function processMemberShift(dailySheet, member, date, ss) {
   if (!personalSheet) return;
 
   // その日程のデータを取得
-  const dateRow = getDateOrderByDate(date) + SHIFT_FORM_TEMPLATE.DATA.START_ROW;
+  const dateRow =
+    getDateOrderByDate(date, manageSheet) + SHIFT_FORM_TEMPLATE.DATA.START_ROW;
   const rowData = personalSheet
     .getRange(dateRow, 1, 1, SHIFT_FORM_TEMPLATE.DATA.NOTE_COL)
     .getValues()[0];

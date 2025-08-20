@@ -4,6 +4,7 @@ function reflectLessonTemplate() {
   const ss = getSpreadsheet();
   const manageSheet = getManageSheet();
   const templateSheet = getTemplateSheet();
+  const allSheets = ss.getSheets();
   const ui = getUI();
 
   // 曜日とテンプレート名の対応マップ

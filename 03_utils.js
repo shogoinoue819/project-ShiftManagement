@@ -5,41 +5,6 @@
 // ===== 1. シート・UI取得 =====
 
 /**
- * 共通で使用されるシート・UIオブジェクトをまとめて取得
- *
- * 後方互換性のため、従来の5つの値を配列で返す形式も維持しています。
- * パフォーマンスを重視する場合は、個別の関数を使用することを推奨します。
- *
- * @param {Spreadsheet|null} spreadsheet - 対象のスプレッドシート（テスト時用、省略時はアクティブなSS）
- * @returns {Array} [ss, manageSheet, templateSheet, allSheets, ui]
- *
- * @example
- * // 従来の使用方法（5つ全て取得）
- * const [ss, manageSheet, templateSheet, allSheets, ui] = getCommonSheets();
- *
- * // 個別取得の推奨方法
- * const ss = getSpreadsheet();
- * const manageSheet = getManageSheet();
- * const ui = getUI();
- *
- * @see getSpreadsheet, getManageSheet, getTemplateSheet, getAllSheets, getUI
- */
-function getCommonSheets(spreadsheet = null) {
-  // SSを取得（テスト時はパラメータを使用）
-  const ss = spreadsheet || SpreadsheetApp.getActiveSpreadsheet();
-  // シフト管理シートを取得
-  const manageSheet = ss.getSheetByName(SHEET_NAMES.SHIFT_MANAGEMENT);
-  // シフトテンプレートシートを取得
-  const templateSheet = ss.getSheetByName(SHEET_NAMES.SHIFT_TEMPLATE);
-  // 全てのシートを取得
-  const allSheets = ss.getSheets();
-  // UIを取得
-  const ui = SpreadsheetApp.getUi();
-
-  return [ss, manageSheet, templateSheet, allSheets, ui];
-}
-
-/**
  * スプレッドシートオブジェクトを取得
  *
  * @param {Spreadsheet|null} spreadsheet - 対象のスプレッドシート（テスト時用、省略時はアクティブなSS）
@@ -91,9 +56,6 @@ function getUI() {
   return SpreadsheetApp.getUi();
 }
 
-// SSをまとめて取得（本番環境用）
-const [ss, manageSheet, templateSheet, allSheets, ui] = getCommonSheets();
-
 // ===== 2. セル・範囲処理 =====
 
 /**
@@ -108,6 +70,7 @@ const [ss, manageSheet, templateSheet, allSheets, ui] = getCommonSheets();
  *
  * @example
  * // シフト管理シートのメンバーリスト列の最終行を取得
+ * const manageSheet = getManageSheet();
  * const lastRow = getLastRowInColumn(manageSheet, 5);
  * console.log(`最終行: ${lastRow}`);
  *
@@ -121,7 +84,7 @@ const [ss, manageSheet, templateSheet, allSheets, ui] = getCommonSheets();
  * - 空のセルは無視され、実際にデータが存在する行のみカウント
  * - パフォーマンス向上のため、getMaxRows()ではなくgetLastRow()を使用
  *
- * @see getLastColumnInRow, isValidSheetAndColumn
+ * @see getLastColumnInRow, isValidSheetAndRow
  */
 function getLastRowInColumn(sheet, col) {
   // パラメータの検証
@@ -152,6 +115,7 @@ function getLastRowInColumn(sheet, col) {
  *
  * @example
  * // シフト管理シートの1行目の最終列を取得
+ * const manageSheet = getManageSheet();
  * const lastCol = getLastColumnInRow(manageSheet, 1);
  * console.log(`最終列: ${lastCol}`);
  *
@@ -262,14 +226,17 @@ function findLastNonEmptyColumn(values) {
  * - メモリ効率の最適化
  */
 class MemberManager {
-  constructor(sheet = manageSheet) {
+  /**
+   * コンストラクタ
+   * @param {Sheet} sheet - 管理シート
+   */
+  constructor(sheet) {
+    if (!sheet) {
+      throw new Error("MemberManager: シートが指定されていません");
+    }
     this.sheet = sheet;
-    this.memberData = null;
     this.memberMap = null;
-    this.idToIndexMap = null;
-    this.nameToIdMap = null;
     this.lastUpdate = null;
-    this.isInitialized = false;
   }
 
   /**
@@ -579,22 +546,46 @@ class MemberManager {
 
     return this.nameToIdMap.has(String(name));
   }
+
+  /**
+   * メンバーマップを作成
+   *
+   * @returns {Object} メンバーマップ
+   */
+  createMemberMap() {
+    const memberMap = {};
+    const length = Math.min(this.memberData.length, this.urlData.length);
+
+    // ループを最適化
+    for (let i = 0; i < length; i++) {
+      const [id, name] = this.memberData[i];
+      if (id && name) {
+        // 有効なデータのみ処理
+        memberMap[id] = {
+          name,
+          url: this.urlData[i][0] || UTILS_CONSTANTS.DEFAULTS.EMPTY_STRING,
+        };
+      }
+    }
+    return memberMap; // { id1: { name: ..., url: ... }, ... }
+  }
 }
 
 // グローバルなメンバーマネージャーインスタンス
 let globalMemberManager = null;
 
 /**
- * グローバルメンバーマネージャーを取得
+ * メンバーマネージャーを取得
  *
- * @param {Sheet} [sheet=manageSheet] - 対象シート（テスト用）
+ * @param {Sheet} sheet - 管理シート
  * @returns {MemberManager} メンバーマネージャーインスタンス
  */
-function getMemberManager(sheet = manageSheet) {
-  if (!globalMemberManager || globalMemberManager.sheet !== sheet) {
-    globalMemberManager = new MemberManager(sheet);
+function getMemberManager(sheet) {
+  if (!sheet) {
+    console.warn("getMemberManager: シートが指定されていません");
+    return null;
   }
-  return globalMemberManager;
+  return new MemberManager(sheet);
 }
 
 // ===== 後方互換性のための関数 =====
@@ -649,20 +640,21 @@ function generateRandomMemberId() {
  * この関数は他のメンバー関連関数の基盤となり、データ取得の重複を防ぎます。
  *
  * @param {number} [columns=2] - 取得する列数（デフォルト: ID列と氏名列の2列）
- * @param {Sheet} [sheet=manageSheet] - 対象シート（テスト用）
+ * @param {Sheet} sheet - 対象シート
  * @returns {Array<Array>} メンバーデータの2次元配列
  *
  * @example
  * // ID列と氏名列を取得（デフォルト）
- * const memberData = getMemberListData();
+ * const manageSheet = getManageSheet();
+ * const memberData = getMemberListData(2, manageSheet);
  * // 結果: [["usr_abc123", "田中太郎"], ["usr_def456", "佐藤花子"], ...]
  *
  * // ID列のみを取得
- * const idOnly = getMemberListData(1);
+ * const idOnly = getMemberListData(1, manageSheet);
  * // 結果: [["usr_abc123"], ["usr_def456"], ...]
  *
  * // 3列分のデータを取得
- * const extendedData = getMemberListData(3);
+ * const extendedData = getMemberListData(3, manageSheet);
  * // 結果: [["usr_abc123", "田中太郎", "田中"], ...]
  *
  * // テスト用：特定のシートを指定
@@ -679,10 +671,7 @@ function generateRandomMemberId() {
  * @see UTILS_CONSTANTS.COLUMNS
  * @deprecated 新しいMemberManagerクラスの使用を推奨
  */
-function getMemberListData(
-  columns = UTILS_CONSTANTS.COLUMNS.ID_AND_NAME,
-  sheet = manageSheet
-) {
+function getMemberListData(columns, sheet) {
   // パラメータの検証
   if (!isValidMemberListParams(sheet, columns)) {
     return UTILS_CONSTANTS.DEFAULTS.EMPTY_ARRAY;
@@ -757,58 +746,65 @@ function fetchMemberListData(lastRow, columns, sheet) {
 }
 
 /**
- * IDから氏名を取得
+ * メンバーIDから氏名を取得
  *
  * @param {string} id - メンバーID
- * @param {Sheet} [sheet=manageSheet] - 対象シート（テスト用）
- * @returns {string|null} メンバー氏名、見つからない場合はnull
- * @deprecated 新しいMemberManagerクラスの使用を推奨
+ * @param {Sheet} sheet - 管理シート
+ * @returns {string|null} 氏名（見つからない場合はnull）
  */
-function getMemberNameById(id, sheet = manageSheet) {
-  // パラメータの検証
-  if (!id) {
-    console.warn("getMemberNameById: IDが指定されていません");
+function getMemberNameById(id, sheet) {
+  if (!sheet) {
+    console.warn("getMemberNameById: シートが指定されていません");
     return null;
   }
 
   const memberManager = getMemberManager(sheet);
+  if (!memberManager) {
+    return null;
+  }
+
   return memberManager.getNameById(id);
 }
 
 /**
- * 氏名からIDを取得
+ * メンバー氏名からIDを取得
  *
  * @param {string} name - メンバー氏名
- * @param {Sheet} [sheet=manageSheet] - 対象シート（テスト用）
- * @returns {string|null} メンバーID、見つからない場合はnull
- * @deprecated 新しいMemberManagerクラスの使用を推奨
+ * @param {Sheet} sheet - 管理シート
+ * @returns {string|null} メンバーID（見つからない場合はnull）
  */
-function getMemberIdByName(name, sheet = manageSheet) {
-  // パラメータの検証
-  if (!isValidMemberName(name)) {
+function getMemberIdByName(name, sheet) {
+  if (!sheet) {
+    console.warn("getMemberIdByName: シートが指定されていません");
     return null;
   }
 
   const memberManager = getMemberManager(sheet);
+  if (!memberManager) {
+    return null;
+  }
+
   return memberManager.getIdByName(name);
 }
 
 /**
- * IDからorderを取得
+ * メンバーIDから順序（行番号）を取得
  *
  * @param {string} id - メンバーID
- * @param {Sheet} [sheet=manageSheet] - 対象シート（テスト用）
- * @returns {number} メンバーの順序（0から開始、見つからない場合は-1）
- * @deprecated 新しいMemberManagerクラスの使用を推奨
+ * @param {Sheet} sheet - 管理シート
+ * @returns {number} 順序（0から開始、見つからない場合は-1）
  */
-function getMemberOrderById(id, sheet = manageSheet) {
-  // パラメータの検証
-  if (!id) {
-    console.warn("getMemberOrderById: IDが指定されていません");
-    return UTILS_CONSTANTS.DEFAULTS.NOT_FOUND;
+function getMemberOrderById(id, sheet) {
+  if (!sheet) {
+    console.warn("getMemberOrderById: シートが指定されていません");
+    return -1;
   }
 
   const memberManager = getMemberManager(sheet);
+  if (!memberManager) {
+    return -1;
+  }
+
   return memberManager.getOrderById(id);
 }
 
@@ -883,13 +879,13 @@ function findMemberOrderById(data, id) {
 /**
  * メンバーマップ作成
  *
- * @param {Sheet} [sheet=manageSheet] - 対象シート（テスト用）
- * @returns {Object} メンバーIDをキーとしたオブジェクト
+ * @param {Sheet} sheet - 対象シート
+ * @returns {Object} メンバーマップ
  * @deprecated 新しいMemberManagerクラスの使用を推奨
  */
-function createMemberMap(sheet = manageSheet) {
+function createMemberMap(sheet) {
   if (!sheet) {
-    console.warn("createMemberMap: 管理シートが取得できません");
+    console.warn("createMemberMap: シートが指定されていません");
     return UTILS_CONSTANTS.DEFAULTS.EMPTY_OBJECT;
   }
 
@@ -955,12 +951,13 @@ function buildMemberMap(memberData, urlData) {
  * URLからファイルIDを抽出し、オブジェクトとして返します。
  *
  * @param {number} row - メンバーリストの行番号
- * @param {Sheet} [sheet=manageSheet] - 対象のシート（省略時は管理シート）
+ * @param {Sheet} sheet - 対象のシート
  * @returns {Object|null} メンバー情報 {name: string, fileId: string} または null（失敗時）
  *
  * @example
  * // 基本的な使用方法
- * const memberInfo = getMemberInfo(5);
+ * const manageSheet = getManageSheet();
+ * const memberInfo = getMemberInfo(5, manageSheet);
  * if (memberInfo) {
  *   console.log(`名前: ${memberInfo.name}, ファイルID: ${memberInfo.fileId}`);
  * }
@@ -969,15 +966,17 @@ function buildMemberMap(memberData, urlData) {
  * const memberInfo = getMemberInfo(5, otherSheet);
  *
  * // エラーハンドリング付きで実行
- * const memberInfo = getMemberInfo(5);
+ * const manageSheet = getManageSheet();
+ * const memberInfo = getMemberInfo(5, manageSheet);
  * if (!memberInfo) {
  *   console.error("メンバー情報の取得に失敗しました");
  *   return;
  * }
  */
-function getMemberInfo(row, sheet = manageSheet) {
+function getMemberInfo(row, sheet) {
   if (!sheet) {
     console.warn("getMemberInfo: シートが指定されていません");
+    Logger.log(`❌ getMemberInfo: シートが指定されていません`);
     return null;
   }
 
@@ -986,6 +985,7 @@ function getMemberInfo(row, sheet = manageSheet) {
     const name = sheet
       .getRange(row, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.NAME_COL)
       .getValue();
+
     const url = sheet
       .getRange(row, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.URL_COL)
       .getFormula();
@@ -993,19 +993,25 @@ function getMemberInfo(row, sheet = manageSheet) {
     // URLからファイルIDを抽出
     const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
     if (!match || !match[1]) {
-      console.warn(`getMemberInfo: URL抽出失敗: ${name}`);
+      console.warn(`getMemberInfo: URL抽出失敗: ${name} (URL: ${url})`);
+      Logger.log(`❌ URL抽出失敗: ${name}`);
       return null;
     }
 
-    return {
+    const fileId = match[1];
+
+    const result = {
       name: name,
-      fileId: match[1],
+      fileId: fileId,
     };
+
+    return result;
   } catch (e) {
     console.error("getMemberInfo: エラーが発生しました", {
       error: e.message,
       row: row,
     });
+    Logger.log(`❌ getMemberInfoエラー: 行${row} - ${e}`);
     return null;
   }
 }
@@ -1019,20 +1025,20 @@ function getMemberInfo(row, sheet = manageSheet) {
  * 0ベースのインデックスで返します。日付が見つからない場合は-1を返します。
  *
  * @param {Date|string} date - 検索対象の日付（Date型または文字列）
- * @param {Sheet} [sheet=manageSheet] - 対象シート（テスト用）
+ * @param {Sheet} sheet - 対象シート
  * @returns {number} 日程リストでの順序（0から開始、見つからない場合は-1）
  *
  * @example
  * // Date型で検索
- * const order1 = getDateOrderByDate(new Date(2024, 0, 15)); // 1月15日
+ * const order1 = getDateOrderByDate(new Date(2024, 0, 15), manageSheet); // 1月15日
  * console.log(`1月15日の順序: ${order1}`); // 例: 10
  *
  * // 文字列で検索
- * const order2 = getDateOrderByDate("1/15");
+ * const order2 = getDateOrderByDate("1/15", manageSheet);
  * console.log(`1/15の順序: ${order2}`); // 例: 10
  *
  * // 日付が見つからない場合
- * const order3 = getDateOrderByDate("12/31");
+ * const order3 = getDateOrderByDate("12/31", manageSheet);
  * console.log(`12/31の順序: ${order3}`); // -1
  *
  * @note
@@ -1044,10 +1050,15 @@ function getMemberInfo(row, sheet = manageSheet) {
  * @see getDateList, convertDateToString, findDateOrder
  * @see UTILS_CONSTANTS.DEFAULTS.NOT_FOUND
  */
-function getDateOrderByDate(date, sheet = manageSheet) {
+function getDateOrderByDate(date, sheet) {
   // パラメータの検証
   if (!date) {
     console.warn("getDateOrderByDate: 日付が指定されていません");
+    return UTILS_CONSTANTS.DEFAULTS.NOT_FOUND;
+  }
+
+  if (!sheet) {
+    console.warn("getDateOrderByDate: シートが指定されていません");
     return UTILS_CONSTANTS.DEFAULTS.NOT_FOUND;
   }
 
@@ -1073,12 +1084,12 @@ function getDateOrderByDate(date, sheet = manageSheet) {
 /**
  * 日程リスト作成
  *
- * @param {Sheet} [sheet=manageSheet] - 対象シート（テスト用）
+ * @param {Sheet} sheet - 対象シート
  * @returns {Array<Array>} 日程データの2次元配列
  */
-function getDateList(sheet = manageSheet) {
+function getDateList(sheet) {
   if (!sheet) {
-    console.warn("getDateList: 管理シートが取得できません");
+    console.warn("getDateList: 管理シートが指定されていません");
     return UTILS_CONSTANTS.DEFAULTS.EMPTY_ARRAY;
   }
 
@@ -1462,6 +1473,7 @@ function isValidHourAndMinute(h, m) {
  *
  * @example
  * // シフト管理シートの背景色を削除
+ * const manageSheet = getManageSheet();
  * clearBackgrounds(manageSheet);
  *
  * // 特定のシートの背景色を削除
@@ -1472,6 +1484,7 @@ function isValidHourAndMinute(h, m) {
  *
  * // エラーハンドリング付きで実行
  * try {
+ *   const manageSheet = getManageSheet();
  *   clearBackgrounds(manageSheet);
  *   console.log("背景色の削除が完了しました");
  * } catch (error) {
@@ -1583,12 +1596,15 @@ function applyBorderToRange(merged) {
  *
  * @example
  * // 基本的な使用方法
+ * const manageSheet = getManageSheet();
  * protectSheet(manageSheet);
  *
  * // カスタム説明付きで保護
  * protectSheet(templateSheet, "シフトテンプレートの保護");
  *
  * // 複数シートを保護
+ * const manageSheet = getManageSheet();
+ * const templateSheet = getTemplateSheet();
  * const sheetsToProtect = [manageSheet, templateSheet];
  * sheetsToProtect.forEach(sheet => {
  *   if (sheet) {
@@ -1598,6 +1614,7 @@ function applyBorderToRange(merged) {
  *
  * // エラーハンドリング付きで実行
  * try {
+ *   const manageSheet = getManageSheet();
  *   protectSheet(manageSheet);
  *   console.log("シートの保護が完了しました");
  * } catch (error) {
@@ -1618,7 +1635,8 @@ function protectSheet(sheet, description = "シートの保護") {
   // パラメータの検証
   if (!sheet) {
     console.warn("protectSheet: シートが指定されていません");
-    return;
+    Logger.log(`❌ protectSheet: シートが指定されていません`);
+    return false;
   }
 
   try {
@@ -1628,8 +1646,23 @@ function protectSheet(sheet, description = "シートの保護") {
     if (protection.canDomainEdit()) {
       protection.setDomainEdit(false);
     }
+
+    // 保護が正しく設定されたか確認
+    const protections = sheet.getProtections(
+      SpreadsheetApp.ProtectionType.SHEET
+    );
+
+    if (protections.length === 0) {
+      console.error("protectSheet: 保護の設定に失敗しました");
+      Logger.log(`❌ 保護の設定に失敗: ${sheet.getName()}`);
+      return false;
+    }
+
+    return true;
   } catch (e) {
     console.error("protectSheet: エラーが発生しました", { error: e.message });
+    Logger.log(`❌ protectSheetエラー: ${sheet.getName()} - ${e}`);
+    return false;
   }
 }
 
@@ -1670,6 +1703,7 @@ function protectSheetByName(
         memberName ? `: ${memberName}` : ""
       }`
     );
+    Logger.log(`❌ シートが見つかりません: ${sheetName}`);
     return false;
   }
 
@@ -1678,12 +1712,24 @@ function protectSheetByName(
     const protections = sheet.getProtections(
       SpreadsheetApp.ProtectionType.SHEET
     );
+
     if (protections.length > 0) {
       protections.forEach((p) => p.remove());
     }
 
     // 新しく保護を設定
-    protectSheet(sheet, description);
+    const success = protectSheet(sheet, description);
+
+    if (!success) {
+      console.error(
+        `protectSheetByName: 保護の設定に失敗しました${
+          memberName ? ` (${memberName})` : ""
+        }`
+      );
+      Logger.log(`❌ 保護の設定に失敗: ${sheetName}`);
+      return false;
+    }
+
     return true;
   } catch (e) {
     console.error(
@@ -1692,6 +1738,7 @@ function protectSheetByName(
       }`,
       { error: e.message }
     );
+    Logger.log(`❌ protectSheetByNameエラー: ${sheetName} - ${e}`);
     return false;
   }
 }

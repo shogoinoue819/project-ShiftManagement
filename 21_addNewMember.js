@@ -3,6 +3,7 @@ function addNewMember() {
   const ss = getSpreadsheet();
   const manageSheet = getManageSheet();
   const templateSheet = getTemplateSheet();
+  const allSheets = ss.getSheets();
   const ui = getUI();
 
   // 1. 氏名を入力

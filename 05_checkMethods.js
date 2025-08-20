@@ -22,6 +22,8 @@ function onEdit(e) {
 // シート保護の共通処理
 function protectMemberSheets(fileId, memberName, isLock) {
   try {
+    Logger.log(`🔒 ${isLock ? "ロック" : "アンロック"}処理開始: ${memberName}`);
+
     // ファイルIDから提出用SSを取得
     const targetFile = SpreadsheetApp.openById(fileId);
 
@@ -33,6 +35,7 @@ function protectMemberSheets(fileId, memberName, isLock) {
         "チェックによるロック",
         memberName
       );
+
       const infoSuccess = protectSheetByName(
         targetFile,
         SHEET_NAMES.SHIFT_FORM_INFO,
@@ -43,7 +46,9 @@ function protectMemberSheets(fileId, memberName, isLock) {
       if (formSuccess && infoSuccess) {
         Logger.log(`🔒 ${memberName} をロックしました`);
       } else {
-        Logger.log(`⚠️ ${memberName} のロックが部分的に失敗しました`);
+        Logger.log(
+          `⚠️ ${memberName} のロックが部分的に失敗しました (form: ${formSuccess}, info: ${infoSuccess})`
+        );
         return false;
       }
     } else {
@@ -53,6 +58,7 @@ function protectMemberSheets(fileId, memberName, isLock) {
         SHEET_NAMES.SHIFT_FORM,
         memberName
       );
+
       const infoSuccess = unprotectSheetByName(
         targetFile,
         SHEET_NAMES.SHIFT_FORM_INFO,
@@ -62,7 +68,9 @@ function protectMemberSheets(fileId, memberName, isLock) {
       if (formSuccess && infoSuccess) {
         Logger.log(`🔓 ${memberName} のロックを解除しました`);
       } else {
-        Logger.log(`⚠️ ${memberName} のロック解除が部分的に失敗しました`);
+        Logger.log(
+          `⚠️ ${memberName} のロック解除が部分的に失敗しました (form: ${formSuccess}, info: ${infoSuccess})`
+        );
         return false;
       }
     }
@@ -79,20 +87,27 @@ function protectMemberSheets(fileId, memberName, isLock) {
 // 選択されたメンバーをロック
 function lockSelectedMember(row) {
   try {
-    const memberInfo = getMemberInfo(row);
+    const manageSheet = getManageSheet();
+    const memberInfo = getMemberInfo(row, manageSheet);
     if (!memberInfo) {
       Logger.log(`⚠️ メンバー情報の取得に失敗: 行${row}`);
       return false;
     }
+
+    Logger.log(`🔒 ロック処理開始: ${memberInfo.name}`);
 
     const success = protectMemberSheets(
       memberInfo.fileId,
       memberInfo.name,
       true
     );
+
     if (!success) {
       Logger.log(`⚠️ メンバーロックに失敗: ${memberInfo.name}`);
+    } else {
+      Logger.log(`✅ メンバーロック成功: ${memberInfo.name}`);
     }
+
     return success;
   } catch (e) {
     Logger.log(`❌ ロック処理でエラーが発生: 行${row} - ${e}`);
@@ -103,23 +118,29 @@ function lockSelectedMember(row) {
 // 選択されたメンバーのロックを解除
 function unlockSelectedMember(row) {
   try {
-    const memberInfo = getMemberInfo(row);
+    const manageSheet = getManageSheet();
+    const memberInfo = getMemberInfo(row, manageSheet);
     if (!memberInfo) {
       Logger.log(`⚠️ メンバー情報の取得に失敗: 行${row}`);
       return false;
     }
+
+    Logger.log(`🔓 ロック解除処理開始: ${memberInfo.name}`);
 
     const success = protectMemberSheets(
       memberInfo.fileId,
       memberInfo.name,
       false
     );
+
     if (success) {
+      Logger.log(`✅ メンバーロック解除成功: ${memberInfo.name}`);
       const ui = getUI();
       ui.alert(`🔓 ${memberInfo.name}さんのロックを解除しました`);
     } else {
       Logger.log(`⚠️ メンバーロック解除に失敗: ${memberInfo.name}`);
     }
+
     return success;
   } catch (e) {
     Logger.log(`❌ ロック解除処理でエラーが発生: 行${row} - ${e}`);
@@ -181,16 +202,40 @@ function checkAllSubmittedMembers() {
 
   // 各対象メンバーをロック（先にロック処理を実行）
   const successfulRows = [];
+  const failedRows = [];
+
+  Logger.log(`🔒 対象メンバー数: ${rowsToCheck.length}人`);
+
   rowsToCheck.forEach((rowIndex) => {
-    const success = lockSelectedMember(rowIndex);
-    if (success) {
-      successfulRows.push(rowIndex);
+    try {
+      const success = lockSelectedMember(rowIndex);
+      if (success) {
+        successfulRows.push(rowIndex);
+      } else {
+        failedRows.push(rowIndex);
+      }
+    } catch (e) {
+      Logger.log(`❌ 行${rowIndex}のロック処理でエラー: ${e}`);
+      failedRows.push(rowIndex);
     }
   });
 
-  // ロックに成功した行のみチェックを設定
+  // ロックに成功した行がない場合
   if (successfulRows.length === 0) {
-    ui.alert(`❌ ロック処理に失敗したため、チェックを設定できませんでした`);
+    const failedNames = failedRows
+      .map((row) => {
+        try {
+          const memberInfo = getMemberInfo(row, manageSheet);
+          return memberInfo ? memberInfo.name : `行${row}`;
+        } catch (e) {
+          return `行${row}`;
+        }
+      })
+      .join(", ");
+
+    ui.alert(
+      `❌ ロック処理に失敗したため、チェックを設定できませんでした\n\n失敗したメンバー: ${failedNames}`
+    );
     return;
   }
 
@@ -212,15 +257,27 @@ function checkAllSubmittedMembers() {
   // 一括更新
   checkRange.setValues(checkValues);
 
+  // 結果の表示
   if (successfulRows.length === rowsToCheck.length) {
     ui.alert(
       `✅ 提出済みのメンバー${successfulRows.length}人をチェックしました`
     );
   } else {
+    const failedNames = failedRows
+      .map((row) => {
+        try {
+          const memberInfo = getMemberInfo(row, manageSheet);
+          return memberInfo ? memberInfo.name : `行${row}`;
+        } catch (e) {
+          return `行${row}`;
+        }
+      })
+      .join(", ");
+
     ui.alert(
       `⚠️ 提出済みのメンバー${successfulRows.length}人をチェックしました（${
         rowsToCheck.length - successfulRows.length
-      }人はロック処理に失敗）`
+      }人はロック処理に失敗）\n\n失敗したメンバー: ${failedNames}`
     );
   }
 }

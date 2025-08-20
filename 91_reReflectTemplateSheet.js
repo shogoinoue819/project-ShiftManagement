@@ -1,14 +1,15 @@
-// デバッグ用シフト希望表テンプレート反映
+// デバッグ用今後の勤務希望テンプレート反映
 function reReflectTemplateSheet() {
   const templateSS = SpreadsheetApp.openById(TEMPLATE_FILE_ID);
-  const templateSheet = templateSS.getSheetByName(SHEET_NAMES.SHIFT_FORM);
+  const templateSheet = templateSS.getSheetByName(SHEET_NAMES.SHIFT_FORM_INFO);
   if (!templateSheet) {
     throw new Error(
-      `❌ テンプレートにシート '${SHEET_NAMES.SHIFT_FORM}' が見つかりません`
+      `❌ テンプレートにシート '${SHEET_NAMES.SHIFT_FORM_INFO}' が見つかりません`
     );
   }
 
-  const memberManager = getMemberManager();
+  const manageSheet = getManageSheet();
+  const memberManager = getMemberManager(manageSheet);
   // 初期化を確実に行う
   if (!memberManager.ensureInitialized()) {
     throw new Error("❌ メンバーデータの初期化に失敗しました");

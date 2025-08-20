@@ -21,7 +21,7 @@ function updateSheets() {
   updateMemberDisplay();
 
   // 日程リストの取得
-  const dateList = getDateList();
+  const dateList = getDateList(manageSheet);
   Logger.log(`📅 日程リスト取得成功: ${dateList.length}件`);
 
   // 各日程のシートを処理
@@ -221,7 +221,7 @@ function linkMemberDisplay() {
   const ui = getUI();
 
   // メンバー情報の取得と検証
-  const memberInfo = getMemberInfo(manageSheet, ui);
+  const memberInfo = getMemberInfoForUpdate(manageSheet, ui);
   if (!memberInfo) {
     return;
   }
@@ -247,7 +247,7 @@ function linkMemberDisplay() {
  * @param {GoogleAppsScript.Base.UI} ui - UIオブジェクト
  * @return {Object|null} メンバー情報（names, bgColors）またはnull
  */
-function getMemberInfo(manageSheet, ui) {
+function getMemberInfoForUpdate(manageSheet, ui) {
   // 最終行を取得
   const lastRow = getLastRowInColumn(
     manageSheet,
@@ -353,7 +353,9 @@ function updateMainTemplateSheet(templateSheet, names, bgColors) {
  * @param {Array} bgColors - 背景色の配列
  */
 function updateWeekdayTemplateSheets(names, bgColors) {
-  // 授業割テンプレートシートの定義
+  const ss = getSpreadsheet();
+  const allSheets = ss.getSheets();
+
   const WEEKDAY_TEMPLATES = {
     Mon: SHEET_NAMES.LESSON_TEMPLATES.MON,
     Tue: SHEET_NAMES.LESSON_TEMPLATES.TUE,

@@ -8,7 +8,8 @@ function reReflectTemplateInfoSheet() {
     );
   }
 
-  const memberManager = getMemberManager();
+  const manageSheet = getManageSheet();
+  const memberManager = getMemberManager(manageSheet);
   // 初期化を確実に行う
   if (!memberManager.ensureInitialized()) {
     throw new Error("❌ メンバーデータの初期化に失敗しました");

@@ -31,7 +31,7 @@ function deleteSelectedMember() {
   }
 
   // メンバーマップ作成
-  const memberManager = getMemberManager();
+  const memberManager = getMemberManager(manageSheet);
   // 初期化を確実に行う
   if (!memberManager.ensureInitialized()) {
     ui.alert("❌ メンバーデータの初期化に失敗しました");
