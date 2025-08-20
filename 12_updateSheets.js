@@ -447,7 +447,7 @@ function setWorkStartFormula(sheet, col, colLetter) {
         SHIFT_TEMPLATE_SHEET.ROWS.DATA_END + 1
       }, MATCH(TRUE, ISNUMBER(SEARCH(":" , TO_TEXT(${colLetter}${
         SHIFT_TEMPLATE_SHEET.ROWS.DATA_START - 1
-      }:${colLetter}${SHIFT_TEMPLATE_SHEET.ROWS.DATA_END + 1}))), 0))), ""`
+      }:${colLetter}${SHIFT_TEMPLATE_SHEET.ROWS.DATA_END + 1}))), 0))), "")`
     );
 }
 
@@ -473,7 +473,7 @@ function setWorkEndFormula(sheet, col, colLetter) {
         SHIFT_TEMPLATE_SHEET.ROWS.DATA_START - 1
       })+1, ISNUMBER(SEARCH(":" , TO_TEXT(${colLetter}${
         SHIFT_TEMPLATE_SHEET.ROWS.DATA_START - 1
-      }:${colLetter}${SHIFT_TEMPLATE_SHEET.ROWS.DATA_END + 1}))))))), ""`
+      }:${colLetter}${SHIFT_TEMPLATE_SHEET.ROWS.DATA_END + 1}))))))), "")`
     );
 }
 
@@ -487,6 +487,6 @@ function setWorkingTimeFormula(sheet, col, colLetter) {
   sheet
     .getRange(SHIFT_TEMPLATE_SHEET.ROWS.WORKING_TIME, col)
     .setFormula(
-      `=IF(AND(ISNUMBER(TIMEVALUE(${colLetter}${SHIFT_TEMPLATE_SHEET.ROWS.WORK_END})), ISNUMBER(TIMEVALUE(${colLetter}${SHIFT_TEMPLATE_SHEET.ROWS.WORK_START}))), TEXT(TIMEVALUE(${colLetter}${SHIFT_TEMPLATE_SHEET.ROWS.WORK_END}) - TIMEVALUE(${colLetter}${SHIFT_TEMPLATE_SHEET.ROWS.WORK_START}), "h:mm"), ""`
+      `=IF(AND(ISNUMBER(TIMEVALUE(${colLetter}${SHIFT_TEMPLATE_SHEET.ROWS.WORK_END})), ISNUMBER(TIMEVALUE(${colLetter}${SHIFT_TEMPLATE_SHEET.ROWS.WORK_START}))), TEXT(TIMEVALUE(${colLetter}${SHIFT_TEMPLATE_SHEET.ROWS.WORK_END}) - TIMEVALUE(${colLetter}${SHIFT_TEMPLATE_SHEET.ROWS.WORK_START}), "h:mm"), "")`
     );
 }
