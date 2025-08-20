@@ -168,9 +168,9 @@ function updateIndividualForm(memberName, memberUrl, templateData) {
     throw new Error(`ファイルIDの抽出に失敗: ${memberUrl}`);
   }
 
-  let memberSpreadsheet;
+  let memberSS;
   try {
-    memberSpreadsheet = SpreadsheetApp.openById(fileId);
+    memberSS = SpreadsheetApp.openById(fileId);
   } catch (e) {
     throw new Error(`スプレッドシートの開封に失敗: ${e.message}`);
   }
@@ -178,28 +178,19 @@ function updateIndividualForm(memberName, memberUrl, templateData) {
   try {
     // 各処理ステップを実行
     const { currentFormSheet, previousSheet } = processPreviousSheet(
-      memberSpreadsheet,
+      memberSS,
       templateData,
       memberName
     );
     const newFormSheet = createNewFormSheet(
-      memberSpreadsheet,
+      memberSS,
       templateData,
       previousSheet
     );
-    const infoSheet = updateInfoSheet(
-      memberSpreadsheet,
-      templateData,
-      memberName
-    );
+    const infoSheet = updateInfoSheet(memberSS, templateData, memberName);
 
     // シート順の整理
-    organizeSheetOrder(
-      memberSpreadsheet,
-      newFormSheet,
-      infoSheet,
-      currentFormSheet
-    );
+    organizeSheetOrder(memberSS, newFormSheet, infoSheet, currentFormSheet);
 
     // 初期化処理
     initializeFormSheet(newFormSheet, memberName);
@@ -215,11 +206,9 @@ function extractFileIdFromUrl(url) {
 }
 
 // 前回分シートの処理
-function processPreviousSheet(spreadsheet, templateData, memberName) {
+function processPreviousSheet(ss, templateData, memberName) {
   // === ① 「前回分」シートの処理 ===
-  let previousSheet = spreadsheet.getSheetByName(
-    SHEET_NAMES.SHIFT_FORM_PREVIOUS
-  );
+  let previousSheet = ss.getSheetByName(SHEET_NAMES.SHIFT_FORM_PREVIOUS);
   if (previousSheet) {
     previousSheet.setName("TEMP_OLD");
     previousSheet
@@ -228,10 +217,10 @@ function processPreviousSheet(spreadsheet, templateData, memberName) {
   }
 
   // === ② 現在のシフト希望表を「前回分」にリネーム＆保護 ===
-  let currentFormSheet = spreadsheet.getSheetByName(SHEET_NAMES.SHIFT_FORM);
+  let currentFormSheet = ss.getSheetByName(SHEET_NAMES.SHIFT_FORM);
   if (!currentFormSheet) {
     // 現在のシフト希望表が存在しない場合は、テンプレートからコピーして作成
-    currentFormSheet = templateData.sheet.copyTo(spreadsheet);
+    currentFormSheet = templateData.sheet.copyTo(ss);
     currentFormSheet.setName(SHEET_NAMES.SHIFT_FORM_PREVIOUS);
     protectSheet(currentFormSheet, "前回分シートのロック");
     Logger.log(`📝 テンプレートから前回分シートを作成: ${memberName}`);
@@ -247,11 +236,11 @@ function processPreviousSheet(spreadsheet, templateData, memberName) {
 }
 
 // 新しい提出用シートの作成
-function createNewFormSheet(spreadsheet, templateData, previousSheet) {
+function createNewFormSheet(ss, templateData, previousSheet) {
   // === ③ 新しい提出用シートを作成 ===
   let newFormSheet = previousSheet
     ? previousSheet
-    : templateData.sheet.copyTo(spreadsheet);
+    : templateData.sheet.copyTo(ss);
   newFormSheet.setName(SHEET_NAMES.SHIFT_FORM);
 
   // 2行目以降のデータを貼り付け（1行目は変更しない）
@@ -271,12 +260,12 @@ function createNewFormSheet(spreadsheet, templateData, previousSheet) {
 }
 
 // 今後の勤務希望シートの更新
-function updateInfoSheet(spreadsheet, templateData, memberName) {
+function updateInfoSheet(ss, templateData, memberName) {
   // === ④ 「今後の勤務希望」シートの取得 ===
-  let infoSheet = spreadsheet.getSheetByName(SHEET_NAMES.SHIFT_FORM_INFO);
+  let infoSheet = ss.getSheetByName(SHEET_NAMES.SHIFT_FORM_INFO);
   if (!infoSheet) {
     // 今後の勤務希望シートが存在しない場合は、テンプレートからコピーして作成
-    infoSheet = templateData.sheet.copyTo(spreadsheet);
+    infoSheet = templateData.sheet.copyTo(ss);
     infoSheet.setName(SHEET_NAMES.SHIFT_FORM_INFO);
     Logger.log(`📝 テンプレートから今後の勤務希望シートを作成: ${memberName}`);
   } else {
@@ -311,12 +300,7 @@ function resetInfoSheetContent(infoSheet) {
 }
 
 // シート順の整理
-function organizeSheetOrder(
-  spreadsheet,
-  newFormSheet,
-  infoSheet,
-  currentFormSheet
-) {
+function organizeSheetOrder(ss, newFormSheet, infoSheet, currentFormSheet) {
   // === ⑤ シート順の整理 ===
   const SHEET_ORDER = {
     SUBMISSION_FORM: 1, // 提出用
@@ -325,8 +309,8 @@ function organizeSheetOrder(
   };
 
   const moveSheet = (sheet, index) => {
-    spreadsheet.setActiveSheet(sheet);
-    spreadsheet.moveActiveSheet(index);
+    ss.setActiveSheet(sheet);
+    ss.moveActiveSheet(index);
   };
 
   moveSheet(newFormSheet, SHEET_ORDER.SUBMISSION_FORM);
