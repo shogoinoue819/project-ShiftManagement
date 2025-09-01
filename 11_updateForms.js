@@ -193,6 +193,9 @@ function updateIndividualForm(memberName, memberUrl, templateData) {
     // シート順の整理
     organizeSheetOrder(memberSS, newFormSheet, infoSheet, currentFormSheet);
 
+    // シート構成の整理（不要なシートの削除と順番の整理）
+    organizeUpdateFormsSheets(memberSS, memberName);
+
     // 初期化処理
     initializeFormSheet(newFormSheet, memberName);
   } catch (e) {
@@ -317,6 +320,58 @@ function organizeSheetOrder(ss, newFormSheet, infoSheet, currentFormSheet) {
   moveSheet(newFormSheet, SHEET_ORDER.SUBMISSION_FORM);
   moveSheet(infoSheet, SHEET_ORDER.FUTURE_PREFERENCES);
   moveSheet(currentFormSheet, SHEET_ORDER.PREVIOUS_FORM);
+}
+
+// シート構成の整理（不要なシートの削除と順番の整理）
+function organizeUpdateFormsSheets(memberSS, memberName) {
+  try {
+    const allSheets = memberSS.getSheets();
+
+    // 保持するシート名のリスト（順番通り）
+    const targetSheetNames = [
+      SHEET_NAMES.SHIFT_FORM, // ①シフト希望表
+      SHEET_NAMES.SHIFT_FORM_INFO, // ②今後の勤務希望
+      SHEET_NAMES.SHIFT_FORM_PREVIOUS, // ③前回分
+    ];
+
+    // 不要なシートを削除
+    for (const sheet of allSheets) {
+      const sheetName = sheet.getName();
+      if (!targetSheetNames.includes(sheetName)) {
+        try {
+          memberSS.deleteSheet(sheet);
+          Logger.log(`🗑️ ${memberName} さんの不要シート削除: "${sheetName}"`);
+        } catch (deleteError) {
+          Logger.log(
+            `⚠️ ${memberName} さんのシート削除失敗: "${sheetName}" - ${deleteError.message}`
+          );
+        }
+      }
+    }
+
+    // シートの順番を整理
+    let currentPosition = 1;
+    for (const targetSheetName of targetSheetNames) {
+      const targetSheet = memberSS.getSheetByName(targetSheetName);
+      if (targetSheet) {
+        try {
+          memberSS.setActiveSheet(targetSheet);
+          memberSS.moveActiveSheet(currentPosition);
+          currentPosition++;
+        } catch (moveError) {
+          Logger.log(
+            `⚠️ ${memberName} さんのシート移動失敗: "${targetSheetName}" - ${moveError.message}`
+          );
+        }
+      }
+    }
+
+    Logger.log(`✅ ${memberName} さんのシート構成整理完了`);
+    return true;
+  } catch (e) {
+    Logger.log(`❌ ${memberName} さんのシート構成整理でエラー: ${e.message}`);
+    return false;
+  }
 }
 
 // フォームシートの初期化

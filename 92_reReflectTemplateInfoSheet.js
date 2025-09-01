@@ -3,7 +3,7 @@
 // ===== 設定定数 =====
 const INFO_SHEET_PROCESSING_CONFIG = {
   LIMIT_COUNT: 30, // 処理対象人数の制限
-  PROCESS_FIRST_HALF: false, // true: 前半処理, false: 後半処理
+  PROCESS_FIRST_HALF: true, // true: 前半処理, false: 後半処理
   // 前半処理: 1-30人目まで処理
   // 後半処理: 31人目以降を処理
 };
@@ -156,10 +156,61 @@ function processMemberSheet(
     memberSS.setActiveSheet(copiedSheet);
     memberSS.moveActiveSheet(movePosition);
 
+    // シート整理処理
+    organizeMemberSheets(memberSS, memberName);
+
     Logger.log(`✅ ${memberName} さんのシート処理完了`);
     return true;
   } catch (e) {
     Logger.log(`❌ ${memberName} さんのシート処理エラー: ${e.message}`);
     return false;
+  }
+}
+
+// シート整理処理
+function organizeMemberSheets(memberSS, memberName) {
+  try {
+    const allSheets = memberSS.getSheets();
+    const targetSheetNames = [
+      SHEET_NAMES.SHIFT_FORM, // ①シフト希望表
+      SHEET_NAMES.SHIFT_FORM_INFO, // ②今後の勤務希望
+      SHEET_NAMES.SHIFT_FORM_PREVIOUS, // ③前回分
+    ];
+
+    // 不要なシートを削除
+    for (const sheet of allSheets) {
+      const sheetName = sheet.getName();
+      if (!targetSheetNames.includes(sheetName)) {
+        try {
+          memberSS.deleteSheet(sheet);
+          Logger.log(`🗑️ ${memberName} さんの不要シート削除: "${sheetName}"`);
+        } catch (deleteError) {
+          Logger.log(
+            `⚠️ ${memberName} さんのシート削除失敗: "${sheetName}" - ${deleteError.message}`
+          );
+        }
+      }
+    }
+
+    // シートの順番を整理
+    let currentPosition = 1;
+    for (const targetSheetName of targetSheetNames) {
+      const targetSheet = memberSS.getSheetByName(targetSheetName);
+      if (targetSheet) {
+        try {
+          memberSS.setActiveSheet(targetSheet);
+          memberSS.moveActiveSheet(currentPosition);
+          currentPosition++;
+        } catch (moveError) {
+          Logger.log(
+            `⚠️ ${memberName} さんのシート移動失敗: "${targetSheetName}" - ${moveError.message}`
+          );
+        }
+      }
+    }
+
+    Logger.log(`✅ ${memberName} さんのシート整理完了`);
+  } catch (e) {
+    Logger.log(`⚠️ ${memberName} さんのシート整理でエラー: ${e.message}`);
   }
 }
