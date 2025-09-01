@@ -1,18 +1,27 @@
 // 曜日別授業割を反映
 function reflectLessonTemplate() {
-  // SSをまとめて取得
-  const ss = getSpreadsheet();
-  const ui = getUI();
+  try {
+    Logger.log("🔄 授業割テンプレ反映開始");
 
-  // ターゲットはシフト作成シート
-  const targetSheets = getTargetSheets(ss);
+    // SSをまとめて取得
+    const ss = getSpreadsheet();
+    const ui = getUI();
 
-  // 各日程のシフト作成シートにおいて、
-  targetSheets.forEach((dailySheet) => {
-    processDailySheet(dailySheet, ss);
-  });
+    // ターゲットはシフト作成シート
+    const targetSheets = getTargetSheets(ss);
+    Logger.log(`📋 対象シート数: ${targetSheets.length}`);
 
-  ui.alert("✅ 授業割テンプレを反映しました！");
+    // 各日程のシフト作成シートにおいて、
+    targetSheets.forEach((dailySheet) => {
+      processDailySheet(dailySheet, ss);
+    });
+
+    Logger.log("✅ 授業割テンプレ反映完了");
+    ui.alert("✅ 授業割テンプレを反映しました！");
+  } catch (error) {
+    Logger.log(`❌ エラーが発生しました: ${error.message}`);
+    throw error;
+  }
 }
 
 /**
@@ -31,28 +40,30 @@ function getTargetSheets(ss) {
  * @param {GoogleAppsScript.Spreadsheet.Spreadsheet} ss - スプレッドシート
  */
 function processDailySheet(dailySheet, ss) {
-  // シート名を取得
-  const sheetName = dailySheet.getName();
+  try {
+    // シート名を取得
+    const sheetName = dailySheet.getName();
 
-  // 日付から曜日を取得
-  const dayOfWeek = getDayOfWeekFromSheet(dailySheet);
+    // 日付から曜日を取得
+    const dayOfWeek = getDayOfWeekFromSheet(dailySheet);
 
-  // 月〜金に含まれる場合のみ処理
-  if (!isWeekday(dayOfWeek)) {
-    return;
+    // 月〜金に含まれる場合のみ処理
+    if (!isWeekday(dayOfWeek)) {
+      return;
+    }
+
+    // 曜日に対応した授業割シートを取得
+    const lessonTemplateSheet = getLessonTemplateSheet(ss, dayOfWeek);
+    if (!lessonTemplateSheet) {
+      return;
+    }
+
+    // テンプレートデータをコピー
+    copyTemplateData(dailySheet, lessonTemplateSheet);
+  } catch (error) {
+    Logger.log(`❌ シート処理でエラー: ${sheetName} - ${error.message}`);
+    throw error;
   }
-
-  // 曜日に対応した授業割シートを取得
-  const lessonTemplateSheet = getLessonTemplateSheet(ss, dayOfWeek);
-  if (!lessonTemplateSheet) {
-    Logger.log(`テンプレートが見つかりません: ${dayOfWeek}`);
-    return;
-  }
-
-  // テンプレートデータをコピー
-  copyTemplateData(dailySheet, lessonTemplateSheet);
-
-  Logger.log(`テンプレートを適用: ${sheetName}`);
 }
 
 /**
@@ -61,18 +72,39 @@ function processDailySheet(dailySheet, ss) {
  * @returns {string} 曜日（Mon, Tue, Wed, Thu, Fri, Sat, Sun）
  */
 function getDayOfWeekFromSheet(dailySheet) {
-  const date = dailySheet
-    .getRange(SHIFT_TEMPLATE_SHEET.DATE_ROW, SHIFT_TEMPLATE_SHEET.DATE_COL)
-    .getValue();
-  return formatDateToString(date, "E");
+  try {
+    const date = dailySheet
+      .getRange(SHIFT_TEMPLATE_SHEET.DATE_ROW, SHIFT_TEMPLATE_SHEET.DATE_COL)
+      .getValue();
+
+    if (!(date instanceof Date)) {
+      return null;
+    }
+
+    // 曜日略称を取得（Fri, Mon, Tue等）
+    const dayOfWeek = Utilities.formatDate(
+      date,
+      Session.getScriptTimeZone(),
+      "EEE"
+    );
+
+    return dayOfWeek;
+  } catch (error) {
+    Logger.log(`❌ 曜日取得でエラー: ${error.message}`);
+    throw error;
+  }
 }
 
 /**
  * 曜日が平日（月〜金）かどうかを判定
- * @param {string} dayOfWeek - 曜日（Mon, Tue, Wed, Thu, Fri, Sat, Sun）
+ * @param {string} dayOfWeek - 曜日（Fri, Mon, Tue, Wed, Thu, Sat, Sun）
  * @returns {boolean} 平日の場合true
  */
 function isWeekday(dayOfWeek) {
+  if (!dayOfWeek) {
+    return false;
+  }
+
   const weekdayMap = {
     Mon: true,
     Tue: true,
@@ -82,7 +114,10 @@ function isWeekday(dayOfWeek) {
     Sat: false,
     Sun: false,
   };
-  return weekdayMap[dayOfWeek] || false;
+
+  const result = weekdayMap[dayOfWeek] || false;
+
+  return result;
 }
 
 /**

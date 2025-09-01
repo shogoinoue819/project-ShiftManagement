@@ -91,16 +91,28 @@ function addMemberColumnToSheet(sheet, newCol, displayName, bgColor) {
   memberCell.setValue(displayName);
   memberCell.setBackground(bgColor);
 
-  // 勤務エリアに灰色背景を設定
-  sheet
-    .getRange(
-      SHIFT_TEMPLATE_SHEET.ROWS.DATA_START,
-      newCol,
-      SHIFT_TEMPLATE_SHEET.ROWS.DATA_END -
-        SHIFT_TEMPLATE_SHEET.ROWS.DATA_START +
-        1
-    )
-    .setBackground(TIME_SETTINGS.UNAVAILABLE_BACKGROUND_COLOR);
+  // 授業テンプレートシートの場合はグレー背景設定をスキップ
+  const sheetName = sheet.getName();
+  const isLessonTemplate = [
+    SHEET_NAMES.LESSON_TEMPLATES.MON,
+    SHEET_NAMES.LESSON_TEMPLATES.TUE,
+    SHEET_NAMES.LESSON_TEMPLATES.WED,
+    SHEET_NAMES.LESSON_TEMPLATES.THU,
+    SHEET_NAMES.LESSON_TEMPLATES.FRI,
+  ].includes(sheetName);
+
+  if (!isLessonTemplate) {
+    // 勤務エリアに灰色背景を設定（授業テンプレート以外）
+    sheet
+      .getRange(
+        SHIFT_TEMPLATE_SHEET.ROWS.DATA_START,
+        newCol,
+        SHIFT_TEMPLATE_SHEET.ROWS.DATA_END -
+          SHIFT_TEMPLATE_SHEET.ROWS.DATA_START +
+          1
+      )
+      .setBackground(TIME_SETTINGS.UNAVAILABLE_BACKGROUND_COLOR);
+  }
 
   // 出勤・退勤・勤務時間の数式を設定
   const colLetter = convertColumnToLetter(newCol);

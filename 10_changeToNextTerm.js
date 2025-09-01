@@ -31,7 +31,7 @@ function changeToNextTerm() {
   );
 
   const response = ui.alert(
-    "確認",
+    "⚠️確認",
     `シフト希望表を「${formattedDate}」から始まる日程に更新します。\nよろしいですか？`,
     ui.ButtonSet.OK_CANCEL
   );
