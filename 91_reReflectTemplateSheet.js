@@ -1,51 +1,43 @@
-// デバッグ用今後の勤務希望テンプレート反映
+// デバッグ用シフト希望表テンプレート反映
+
+// ===== 設定定数 =====
+const SHIFT_FORM_PROCESSING_CONFIG = {
+  LIMIT_COUNT: 30, // 処理対象人数の制限
+  PROCESS_FIRST_HALF: false, // true: 前半処理, false: 後半処理
+  // 前半処理: 1-30人目まで処理
+  // 後半処理: 31人目以降を処理
+};
+
 function reReflectTemplateSheet() {
-  const templateSS = SpreadsheetApp.openById(TEMPLATE_FILE_ID);
-  const templateSheet = templateSS.getSheetByName(SHEET_NAMES.SHIFT_FORM_INFO);
+  // テンプレートシートの取得と検証
+  const templateSheet = getShiftFormTemplateSheet();
   if (!templateSheet) {
-    throw new Error(
-      `❌ テンプレートにシート '${SHEET_NAMES.SHIFT_FORM_INFO}' が見つかりません`
-    );
+    throw new Error("❌ テンプレートシートの取得に失敗しました");
   }
 
-  const manageSheet = getManageSheet();
-  const memberManager = getMemberManager(manageSheet);
-  // 初期化を確実に行う
-  if (!memberManager.ensureInitialized()) {
+  // メンバー管理の初期化
+  const memberManager = initializeMemberManager();
+  if (!memberManager) {
     throw new Error("❌ メンバーデータの初期化に失敗しました");
   }
-  const memberMap = memberManager.memberMap;
 
-  // メンバーマップの妥当性チェック
-  if (!memberMap || Object.keys(memberMap).length === 0) {
-    throw new Error("❌ メンバーデータが取得できませんでした");
-  }
   let count = 0;
 
-  // 提出ステータス列を取得（提出列は SUBMIT 列）
-  const lastRow = getLastRowInColumn(
-    manageSheet,
-    SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_COL
-  );
-  const submitValues = manageSheet
-    .getRange(
-      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW,
-      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.SUBMIT_COL,
-      lastRow - SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW + 1,
-      1
-    )
-    .getValues()
-    .flat();
+  // 提出ステータス列を取得
+  const submitValues = getSubmitStatusValues();
 
   let index = 0;
-  for (const [id, { name, url }] of Object.entries(memberMap)) {
-    // ===== !前後半スイッチ！ =====
-    // 前半
-    // if (index >= 30) break; // 30人目以降はスキップ
-    // 後半
-    if (index < 30) {
-      index++;
-      continue; // 前半30人はスキップ
+  for (const [id, { name, url }] of Object.entries(memberManager.memberMap)) {
+    // 前半・後半の処理分岐
+    if (SHIFT_FORM_PROCESSING_CONFIG.PROCESS_FIRST_HALF) {
+      // 前半処理: 制限人数まで処理
+      if (index >= SHIFT_FORM_PROCESSING_CONFIG.LIMIT_COUNT) break;
+    } else {
+      // 後半処理: 制限人数まではスキップ
+      if (index < SHIFT_FORM_PROCESSING_CONFIG.LIMIT_COUNT) {
+        index++;
+        continue;
+      }
     }
 
     // 未提出以外はスキップ
@@ -55,52 +47,184 @@ function reReflectTemplateSheet() {
       continue;
     }
 
-    const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
-    if (!match || !match[1]) {
-      Logger.log(`❌ ${name} さんのURLが不正です: ${url}`);
-      index++;
-      continue;
-    }
-
-    const fileId = match[1];
     try {
-      const memberSS = SpreadsheetApp.openById(fileId);
-
-      // 既存の「シフト希望表」シートを削除
-      const existingSheet = memberSS.getSheetByName(SHEET_NAMES.SHIFT_FORM);
-      if (existingSheet) {
-        memberSS.deleteSheet(existingSheet);
+      const success = processMemberSheet(
+        name,
+        url,
+        templateSheet,
+        SHEET_NAMES.SHIFT_FORM,
+        1
+      );
+      if (success) {
+        count++;
+        Logger.log(`✅ ${name} さんに「シフト希望表」シートを再反映しました`);
       }
-
-      // コピーしてリネーム
-      const copiedSheet = templateSheet.copyTo(memberSS);
-      copiedSheet.setName(SHEET_NAMES.SHIFT_FORM);
-      memberSS.setActiveSheet(copiedSheet);
-      memberSS.moveActiveSheet(1); // 位置を調整
-
-      // 初期化処理
-      copiedSheet
-        .getRange(
-          SHIFT_FORM_TEMPLATE.HEADER.ROW,
-          SHIFT_FORM_TEMPLATE.HEADER.NAME_COL
-        )
-        .setValue(name);
-      copiedSheet
-        .getRange(
-          SHIFT_FORM_TEMPLATE.HEADER.ROW,
-          SHIFT_FORM_TEMPLATE.HEADER.CHECK_COL
-        )
-        .setValue(false);
-
-      Logger.log(`✅ ${name} さんに「シフト希望表」シートを再反映しました`);
-      count++;
-      index++;
     } catch (e) {
       Logger.log(`❌ ${name} さんの処理中にエラー: ${e.message}`);
-      index++;
     }
+    index++;
   }
+
   Logger.log(
     `✅ 完了：${count} 名に「シフト希望表」シートを上書き反映しました`
   );
+
+  // 処理設定の表示
+  const processType = SHIFT_FORM_PROCESSING_CONFIG.PROCESS_FIRST_HALF
+    ? "前半"
+    : "後半";
+  Logger.log(
+    `📋 処理設定: ${processType}処理 (制限人数: ${SHIFT_FORM_PROCESSING_CONFIG.LIMIT_COUNT}人)`
+  );
+}
+
+// ===== ヘルパー関数 =====
+function getShiftFormTemplateSheet() {
+  try {
+    const templateSS = SpreadsheetApp.openById(TEMPLATE_FILE_ID);
+
+    // デバッグ: テンプレートファイル内の全シート名を確認
+    const allSheets = templateSS.getSheets();
+    Logger.log("🔍 テンプレートファイル内の全シート名:");
+    allSheets.forEach((sheet, index) => {
+      Logger.log(`  ${index + 1}: "${sheet.getName()}"`);
+    });
+
+    const templateSheet = templateSS.getSheetByName(SHEET_NAMES.SHIFT_FORM);
+    if (!templateSheet) {
+      Logger.log(
+        `⚠️ テンプレートにシート '${SHEET_NAMES.SHIFT_FORM}' が見つかりません`
+      );
+      return null;
+    }
+
+    // デバッグ: 実際に取得されたシート名を確認
+    Logger.log(
+      `🔍 テンプレートから取得したシート名: "${templateSheet.getName()}"`
+    );
+    Logger.log(`🔍 期待されるシート名: "${SHEET_NAMES.SHIFT_FORM}"`);
+
+    return templateSheet;
+  } catch (e) {
+    Logger.log(`❌ テンプレートシート取得エラー: ${e.message}`);
+    return null;
+  }
+}
+
+function initializeMemberManager() {
+  try {
+    const manageSheet = getManageSheet();
+    const memberManager = getMemberManager(manageSheet);
+
+    if (!memberManager.ensureInitialized()) {
+      Logger.log("❌ メンバーデータの初期化に失敗しました");
+      return null;
+    }
+
+    const memberMap = memberManager.memberMap;
+    if (!memberMap || Object.keys(memberMap).length === 0) {
+      Logger.log("❌ メンバーデータが取得できませんでした");
+      return null;
+    }
+
+    return memberManager;
+  } catch (e) {
+    Logger.log(`❌ メンバー管理初期化エラー: ${e.message}`);
+    return null;
+  }
+}
+
+function getSubmitStatusValues() {
+  const manageSheet = getManageSheet();
+  const lastRow = getLastRowInColumn(
+    manageSheet,
+    SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_COL
+  );
+
+  return manageSheet
+    .getRange(
+      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW,
+      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.SUBMIT_COL,
+      lastRow - SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW + 1,
+      1
+    )
+    .getValues()
+    .flat();
+}
+
+function processMemberSheet(
+  memberName,
+  url,
+  templateSheet,
+  sheetName,
+  movePosition
+) {
+  try {
+    // URLからファイルIDを抽出
+    const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+    if (!match || !match[1]) {
+      Logger.log(`❌ ${memberName} さんのURLが不正です: ${url}`);
+      return false;
+    }
+
+    const fileId = match[1];
+    const memberSS = SpreadsheetApp.openById(fileId);
+
+    // 既存シートを削除
+    const existingSheet = memberSS.getSheetByName(sheetName);
+    if (existingSheet) {
+      memberSS.deleteSheet(existingSheet);
+    }
+
+    // コピーしてリネーム
+    const copiedSheet = templateSheet.copyTo(memberSS);
+    copiedSheet.setName(sheetName);
+    memberSS.setActiveSheet(copiedSheet);
+    memberSS.moveActiveSheet(movePosition);
+
+    // シフト希望表の場合のみ初期化処理
+    if (sheetName === SHEET_NAMES.SHIFT_FORM) {
+      try {
+        // 名前を設定
+        copiedSheet
+          .getRange(
+            SHIFT_FORM_TEMPLATE.HEADER.ROW,
+            SHIFT_FORM_TEMPLATE.HEADER.NAME_COL
+          )
+          .setValue(memberName);
+
+        // チェックボックスを設定（データ検証ルールをクリアしてから設定）
+        const checkCell = copiedSheet.getRange(
+          SHIFT_FORM_TEMPLATE.HEADER.ROW,
+          SHIFT_FORM_TEMPLATE.HEADER.CHECK_COL
+        );
+
+        // データ検証ルールを一時的にクリア
+        checkCell.clearDataValidations();
+
+        // チェックボックスを設定
+        checkCell.setValue(false);
+
+        // データ検証ルールを再設定（1-5の値のみ許可）
+        const rule = SpreadsheetApp.newDataValidation()
+          .requireNumberBetween(1, 5)
+          .setAllowInvalid(false)
+          .setHelpText("1, 2, 3, 4, 5 のいずれかの値を入力してください")
+          .build();
+        checkCell.setDataValidation(rule);
+
+        Logger.log(`✅ ${memberName} さんの初期化処理完了`);
+      } catch (initError) {
+        Logger.log(
+          `⚠️ ${memberName} さんの初期化処理でエラー: ${initError.message}`
+        );
+        // 初期化エラーでも処理は継続
+      }
+    }
+
+    return true;
+  } catch (e) {
+    Logger.log(`❌ ${memberName} さんのシート処理エラー: ${e.message}`);
+    return false;
+  }
 }
