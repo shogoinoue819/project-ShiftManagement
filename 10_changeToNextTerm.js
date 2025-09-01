@@ -1,5 +1,5 @@
 // シフト管理シートを更新し、新しい日程リストを反映する（reflectDateListの拡張版）
-function setupNewForms() {
+function changeToNextTerm() {
   // SSをまとめて取得
   const ss = getSpreadsheet();
   const ui = getUI();
