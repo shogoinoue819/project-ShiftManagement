@@ -3,7 +3,6 @@ function createNewMember() {
   // SSをまとめて取得
   const ss = getSpreadsheet();
   const manageSheet = getManageSheet();
-  const templateSheet = getTemplateSheet();
   const ui = getUI();
 
   // ===== 管理者入力 =====
@@ -126,6 +125,17 @@ function createNewMember() {
 
   // ===== メンバーリストに追加 =====
 
+  // 再利用する参照を一度だけ算出
+  const nameColLetter = convertColumnToLetter(
+    SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.NAME_COL
+  );
+  const checkCell =
+    convertColumnToLetter(SHIFT_FORM_TEMPLATE.HEADER.CHECK_COL) +
+    SHIFT_FORM_TEMPLATE.HEADER.ROW;
+  const infoCell =
+    convertColumnToLetter(SHIFT_FORM_TEMPLATE.HEADER.INFO_COL) +
+    SHIFT_FORM_TEMPLATE.HEADER.ROW;
+
   // 最終行を取得
   const lastRow = getLastRowInColumn(
     manageSheet,
@@ -136,77 +146,16 @@ function createNewMember() {
 
   // IDを生成
   const uniqueId = generateRandomMemberId();
-  // IDをセット
-  manageSheet
-    .getRange(newRow, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.ID_COL)
-    .setValue(uniqueId);
-  // 氏名をセット
-  manageSheet
-    .getRange(newRow, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.NAME_COL)
-    .setValue(name);
-  // 提出ステータスをセット(個別シートとリンク)
-  const nameColLetter = convertColumnToLetter(
-    SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.NAME_COL
+  setupMemberRow(
+    manageSheet,
+    newRow,
+    uniqueId,
+    name,
+    personalUrl,
+    nameColLetter,
+    checkCell,
+    infoCell
   );
-  const checkCell =
-    convertColumnToLetter(SHIFT_FORM_TEMPLATE.HEADER.CHECK_COL) +
-    SHIFT_FORM_TEMPLATE.HEADER.ROW;
-  manageSheet
-    .getRange(newRow, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.SUBMIT_COL)
-    .setFormula(
-      `=IF(INDIRECT("'" & ${nameColLetter}${newRow} & "'!${checkCell}") = TRUE, "${STATUS_STRINGS.SUBMIT.TRUE}", "${STATUS_STRINGS.SUBMIT.FALSE}")`
-    );
-  // チェックボックスをセット
-  manageSheet
-    .getRange(newRow, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.CHECK_COL)
-    .setValue(false);
-  // 反映ステータスをセット
-  manageSheet
-    .getRange(newRow, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.REFLECT_COL)
-    .setValue(STATUS_STRINGS.REFLECT.FALSE);
-  // URLをセット(HYPERLINK形式)
-  manageSheet
-    .getRange(newRow, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.URL_COL)
-    .setFormula(`=HYPERLINK("${personalUrl}", "シートリンク")`);
-  // 勤務日数①をセット
-  manageSheet
-    .getRange(newRow, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_DATES_1_COL)
-    .setFormula(WORK_CALCULATION_FORMULAS.WEEK_1.DATES);
-  // 労働時間①をセット
-  manageSheet
-    .getRange(newRow, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_TIMES_1_COL)
-    .setFormula(WORK_CALCULATION_FORMULAS.WEEK_1.TIMES);
-  // 勤務日数②をセット
-  manageSheet
-    .getRange(newRow, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_DATES_2_COL)
-    .setFormula(WORK_CALCULATION_FORMULAS.WEEK_2.DATES);
-  // 労働時間②をセット
-  manageSheet
-    .getRange(newRow, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_TIMES_2_COL)
-    .setFormula(WORK_CALCULATION_FORMULAS.WEEK_2.TIMES);
-  // 勤務日数③をセット
-  manageSheet
-    .getRange(newRow, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_DATES_3_COL)
-    .setFormula(WORK_CALCULATION_FORMULAS.WEEK_3.DATES);
-  // 労働時間③をセット
-  manageSheet
-    .getRange(newRow, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_TIMES_3_COL)
-    .setFormula(WORK_CALCULATION_FORMULAS.WEEK_3.TIMES);
-  // 勤務日数④をセット
-  manageSheet
-    .getRange(newRow, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_DATES_4_COL)
-    .setFormula(WORK_CALCULATION_FORMULAS.WEEK_4.DATES);
-  // 労働時間④をセット
-  manageSheet
-    .getRange(newRow, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_TIMES_4_COL)
-    .setFormula(WORK_CALCULATION_FORMULAS.WEEK_4.TIMES);
-  // 勤務日数希望をセット
-  const infoCell =
-    convertColumnToLetter(SHIFT_FORM_TEMPLATE.HEADER.INFO_COL) +
-    SHIFT_FORM_TEMPLATE.HEADER.ROW;
-  manageSheet
-    .getRange(newRow, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_DATES_REQUEST_COL)
-    .setFormula(`=INDIRECT("'" & ${nameColLetter}${newRow} & "'!${infoCell}")`);
 
   // // メアドをセット
   // manageSheet.getRange(newRow, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.EMAIL_COL).setValue(email);
@@ -217,81 +166,101 @@ function createNewMember() {
   const manageSheetPre = ss.getSheetByName(
     SHEET_NAMES.SHIFT_MANAGEMENT_PREVIOUS
   );
-  // 最終行を取得
-  const lastRowPre = getLastRowInColumn(
-    manageSheetPre,
-    SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_COL
-  );
-  // 新規メンバーを追加する行を最終行の1つ下としてセット
-  const newRowPre = lastRowPre + 1;
+  if (manageSheetPre) {
+    // 最終行を取得
+    const lastRowPre = getLastRowInColumn(
+      manageSheetPre,
+      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_COL
+    );
+    // 新規メンバーを追加する行を最終行の1つ下としてセット
+    const newRowPre = lastRowPre + 1;
 
-  // IDをセット
-  manageSheetPre
-    .getRange(newRowPre, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.ID_COL)
-    .setValue(uniqueId);
-  // 氏名をセット
-  manageSheetPre
-    .getRange(newRowPre, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.NAME_COL)
-    .setValue(name);
-  // 提出ステータスをセット(個別シートとリンク)
-  manageSheetPre
-    .getRange(newRowPre, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.SUBMIT_COL)
-    .setFormula(
-      `=IF(INDIRECT("'" & ${nameColLetter}${newRowPre} & "'!${checkCell}") = TRUE, "${STATUS_STRINGS.SUBMIT.TRUE}", "${STATUS_STRINGS.SUBMIT.FALSE}")`
-    );
-  // チェックボックスをセット
-  manageSheetPre
-    .getRange(newRowPre, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.CHECK_COL)
-    .setValue(false);
-  // 反映ステータスをセット
-  manageSheetPre
-    .getRange(newRowPre, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.REFLECT_COL)
-    .setValue(STATUS_STRINGS.REFLECT.FALSE);
-  // URLをセット(HYPERLINK形式)
-  manageSheetPre
-    .getRange(newRowPre, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.URL_COL)
-    .setFormula(`=HYPERLINK("${personalUrl}", "シートリンク")`);
-  // 勤務日数①をセット
-  manageSheetPre
-    .getRange(newRowPre, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_DATES_1_COL)
-    .setFormula(WORK_CALCULATION_FORMULAS.WEEK_1.DATES);
-  // 労働時間①をセット
-  manageSheetPre
-    .getRange(newRowPre, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_TIMES_1_COL)
-    .setFormula(WORK_CALCULATION_FORMULAS.WEEK_1.TIMES);
-  // 勤務日数②をセット
-  manageSheetPre
-    .getRange(newRowPre, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_DATES_2_COL)
-    .setFormula(WORK_CALCULATION_FORMULAS.WEEK_2.DATES);
-  // 労働時間②をセット
-  manageSheetPre
-    .getRange(newRowPre, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_TIMES_2_COL)
-    .setFormula(WORK_CALCULATION_FORMULAS.WEEK_2.TIMES);
-  // 勤務日数③をセット
-  manageSheetPre
-    .getRange(newRowPre, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_DATES_3_COL)
-    .setFormula(WORK_CALCULATION_FORMULAS.WEEK_3.DATES);
-  // 労働時間③をセット
-  manageSheetPre
-    .getRange(newRowPre, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_TIMES_3_COL)
-    .setFormula(WORK_CALCULATION_FORMULAS.WEEK_3.TIMES);
-  // 勤務日数④をセット
-  manageSheetPre
-    .getRange(newRowPre, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_DATES_4_COL)
-    .setFormula(WORK_CALCULATION_FORMULAS.WEEK_4.DATES);
-  // 労働時間④をセット
-  manageSheetPre
-    .getRange(newRowPre, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_TIMES_4_COL)
-    .setFormula(WORK_CALCULATION_FORMULAS.WEEK_4.TIMES);
-  // 勤務日数希望をセット
-  manageSheetPre
-    .getRange(
+    setupMemberRow(
+      manageSheetPre,
       newRowPre,
-      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_DATES_REQUEST_COL
-    )
-    .setFormula(
-      `=INDIRECT("'" & ${nameColLetter}${newRowPre} & "'!${infoCell}")`
+      uniqueId,
+      name,
+      personalUrl,
+      nameColLetter,
+      checkCell,
+      infoCell
     );
+  } else {
+    Logger.log(
+      `⚠️ 前回用管理シートが見つかりません: ${SHEET_NAMES.SHIFT_MANAGEMENT_PREVIOUS}`
+    );
+  }
 
   ui.alert(`✅「${name}」さんの個別ファイルと個別シートを作成しました！`);
+}
+
+// ===== ヘルパー関数 =====
+function setupMemberRow(
+  sheet,
+  row,
+  uniqueId,
+  name,
+  personalUrl,
+  nameColLetter,
+  checkCell,
+  infoCell
+) {
+  // ID・氏名
+  sheet
+    .getRange(row, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.ID_COL)
+    .setValue(uniqueId);
+  sheet
+    .getRange(row, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.NAME_COL)
+    .setValue(name);
+
+  // 提出ステータス（個別シートのチェック参照）
+  sheet
+    .getRange(row, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.SUBMIT_COL)
+    .setFormula(
+      `=IF(INDIRECT("'" & ${nameColLetter}${row} & "'!${checkCell}") = TRUE, "${STATUS_STRINGS.SUBMIT.TRUE}", "${STATUS_STRINGS.SUBMIT.FALSE}")`
+    );
+
+  // チェックボックス・反映ステータス
+  sheet
+    .getRange(row, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.CHECK_COL)
+    .setValue(false);
+  sheet
+    .getRange(row, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.REFLECT_COL)
+    .setValue(STATUS_STRINGS.REFLECT.FALSE);
+
+  // URL（HYPERLINK）
+  sheet
+    .getRange(row, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.URL_COL)
+    .setFormula(`=HYPERLINK("${personalUrl}", "シートリンク")`);
+
+  // 勤務日数・労働時間（週1〜4）
+  sheet
+    .getRange(row, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_DATES_1_COL)
+    .setFormula(WORK_CALCULATION_FORMULAS.WEEK_1.DATES);
+  sheet
+    .getRange(row, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_TIMES_1_COL)
+    .setFormula(WORK_CALCULATION_FORMULAS.WEEK_1.TIMES);
+  sheet
+    .getRange(row, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_DATES_2_COL)
+    .setFormula(WORK_CALCULATION_FORMULAS.WEEK_2.DATES);
+  sheet
+    .getRange(row, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_TIMES_2_COL)
+    .setFormula(WORK_CALCULATION_FORMULAS.WEEK_2.TIMES);
+  sheet
+    .getRange(row, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_DATES_3_COL)
+    .setFormula(WORK_CALCULATION_FORMULAS.WEEK_3.DATES);
+  sheet
+    .getRange(row, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_TIMES_3_COL)
+    .setFormula(WORK_CALCULATION_FORMULAS.WEEK_3.TIMES);
+  sheet
+    .getRange(row, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_DATES_4_COL)
+    .setFormula(WORK_CALCULATION_FORMULAS.WEEK_4.DATES);
+  sheet
+    .getRange(row, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_TIMES_4_COL)
+    .setFormula(WORK_CALCULATION_FORMULAS.WEEK_4.TIMES);
+
+  // 勤務日数希望
+  sheet
+    .getRange(row, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_DATES_REQUEST_COL)
+    .setFormula(`=INDIRECT("'" & ${nameColLetter}${row} & "'!${infoCell}")`);
 }
