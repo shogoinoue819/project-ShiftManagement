@@ -1,6 +1,7 @@
 /**
  * シフト作成シートをアップデート
- * 現在の日程のシフト作成シートを全て削除し、新しく作成します
+ * 新しく作成する日程と同じ名前のシートがある場合のみ更新（削除→再作成）します
+ * 既存の他のシートは削除されません
  */
 function updateSheets() {
   Logger.log("🔄 シフト作成シートアップデート処理を開始");
@@ -12,13 +13,23 @@ function updateSheets() {
 
   Logger.log("📋 スプレッドシートとシートの取得完了");
 
+  // 表示名の空白チェック（最初に実行）
+  if (!validateMemberNames(manageSheet, ui)) {
+    Logger.log("❌ 表示名の検証に失敗したため、処理を中断します");
+    return;
+  }
+
   // 確認ダイアログを表示
   if (!confirmSheetUpdate(ui)) {
     return;
   }
 
   // メンバーリスト表示をテンプレートに反映
-  updateMemberDisplay();
+  const memberDisplaySuccess = updateMemberDisplay();
+  if (!memberDisplaySuccess) {
+    Logger.log("❌ メンバーリスト表示の更新に失敗したため、処理を中断します");
+    return;
+  }
 
   // 日程リストの取得
   const dateList = getDateList(manageSheet);
@@ -40,7 +51,7 @@ function updateSheets() {
 function confirmSheetUpdate(ui) {
   const confirm = ui.alert(
     "⚠️確認",
-    "この操作で、現在の日程のシフト作成シートが全て削除されます。\n\n本当に実行してよろしいですか？",
+    "この操作で、新しく作成する日程と同じ名前のシートがある場合、それらのシートが更新（削除→再作成）されます。\n\n既存の他のシートは削除されません。\n\n本当に実行してよろしいですか？",
     ui.ButtonSet.OK_CANCEL
   );
 
@@ -54,13 +65,124 @@ function confirmSheetUpdate(ui) {
 }
 
 /**
+ * 表示名の空白チェック
+ * 管理シートと前回分シートの両方で表示名の空白をチェックします
+ * @param {GoogleAppsScript.Spreadsheet.Sheet} manageSheet - 管理シート
+ * @param {GoogleAppsScript.Base.UI} ui - UIオブジェクト
+ * @return {boolean} 検証が成功した場合はtrue、失敗した場合はfalse
+ */
+function validateMemberNames(manageSheet, ui) {
+  Logger.log("🔍 表示名の空白チェックを開始");
+
+  // 管理シートのチェック
+  const currentSheetResult = checkMemberNamesInSheet(manageSheet, "管理シート");
+  if (!currentSheetResult.isValid) {
+    ui.alert(
+      "⚠️ 表示名リストに空白のセルがあります！",
+      `管理シートの${currentSheetResult.blankRows.join(
+        ", "
+      )}行目に空白があります。\n` +
+        "すべてのメンバーに名前を入力してください。",
+      ui.ButtonSet.OK
+    );
+    return false;
+  }
+
+  // 前回分シートのチェック
+  const ss = getSpreadsheet();
+  const previousSheet = ss.getSheetByName(
+    SHEET_NAMES.SHIFT_MANAGEMENT_PREVIOUS
+  );
+  if (previousSheet) {
+    const previousSheetResult = checkMemberNamesInSheet(
+      previousSheet,
+      "管理シート<前回分>"
+    );
+    if (!previousSheetResult.isValid) {
+      ui.alert(
+        "⚠️ 表示名リストに空白のセルがあります！",
+        `管理シート<前回分>の${previousSheetResult.blankRows.join(
+          ", "
+        )}行目に空白があります。\n` +
+          "すべてのメンバーに名前を入力してください。",
+        ui.ButtonSet.OK
+      );
+      return false;
+    }
+  }
+
+  Logger.log("✅ 表示名の空白チェックが完了しました");
+  return true;
+}
+
+/**
+ * 指定されたシートの表示名の空白チェック
+ * @param {GoogleAppsScript.Spreadsheet.Sheet} sheet - チェック対象のシート
+ * @param {string} sheetName - シート名（ログ用）
+ * @return {Object} チェック結果 {isValid: boolean, blankRows: Array<number>}
+ */
+function checkMemberNamesInSheet(sheet, sheetName) {
+  try {
+    // 最終行を取得
+    const lastRow = getLastRowInColumn(
+      sheet,
+      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_COL
+    );
+
+    if (lastRow < SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW) {
+      Logger.log(`⚠️ ${sheetName}: メンバーリストが存在しません`);
+      return { isValid: true, blankRows: [] };
+    }
+
+    // 表示名リストを取得
+    const nameRange = sheet.getRange(
+      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW,
+      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.DISPLAY_NAME_COL,
+      lastRow - SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW + 1,
+      1
+    );
+    const rawNames = nameRange.getValues().flat();
+
+    // 空白セルの行番号を特定
+    const blankRows = [];
+    rawNames.forEach((name, index) => {
+      if (name === "" || name === null || name === undefined) {
+        const actualRow = SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW + index;
+        blankRows.push(actualRow);
+      }
+    });
+
+    if (blankRows.length > 0) {
+      Logger.log(
+        `❌ ${sheetName}: ${
+          blankRows.length
+        }箇所に空白があります (行: ${blankRows.join(", ")})`
+      );
+      return { isValid: false, blankRows: blankRows };
+    }
+
+    Logger.log(`✅ ${sheetName}: 表示名に空白はありません`);
+    return { isValid: true, blankRows: [] };
+  } catch (error) {
+    Logger.log(`⚠️ ${sheetName}: 表示名チェックでエラー: ${error.message}`);
+    return { isValid: false, blankRows: [] };
+  }
+}
+
+/**
  * メンバーリスト表示の更新
  * シフトテンプレートにメンバーリストを反映します
+ * @return {boolean} 成功した場合はtrue、失敗した場合はfalse
  */
 function updateMemberDisplay() {
   Logger.log("👥 メンバーリスト表示の更新を開始");
-  linkMemberDisplay();
-  Logger.log("✅ メンバーリスト表示の更新が完了しました");
+  const success = linkMemberDisplay();
+  if (success) {
+    Logger.log("✅ メンバーリスト表示の更新が完了しました");
+  } else {
+    Logger.log("❌ メンバーリスト表示の更新に失敗しました");
+  }
+  return success;
 }
 
 /**
@@ -122,15 +244,18 @@ function processDateSheets(dateList) {
  * @param {GoogleAppsScript.Spreadsheet.Sheet} templateSheet - テンプレートシート
  */
 function createDateSheet(ss, date, dateStr, templateSheet) {
-  // 同じ名前のシートが既に存在する場合は削除
+  // 同じ名前のシートが既に存在する場合は削除（更新）
   const existingSheet = ss.getSheetByName(dateStr);
   if (existingSheet) {
     try {
       ss.deleteSheet(existingSheet);
-      Logger.log(`${dateStr}: 既存シートを削除しました`);
+      Logger.log(`${dateStr}: 既存シートを削除して更新します`);
     } catch (e) {
       Logger.log(`⚠️ ${dateStr}: 既存シートの削除に失敗: ${e.message}`);
+      throw new Error(`既存シートの削除に失敗: ${e.message}`);
     }
+  } else {
+    Logger.log(`${dateStr}: 新規シートを作成します`);
   }
 
   // テンプレートシートをコピーし、日程をシート名にセットしてシフト作成シートを生成
@@ -210,6 +335,7 @@ function protectWorkingTimeRange(sheet) {
 /**
  * メンバーリスト表示をシフトテンプレートにリンクさせる
  * 管理シートのメンバー情報をテンプレートシートに反映します
+ * @return {boolean} 成功した場合はtrue、失敗した場合はfalse
  */
 function linkMemberDisplay() {
   Logger.log("👥 メンバーリスト表示のリンク処理を開始");
@@ -223,22 +349,29 @@ function linkMemberDisplay() {
   // メンバー情報の取得と検証
   const memberInfo = getMemberInfoForUpdate(manageSheet, ui);
   if (!memberInfo) {
-    return;
+    Logger.log("❌ メンバー情報の取得に失敗しました");
+    return false;
   }
 
   const { names, bgColors } = memberInfo;
   Logger.log(`📋 メンバー情報取得成功: ${names.length}名`);
 
-  // メインシートの更新
-  updateMainTemplateSheet(templateSheet, names, bgColors);
+  try {
+    // メインシートの更新
+    updateMainTemplateSheet(templateSheet, names, bgColors);
 
-  // 曜日別テンプレートシートの更新
-  updateWeekdayTemplateSheets(names, bgColors);
+    // 曜日別テンプレートシートの更新
+    updateWeekdayTemplateSheets(names, bgColors);
 
-  // 数式の設定
-  setWorkingTimeFormulas(templateSheet, names);
+    // 数式の設定
+    setWorkingTimeFormulas(templateSheet, names);
 
-  Logger.log("✅ メンバーリスト表示のリンク処理が完了しました");
+    Logger.log("✅ メンバーリスト表示のリンク処理が完了しました");
+    return true;
+  } catch (error) {
+    Logger.log(`❌ メンバーリスト表示の更新でエラー: ${error.message}`);
+    return false;
+  }
 }
 
 /**
@@ -263,13 +396,11 @@ function getMemberInfoForUpdate(manageSheet, ui) {
   );
   const rawNames = nameRange.getValues().flat();
 
-  // 空白セルが存在するかチェック
+  // 空白セルが存在するかチェック（既に最初にチェック済みなので、ここでは単純にnullを返す）
   if (
     rawNames.some((name) => name === "" || name === null || name === undefined)
   ) {
-    ui.alert(
-      "⚠️ 表示名リストに空白のセルがあります。\nすべてのメンバーに名前を入力してください。"
-    );
+    Logger.log("❌ 表示名に空白が検出されました（既にチェック済み）");
     return null;
   }
 
