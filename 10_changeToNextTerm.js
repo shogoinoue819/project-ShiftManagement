@@ -1,4 +1,4 @@
-// シフト管理シートを更新し、新しい日程リストを反映する（reflectDateListの拡張版）
+// シフト管理シートを更新し、新しい日程リストを反映する（日付入力機能付き）
 function changeToNextTerm() {
   // SSをまとめて取得
   const ss = getSpreadsheet();
@@ -12,31 +12,83 @@ function changeToNextTerm() {
     throw new Error("❌ 管理シートまたは前回分シートが見つかりません");
   }
 
-  // 【追加】日程リストの先頭日付を取得し、ユーザー確認
-  const firstDateValue = sheetPre
-    .getRange(
-      SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW,
-      SHIFT_MANAGEMENT_SHEET.DATE_LIST.COL
-    )
-    .getValue();
-
-  if (!(firstDateValue instanceof Date)) {
-    throw new Error("❌ 日程リストに日付が正しく設定されていません");
-  }
-
-  const formattedDate = Utilities.formatDate(
-    firstDateValue,
-    Session.getScriptTimeZone(),
-    "yyyy/MM/dd"
-  );
-
-  const response = ui.alert(
-    "⚠️確認",
-    `シフト希望表を「${formattedDate}」から始まる日程に更新します。\nよろしいですか？`,
+  // 開始日時の入力
+  const startDateResponse = ui.prompt(
+    "📅 開始日時の入力",
+    "新しいシフト期間の開始日時を入力してください。\n形式: M/d (例: 4/1, 12/15)",
     ui.ButtonSet.OK_CANCEL
   );
 
-  if (response !== ui.Button.OK) {
+  if (startDateResponse.getSelectedButton() !== ui.Button.OK) {
+    ui.alert("キャンセルされました。処理を中止します。");
+    return;
+  }
+
+  const startDateStr = startDateResponse.getResponseText().trim();
+  const startDate = parseMDDate(startDateStr);
+
+  if (!startDate) {
+    ui.alert(
+      "❌ エラー",
+      "開始日時の形式が正しくありません。\nM/d形式で入力してください (例: 4/1)",
+      ui.ButtonSet.OK
+    );
+    return;
+  }
+
+  // 終了日時の入力
+  const endDateResponse = ui.prompt(
+    "📅 終了日時の入力",
+    "新しいシフト期間の終了日時を入力してください。\n形式: M/d (例: 4/30, 12/31)",
+    ui.ButtonSet.OK_CANCEL
+  );
+
+  if (endDateResponse.getSelectedButton() !== ui.Button.OK) {
+    ui.alert("キャンセルされました。処理を中止します。");
+    return;
+  }
+
+  const endDateStr = endDateResponse.getResponseText().trim();
+  const endDate = parseMDDate(endDateStr);
+
+  if (!endDate) {
+    ui.alert(
+      "❌ エラー",
+      "終了日時の形式が正しくありません。\nM/d形式で入力してください (例: 4/30)",
+      ui.ButtonSet.OK
+    );
+    return;
+  }
+
+  // 日付の妥当性チェック
+  if (endDate <= startDate) {
+    ui.alert(
+      "❌ エラー",
+      "終了日時は開始日時より後の日付を入力してください。",
+      ui.ButtonSet.OK
+    );
+    return;
+  }
+
+  // 確認ダイアログ
+  const startFormatted = Utilities.formatDate(
+    startDate,
+    Session.getScriptTimeZone(),
+    "M/d"
+  );
+  const endFormatted = Utilities.formatDate(
+    endDate,
+    Session.getScriptTimeZone(),
+    "M/d"
+  );
+
+  const confirmResponse = ui.alert(
+    "⚠️ 確認",
+    `シフト期間を以下の日程に更新します：\n\n開始: ${startFormatted}\n終了: ${endFormatted}\n\nよろしいですか？`,
+    ui.ButtonSet.OK_CANCEL
+  );
+
+  if (confirmResponse !== ui.Button.OK) {
     ui.alert("キャンセルされました。処理を中止します。");
     return;
   }
@@ -44,9 +96,9 @@ function changeToNextTerm() {
   // シートの入れ替え処理
   swapManagementSheets(ss, sheetNow, sheetPre);
 
-  // 新しい管理シートで日程リストを反映
+  // 新しい管理シートで日程リストを生成・反映
   const newManageSheet = ss.getSheetByName(SHEET_NAMES.SHIFT_MANAGEMENT);
-  reflectDateListInternal(newManageSheet);
+  generateAndReflectDateList(newManageSheet, startDate, endDate);
 
   Logger.log("✅ 管理シートの更新と日程リストの反映が完了しました");
 }
@@ -78,6 +130,157 @@ function swapManagementSheets(ss, sheetNow, sheetPre) {
   ss.moveActiveSheet(2); // 次に移動
 
   Logger.log("✅ 管理シートと前回分シートを入れ替えました");
+}
+
+/**
+ * M/d形式の文字列をDateオブジェクトに変換する
+ *
+ * @param {string} dateStr - M/d形式の日付文字列
+ * @returns {Date|null} 変換されたDateオブジェクト、無効な場合はnull
+ */
+function parseMDDate(dateStr) {
+  // M/d形式のパターンをチェック
+  const pattern = /^(\d{1,2})\/(\d{1,2})$/;
+  const match = dateStr.match(pattern);
+
+  if (!match) {
+    return null;
+  }
+
+  const month = parseInt(match[1], 10);
+  const day = parseInt(match[2], 10);
+
+  // 月の妥当性チェック (1-12)
+  if (month < 1 || month > 12) {
+    return null;
+  }
+
+  // 日の妥当性チェック (1-31)
+  if (day < 1 || day > 31) {
+    return null;
+  }
+
+  // 現在の年を取得
+  const currentYear = new Date().getFullYear();
+
+  try {
+    // Dateオブジェクトを作成（月は0ベースなので-1）
+    const date = new Date(currentYear, month - 1, day);
+
+    // 作成された日付が入力値と一致するかチェック（2月30日などの無効な日付を検出）
+    if (date.getMonth() !== month - 1 || date.getDate() !== day) {
+      return null;
+    }
+
+    return date;
+  } catch (error) {
+    return null;
+  }
+}
+
+/**
+ * 開始日時と終了日時から日程リストを生成し、管理シートとテンプレートに反映する
+ *
+ * @param {Sheet} manageSheet - 管理シート
+ * @param {Date} startDate - 開始日時
+ * @param {Date} endDate - 終了日時
+ */
+function generateAndReflectDateList(manageSheet, startDate, endDate) {
+  // 日程リストを生成
+  const dateList = generateDateList(startDate, endDate);
+  const numDates = dateList.length;
+
+  if (numDates === 0) {
+    throw new Error("❌ 日程リストが生成できませんでした");
+  }
+
+  // 管理シートに日程リストを設定
+  manageSheet
+    .getRange(
+      SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW,
+      SHIFT_MANAGEMENT_SHEET.DATE_LIST.COL,
+      numDates,
+      1
+    )
+    .setValues(dateList);
+
+  // B列（完了チェック）を FALSE で初期化
+  const falseValues = Array(numDates).fill([false]);
+  manageSheet
+    .getRange(
+      SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW,
+      SHIFT_MANAGEMENT_SHEET.DATE_LIST.COMPLETE_COL,
+      numDates,
+      1
+    )
+    .setValues(falseValues);
+
+  // C列（共有ステータス）を "未共有" で初期化
+  const shareValues = Array(numDates).fill([`${STATUS_STRINGS.SHARE.FALSE}`]);
+  manageSheet
+    .getRange(
+      SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW,
+      SHIFT_MANAGEMENT_SHEET.DATE_LIST.SHARE_COL,
+      numDates,
+      1
+    )
+    .setValues(shareValues);
+
+  // テンプレートファイルを取得
+  const templateFile = SpreadsheetApp.openById(TEMPLATE_FILE_ID);
+  const targetSheet = templateFile.getSheetByName(SHEET_NAMES.SHIFT_FORM);
+
+  if (!targetSheet) {
+    throw new Error("❌ シフト希望表_テンプレート シートが見つかりません");
+  }
+
+  // A列に日付をセット
+  targetSheet
+    .getRange(
+      SHIFT_FORM_TEMPLATE.DATA.START_ROW,
+      SHIFT_FORM_TEMPLATE.DATA.DATE_COL,
+      numDates,
+      1
+    )
+    .setValues(dateList);
+
+  // 新しく管理シートにした方のチェック欄と反映欄を全てリセット
+  resetMemberListColumns(manageSheet);
+
+  // 不要な行を削除
+  const maxRow = targetSheet.getMaxRows();
+  const deleteStart = SHIFT_FORM_TEMPLATE.DATA.START_ROW + numDates;
+
+  if (deleteStart <= maxRow) {
+    const numToDelete = maxRow - deleteStart + 1;
+    targetSheet.deleteRows(deleteStart, numToDelete);
+    Logger.log(`✅ ${deleteStart}行目から ${numToDelete}行分 を削除`);
+  } else {
+    Logger.log(
+      "⚠️ 削除対象の行がシート範囲外だったため、削除をスキップしました"
+    );
+  }
+
+  Logger.log(`✅ 日程 ${numDates} 件を生成し、テンプレートに反映しました`);
+}
+
+/**
+ * 開始日時と終了日時から日程リストを生成する
+ *
+ * @param {Date} startDate - 開始日時
+ * @param {Date} endDate - 終了日時
+ * @returns {Array<Array<Date>>} 日程リストの配列
+ */
+function generateDateList(startDate, endDate) {
+  const dateList = [];
+  const currentDate = new Date(startDate);
+
+  while (currentDate <= endDate) {
+    dateList.push([new Date(currentDate)]);
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
+  return dateList;
 }
 
 /**
