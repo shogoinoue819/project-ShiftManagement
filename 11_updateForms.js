@@ -108,7 +108,7 @@ function resetManagementSheet(manageSheet, memberMap) {
   Logger.log(`📊 管理シートをリセット: ${memberCount}件のメンバー`);
 }
 
-// テンプレートデータの取得
+// テンプレートデータと書式の取得
 function getTemplateData() {
   const templateFile = SpreadsheetApp.openById(TEMPLATE_FILE_ID);
   const formTemplateSheet = templateFile.getSheetByName(SHEET_NAMES.SHIFT_FORM);
@@ -118,13 +118,69 @@ function getTemplateData() {
   const numCols = templateRange.getNumColumns();
   const values = templateRange.getValues();
 
+  // 日程リスト部分の書式を事前に取得
+  const dateListFormatting = getDateListFormatting(formTemplateSheet, numRows);
+
   return {
     file: templateFile,
     sheet: formTemplateSheet,
     numRows,
     numCols,
     values,
+    dateListFormatting, // 書式データを追加
   };
+}
+
+/**
+ * 日程リスト部分の書式を事前に取得する
+ *
+ * @param {Sheet} templateSheet - テンプレートシート
+ * @param {number} numRows - 総行数
+ * @returns {Object} 書式データ
+ */
+function getDateListFormatting(templateSheet, numRows) {
+  try {
+    const dateListStartRow = SHIFT_FORM_TEMPLATE.DATA.START_ROW; // 4行目
+    const dateListRowCount = numRows - (dateListStartRow - 1); // 4行目以降の行数
+
+    if (dateListRowCount <= 0) {
+      return null;
+    }
+
+    const templateRange = templateSheet.getRange(
+      dateListStartRow,
+      1,
+      dateListRowCount,
+      templateSheet.getLastColumn()
+    );
+
+    // 各セルの書式を取得
+    const formatting = [];
+    for (let row = 1; row <= dateListRowCount; row++) {
+      const rowFormatting = [];
+      for (let col = 1; col <= templateRange.getNumColumns(); col++) {
+        const cell = templateRange.getCell(row, col);
+        rowFormatting.push({
+          fontColor: cell.getFontColor(),
+          backgroundColor: cell.getBackground(),
+          fontWeight: cell.getFontWeight(),
+          fontStyle: cell.getFontStyle(),
+        });
+      }
+      formatting.push(rowFormatting);
+    }
+
+    Logger.log(`📋 日程リスト部分の書式を事前取得: ${dateListRowCount}行`);
+    return {
+      startRow: dateListStartRow,
+      rowCount: dateListRowCount,
+      colCount: templateRange.getNumColumns(),
+      formatting: formatting,
+    };
+  } catch (error) {
+    Logger.log(`⚠️ 書式取得でエラー: ${error.message}`);
+    return null;
+  }
 }
 
 // 全メンバーの個別ファイルをアップデート
@@ -250,9 +306,18 @@ function createNewFormSheet(ss, templateData, previousSheet) {
   // 2行目以降のデータを貼り付け（1行目は変更しない）
   const dataRows = templateData.values.slice(1); // 1行目を除く
   const dataRowCount = dataRows.length;
-  newFormSheet
-    .getRange(2, 1, dataRowCount, templateData.numCols)
-    .setValues(dataRows);
+  const targetRange = newFormSheet.getRange(
+    2,
+    1,
+    dataRowCount,
+    templateData.numCols
+  );
+
+  // 値を設定
+  targetRange.setValues(dataRows);
+
+  // 事前に取得した書式データを適用
+  applyDateListFormatting(templateData.dateListFormatting, newFormSheet);
 
   // 余分な行を削除
   const lastRow = newFormSheet.getLastRow();
@@ -261,6 +326,41 @@ function createNewFormSheet(ss, templateData, previousSheet) {
   }
 
   return newFormSheet;
+}
+
+/**
+ * 事前に取得した書式データを日程リスト部分に適用する
+ *
+ * @param {Object} dateListFormatting - 事前に取得した書式データ
+ * @param {Sheet} targetSheet - 対象シート
+ */
+function applyDateListFormatting(dateListFormatting, targetSheet) {
+  try {
+    if (!dateListFormatting) {
+      Logger.log("⚠️ 書式データが存在しないため、書式適用をスキップしました");
+      return;
+    }
+
+    const { startRow, rowCount, colCount, formatting } = dateListFormatting;
+
+    // 各セルに書式を適用
+    for (let row = 0; row < rowCount; row++) {
+      for (let col = 0; col < colCount; col++) {
+        const cell = targetSheet.getRange(startRow + row, col + 1);
+        const cellFormatting = formatting[row][col];
+
+        cell.setFontColor(cellFormatting.fontColor);
+        cell.setBackground(cellFormatting.backgroundColor);
+        cell.setFontWeight(cellFormatting.fontWeight);
+        cell.setFontStyle(cellFormatting.fontStyle);
+      }
+    }
+
+    Logger.log(`✅ 日程リスト部分（${startRow}行目以降）の書式を適用しました`);
+  } catch (error) {
+    Logger.log(`⚠️ 書式適用でエラー: ${error.message}`);
+    // エラーが発生しても処理は続行
+  }
 }
 
 // 今後の勤務希望シートの更新
