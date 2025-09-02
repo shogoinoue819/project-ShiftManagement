@@ -263,4 +263,39 @@ function setupMemberRow(
   sheet
     .getRange(row, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_DATES_REQUEST_COL)
     .setFormula(`=INDIRECT("'" & ${nameColLetter}${row} & "'!${infoCell}")`);
+
+  // 新規追加行の枠線を削除（表機能による自動枠線を無効化）
+  removeTableBorders(sheet, row);
+}
+
+/**
+ * 指定行の枠線を削除（表機能による自動枠線を無効化）
+ * @param {GoogleAppsScript.Spreadsheet.Sheet} sheet - 対象シート
+ * @param {number} row - 対象行
+ */
+function removeTableBorders(sheet, row) {
+  try {
+    // メンバーリストの全列範囲を取得
+    const startCol = SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.ID_COL;
+    const endCol = SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.WORK_DATES_REQUEST_COL;
+
+    // 対象行の全列範囲を取得
+    const targetRange = sheet.getRange(row, startCol, 1, endCol - startCol + 1);
+
+    // 上の枠線のみを削除（表の構造は維持）
+    targetRange.setBorder(
+      false, // top - 上の枠線を削除
+      null, // left - 左の枠線は変更しない
+      null, // bottom - 下の枠線は変更しない（表の構造維持）
+      null, // right - 右の枠線は変更しない
+      null, // vertical - 縦の枠線は変更しない
+      null, // horizontal - 横の枠線は変更しない
+      "white", // color
+      SpreadsheetApp.BorderStyle.SOLID
+    );
+
+    Logger.log(`✅ 行${row}の枠線を削除しました`);
+  } catch (error) {
+    Logger.log(`⚠️ 枠線削除でエラー: ${error.message}`);
+  }
 }
