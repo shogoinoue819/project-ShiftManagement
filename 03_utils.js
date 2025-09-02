@@ -6,8 +6,7 @@
 
 /**
  * スプレッドシートオブジェクトを取得
- *
- * @param {Spreadsheet|null} spreadsheet - 対象のスプレッドシート（テスト時用、省略時はアクティブなSS）
+ * @param {Spreadsheet|null} spreadsheet - 対象のスプレッドシート（省略時はアクティブなSS）
  * @returns {Spreadsheet} スプレッドシートオブジェクト
  */
 function getSpreadsheet(spreadsheet = null) {
@@ -16,8 +15,7 @@ function getSpreadsheet(spreadsheet = null) {
 
 /**
  * シフト管理シートを取得
- *
- * @param {Spreadsheet|null} spreadsheet - 対象のスプレッドシート（テスト時用、省略時はアクティブなSS）
+ * @param {Spreadsheet|null} spreadsheet - 対象のスプレッドシート（省略時はアクティブなSS）
  * @returns {Sheet|null} シフト管理シート（存在しない場合はnull）
  */
 function getManageSheet(spreadsheet = null) {
@@ -27,8 +25,7 @@ function getManageSheet(spreadsheet = null) {
 
 /**
  * シフトテンプレートシートを取得
- *
- * @param {Spreadsheet|null} spreadsheet - 対象のスプレッドシート（テスト時用、省略時はアクティブなSS）
+ * @param {Spreadsheet|null} spreadsheet - 対象のスプレッドシート（省略時はアクティブなSS）
  * @returns {Sheet|null} シフトテンプレートシート（存在しない場合はnull）
  */
 function getTemplateSheet(spreadsheet = null) {
@@ -38,8 +35,7 @@ function getTemplateSheet(spreadsheet = null) {
 
 /**
  * 全てのシートを取得
- *
- * @param {Spreadsheet|null} spreadsheet - 対象のスプレッドシート（テスト時用、省略時はアクティブなSS）
+ * @param {Spreadsheet|null} spreadsheet - 対象のスプレッドシート（省略時はアクティブなSS）
  * @returns {Sheet[]} 全てのシートの配列
  */
 function getAllSheets(spreadsheet = null) {
@@ -49,7 +45,6 @@ function getAllSheets(spreadsheet = null) {
 
 /**
  * UIオブジェクトを取得
- *
  * @returns {Ui} UIオブジェクト
  */
 function getUI() {
@@ -60,31 +55,9 @@ function getUI() {
 
 /**
  * 特定の列の最終行を取得
- *
- * 指定された列でデータが存在する最後の行番号を効率的に取得します。
- * パフォーマンスを考慮し、実際にデータが存在する範囲のみを処理します。
- *
  * @param {Sheet} sheet - 対象のシート
  * @param {number} col - 対象の列番号（1から開始）
  * @returns {number} 最終行番号（データが存在しない場合は0）
- *
- * @example
- * // シフト管理シートのメンバーリスト列の最終行を取得
- * const manageSheet = getManageSheet();
- * const lastRow = getLastRowInColumn(manageSheet, 5);
- * console.log(`最終行: ${lastRow}`);
- *
- * // データの存在確認
- * if (lastRow > 0) {
- *   const data = sheet.getRange(1, 5, lastRow, 1).getValues();
- * }
- *
- * @note
- * - 列番号は1から開始（Google Apps Scriptの仕様）
- * - 空のセルは無視され、実際にデータが存在する行のみカウント
- * - パフォーマンス向上のため、getMaxRows()ではなくgetLastRow()を使用
- *
- * @see getLastColumnInRow, isValidSheetAndRow
  */
 function getLastRowInColumn(sheet, col) {
   // パラメータの検証
@@ -105,26 +78,9 @@ function getLastRowInColumn(sheet, col) {
 
 /**
  * 特定の行の最終列を取得
- *
- * 指定された行でデータが存在する最後の列番号を効率的に取得します。
- * パフォーマンスを考慮し、実際にデータが存在する範囲のみを処理します。
- *
  * @param {Sheet} sheet - 対象のシート
  * @param {number} row - 対象の行番号（1から開始）
  * @returns {number} 最終列番号（データが存在しない場合は0）
- *
- * @example
- * // シフト管理シートの1行目の最終列を取得
- * const manageSheet = getManageSheet();
- * const lastCol = getLastColumnInRow(manageSheet, 1);
- * console.log(`最終列: ${lastCol}`);
- *
- * @note
- * - 行番号は1から開始（Google Apps Scriptの仕様）
- * - 空のセルは無視され、実際にデータが存在する列のみカウント
- * - パフォーマンス向上のため、getMaxColumns()ではなくgetLastColumn()を使用
- *
- * @see getLastRowInColumn, isValidSheetAndRow
  */
 function getLastColumnInRow(sheet, row) {
   // パラメータの検証
@@ -145,7 +101,6 @@ function getLastColumnInRow(sheet, row) {
 
 /**
  * シートと列の妥当性を検証
- *
  * @param {Sheet} sheet - 検証対象のシート
  * @param {number} col - 検証対象の列番号
  * @returns {boolean} 妥当性の結果
@@ -163,7 +118,6 @@ function isValidSheetAndColumn(sheet, col) {
 
 /**
  * シートと行の妥当性を検証
- *
  * @param {Sheet} sheet - 検証対象のシート
  * @param {number} row - 検証対象の行番号
  * @returns {boolean} 妥当性の結果
@@ -180,8 +134,7 @@ function isValidSheetAndRow(sheet, row) {
 }
 
 /**
- * 配列から最後の非空行を検索（効率化）
- *
+ * 配列から最後の非空行を検索
  * @param {Array<Array>} values - 検索対象の2次元配列
  * @returns {number} 最後の非空行のインデックス（1から開始）
  */
@@ -196,8 +149,7 @@ function findLastNonEmptyRow(values) {
 }
 
 /**
- * 配列から最後の非空列を検索（効率化）
- *
+ * 配列から最後の非空列を検索
  * @param {Array} values - 検索対象の配列
  * @returns {number} 最後の非空列のインデックス（1から開始）
  */
@@ -215,15 +167,7 @@ function findLastNonEmptyColumn(values) {
 
 /**
  * メンバー管理システム
- *
- * メンバーID、氏名、URL、ステータスなどの情報を統一的に管理し、
- * パフォーマンスを最適化した検索・取得機能を提供します。
- *
- * 特徴:
- * - データの一括取得とキャッシュ
- * - 高速な検索（Map使用）
- * - 統一されたインターフェース
- * - メモリ効率の最適化
+ * メンバーID、氏名、URL、ステータスなどの情報を統一的に管理
  */
 class MemberManager {
   /**
@@ -592,31 +536,7 @@ function getMemberManager(sheet) {
 
 /**
  * ランダムな6桁のメンバーIDを生成
- *
- * 英数字を組み合わせたユニークなメンバーIDを生成します。
- * パフォーマンスを考慮し、文字列連結を避けて配列で構築します。
- *
  * @returns {string} "usr_" + 6桁のランダム文字列
- *
- * @example
- * // 新しいメンバーIDを生成
- * const memberId = generateRandomMemberId();
- * console.log(`生成されたID: ${memberId}`); // 例: "usr_aB3x9K"
- *
- * // メンバー登録時に使用
- * const newMember = {
- *   id: generateRandomMemberId(),
- *   name: "田中太郎",
- *   email: "tanaka@example.com"
- * };
- *
- * @note
- * - IDの長さはUTILS_CONSTANTS.ID_GENERATION.MEMBER_ID_LENGTHで定義
- * - 使用可能文字: 英字（大文字・小文字）と数字
- * - 重複の可能性は極めて低いが、完全な保証はない
- * - パフォーマンス向上のため、配列構築後にjoin()を使用
- *
- * @see UTILS_CONSTANTS.ID_GENERATION
  */
 function generateRandomMemberId() {
   const chars =
@@ -634,41 +554,10 @@ function generateRandomMemberId() {
 }
 
 /**
- * メンバーリストからデータを取得する共通ヘルパー関数
- *
- * シフト管理シートのメンバーリストから指定された列数のデータを取得します。
- * この関数は他のメンバー関連関数の基盤となり、データ取得の重複を防ぎます。
- *
+ * メンバーリストからデータを取得
  * @param {number} [columns=2] - 取得する列数（デフォルト: ID列と氏名列の2列）
  * @param {Sheet} sheet - 対象シート
  * @returns {Array<Array>} メンバーデータの2次元配列
- *
- * @example
- * // ID列と氏名列を取得（デフォルト）
- * const manageSheet = getManageSheet();
- * const memberData = getMemberListData(2, manageSheet);
- * // 結果: [["usr_abc123", "田中太郎"], ["usr_def456", "佐藤花子"], ...]
- *
- * // ID列のみを取得
- * const idOnly = getMemberListData(1, manageSheet);
- * // 結果: [["usr_abc123"], ["usr_def456"], ...]
- *
- * // 3列分のデータを取得
- * const extendedData = getMemberListData(3, manageSheet);
- * // 結果: [["usr_abc123", "田中太郎", "田中"], ...]
- *
- * // テスト用：特定のシートを指定
- * const testData = getMemberListData(2, mockSheet);
- *
- * @note
- * - パラメータの妥当性チェックを自動実行
- * - データが存在しない場合は空配列を返す
- * - パフォーマンス向上のため、範囲を限定してデータ取得
- * - この関数は他のメンバー関数から呼び出されることを想定
- * - テスト時は外部依存を最小化するため、パラメータでシートを指定可能
- *
- * @see getMemberNameById, getMemberIdByName, getMemberOrderById
- * @see UTILS_CONSTANTS.COLUMNS
  * @deprecated 新しいMemberManagerクラスの使用を推奨
  */
 function getMemberListData(columns, sheet) {
@@ -692,7 +581,6 @@ function getMemberListData(columns, sheet) {
 
 /**
  * メンバーリストパラメータの妥当性を検証
- *
  * @param {Sheet} sheet - 検証対象のシート
  * @param {number} columns - 検証対象の列数
  * @returns {boolean} 妥当性の結果
@@ -1083,7 +971,6 @@ function getDateOrderByDate(date, sheet) {
 
 /**
  * 日程リスト作成
- *
  * @param {Sheet} sheet - 対象シート
  * @returns {Array<Array>} 日程データの2次元配列
  */
@@ -1109,7 +996,6 @@ function getDateList(sheet) {
 
 /**
  * 日付データの存在確認
- *
  * @param {number} lastRow - 最終行番号
  * @returns {boolean} データの存在確認結果
  */
@@ -1118,8 +1004,7 @@ function hasValidDateData(lastRow) {
 }
 
 /**
- * 日付リストデータの取得（効率化）
- *
+ * 日付リストデータの取得
  * @param {number} lastRow - 最終行番号
  * @param {Sheet} sheet - 対象シート
  * @returns {Array<Array>} 日付データの2次元配列
@@ -1164,8 +1049,7 @@ function convertDateToString(date) {
 }
 
 /**
- * 日付orderの検索（効率化）
- *
+ * 日付orderの検索
  * @param {Array<Array>} dateValues - 日付データの配列
  * @param {string} dateStr - 検索対象の日付文字列
  * @returns {number} 見つかった順序（0から開始、見つからない場合は-1）
@@ -1188,8 +1072,7 @@ function findDateOrder(dateValues, dateStr) {
 }
 
 /**
- * 日付リストデータの処理（効率化）
- *
+ * 日付リストデータの処理
  * @param {Array<Array>} dateRange - 日付範囲データ
  * @returns {Array<Array>} 処理された日付データ
  */
@@ -1212,41 +1095,9 @@ function processDateListData(dateRange) {
 
 /**
  * 日付を指定されたフォーマットの文字列に変換
- *
- * Date型のオブジェクトを指定されたフォーマットの文字列に変換します。
- * デフォルトでは"M/d"形式（例: "1/15"）で出力されます。
- *
  * @param {Date} date - 変換対象の日付
  * @param {string} [format="M/d"] - 出力フォーマット（Google Apps Scriptの日付フォーマット）
  * @returns {string} フォーマットされた日付文字列、無効な日付の場合は空文字列
- *
- * @example
- * // 基本的な使用方法（デフォルトフォーマット）
- * const date = new Date(2024, 0, 15); // 1月15日
- * const formatted = formatDateToString(date);
- * console.log(formatted); // "1/15"
- *
- * // カスタムフォーマット
- * const longFormat = formatDateToString(date, "yyyy年M月d日");
- * console.log(longFormat); // "2024年1月15日"
- *
- * // 英語フォーマット
- * const englishFormat = formatDateToString(date, "MMM dd, yyyy");
- * console.log(englishFormat); // "Jan 15, 2024"
- *
- * // 無効な日付の場合
- * const invalidDate = new Date("invalid");
- * const result = formatDateToString(invalidDate);
- * console.log(result); // ""
- *
- * @note
- * - フォーマットはGoogle Apps Scriptの日付フォーマット仕様に準拠
- * - タイムゾーンは現在のスクリプトのタイムゾーンを使用
- * - 無効な日付の場合は空文字列を返す
- * - パフォーマンス向上のため、日付の妥当性を事前チェック
- *
- * @see isValidDate, UTILS_CONSTANTS.DATE_FORMATS
- * @see https://developers.google.com/apps-script/reference/utilities/utilities#formatdatedate-timezone-format
  */
 function formatDateToString(
   date,
@@ -1464,41 +1315,8 @@ function isValidHourAndMinute(h, m) {
 
 /**
  * シートの背景色を一括削除
- *
- * シート内の勤務不可を示す背景色を一括で削除し、デフォルトの背景色に戻します。
- * エラーハンドリングを実装し、処理の安全性を確保しています。
- *
  * @param {Sheet} sheet - 背景色を削除する対象シート
  * @returns {void}
- *
- * @example
- * // シフト管理シートの背景色を削除
- * const manageSheet = getManageSheet();
- * clearBackgrounds(manageSheet);
- *
- * // 特定のシートの背景色を削除
- * const targetSheet = ss.getSheetByName("シフト希望表");
- * if (targetSheet) {
- *   clearBackgrounds(targetSheet);
- * }
- *
- * // エラーハンドリング付きで実行
- * try {
- *   const manageSheet = getManageSheet();
- *   clearBackgrounds(manageSheet);
- *   console.log("背景色の削除が完了しました");
- * } catch (error) {
- *   console.error("背景色の削除に失敗しました:", error);
- * }
- *
- * @note
- * - 勤務不可背景色（TIME_SETTINGS.UNAVAILABLE_BACKGROUND_COLOR）のみを対象
- * - データ範囲（getDataRange()）内の全セルを処理
- * - エラーが発生した場合はログに記録し、処理を継続
- * - パフォーマンス向上のため、一括で背景色を更新
- *
- * @see processBackgroundColors, TIME_SETTINGS.UNAVAILABLE_BACKGROUND_COLOR
- * @see applyBorders, protectSheet
  */
 function clearBackgrounds(sheet) {
   // パラメータの検証
@@ -1519,7 +1337,11 @@ function clearBackgrounds(sheet) {
   }
 }
 
-// ボーダーをセット
+/**
+ * ボーダーをセット
+ * @param {Range} range - 対象の範囲
+ * @returns {void}
+ */
 function applyBorders(range) {
   // パラメータの検証
   if (!range) {
@@ -1539,7 +1361,11 @@ function applyBorders(range) {
   }
 }
 
-// 背景色の処理（効率化）
+/**
+ * 背景色の処理
+ * @param {Array<Array>} backgrounds - 背景色の2次元配列
+ * @returns {Array<Array>} 処理された背景色配列
+ */
 function processBackgroundColors(backgrounds) {
   const rows = backgrounds.length;
   const cols = backgrounds[0]?.length || 0;
@@ -1558,7 +1384,11 @@ function processBackgroundColors(backgrounds) {
   return backgrounds;
 }
 
-// ボーダーを適用すべきかどうかを判定
+/**
+ * ボーダーを適用すべきかどうかを判定
+ * @param {Range} merged - マージされた範囲
+ * @returns {boolean} ボーダーを適用すべきかどうか
+ */
 function shouldApplyBorder(merged) {
   const bg = merged.getBackground();
   return (
@@ -1568,7 +1398,11 @@ function shouldApplyBorder(merged) {
   );
 }
 
-// 範囲にボーダーを適用
+/**
+ * 範囲にボーダーを適用
+ * @param {Range} merged - マージされた範囲
+ * @returns {void}
+ */
 function applyBorderToRange(merged) {
   merged.setBorder(
     true,
@@ -1586,50 +1420,9 @@ function applyBorderToRange(merged) {
 
 /**
  * シートを保護して編集を制限
- *
- * 指定されたシートを保護し、編集権限を制限します。
- * ドメイン編集も無効化し、セキュリティを強化します。
- *
  * @param {Sheet} sheet - 保護する対象シート
  * @param {string} [description="シートの保護"] - 保護の説明文
- * @returns {void}
- *
- * @example
- * // 基本的な使用方法
- * const manageSheet = getManageSheet();
- * protectSheet(manageSheet);
- *
- * // カスタム説明付きで保護
- * protectSheet(templateSheet, "シフトテンプレートの保護");
- *
- * // 複数シートを保護
- * const manageSheet = getManageSheet();
- * const templateSheet = getTemplateSheet();
- * const sheetsToProtect = [manageSheet, templateSheet];
- * sheetsToProtect.forEach(sheet => {
- *   if (sheet) {
- *     protectSheet(sheet, `${sheet.getName()}の保護`);
- *   }
- * });
- *
- * // エラーハンドリング付きで実行
- * try {
- *   const manageSheet = getManageSheet();
- *   protectSheet(manageSheet);
- *   console.log("シートの保護が完了しました");
- * } catch (error) {
- *   console.error("シートの保護に失敗しました:", error);
- * }
- *
- * @note
- * - 保護されたシートは編集できなくなる
- * - 既存の編集者は自動的に削除される
- * - ドメイン編集権限も無効化される
- * - エラーが発生した場合はログに記録し、処理を継続
- * - 保護の解除は手動で行う必要がある
- *
- * @see clearBackgrounds, applyBorders
- * @see https://developers.google.com/apps-script/reference/spreadsheet/sheet#protect
+ * @returns {boolean} 保護の成功/失敗
  */
 function protectSheet(sheet, description = "シートの保護") {
   // パラメータの検証
@@ -1791,5 +1584,88 @@ function unprotectSheetByName(spreadsheet, sheetName, memberName = "") {
       { error: e.message }
     );
     return false;
+  }
+}
+
+// ===== 8. メンバーシート管理 =====
+
+/**
+ * メンバーマネージャーの初期化（共通処理）
+ *
+ * @returns {MemberManager|null} 初期化されたメンバーマネージャー、失敗時はnull
+ */
+function initializeMemberManager() {
+  try {
+    const manageSheet = getManageSheet();
+    const memberManager = getMemberManager(manageSheet);
+
+    if (!memberManager.ensureInitialized()) {
+      Logger.log("❌ メンバーデータの初期化に失敗しました");
+      return null;
+    }
+
+    const memberMap = memberManager.memberMap;
+    if (!memberMap || Object.keys(memberMap).length === 0) {
+      Logger.log("❌ メンバーデータが取得できませんでした");
+      return null;
+    }
+
+    return memberManager;
+  } catch (e) {
+    Logger.log(`❌ メンバー管理初期化エラー: ${e.message}`);
+    return null;
+  }
+}
+
+/**
+ * メンバーシートの整理（共通処理）
+ *
+ * @param {Spreadsheet} memberSS - メンバーのスプレッドシート
+ * @param {string} memberName - メンバー名
+ */
+function organizeMemberSheets(memberSS, memberName) {
+  try {
+    const allSheets = memberSS.getSheets();
+    const targetSheetNames = [
+      SHEET_NAMES.SHIFT_FORM, // ①シフト希望表
+      SHEET_NAMES.SHIFT_FORM_INFO, // ②今後の勤務希望
+      SHEET_NAMES.SHIFT_FORM_PREVIOUS, // ③前回分
+    ];
+
+    // 不要なシートを削除
+    for (const sheet of allSheets) {
+      const sheetName = sheet.getName();
+      if (!targetSheetNames.includes(sheetName)) {
+        try {
+          memberSS.deleteSheet(sheet);
+          Logger.log(`🗑️ ${memberName} さんの不要シート削除: "${sheetName}"`);
+        } catch (deleteError) {
+          Logger.log(
+            `⚠️ ${memberName} さんのシート削除失敗: "${sheetName}" - ${deleteError.message}`
+          );
+        }
+      }
+    }
+
+    // シートの順番を整理
+    let currentPosition = 1;
+    for (const targetSheetName of targetSheetNames) {
+      const targetSheet = memberSS.getSheetByName(targetSheetName);
+      if (targetSheet) {
+        try {
+          memberSS.setActiveSheet(targetSheet);
+          memberSS.moveActiveSheet(currentPosition);
+          currentPosition++;
+        } catch (moveError) {
+          Logger.log(
+            `⚠️ ${memberName} さんのシート移動失敗: "${targetSheetName}" - ${moveError.message}`
+          );
+        }
+      }
+    }
+
+    Logger.log(`✅ ${memberName} さんのシート整理完了`);
+  } catch (e) {
+    Logger.log(`⚠️ ${memberName} さんのシート整理でエラー: ${e.message}`);
   }
 }

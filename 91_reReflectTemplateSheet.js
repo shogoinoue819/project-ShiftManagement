@@ -111,28 +111,7 @@ function getShiftFormTemplateSheet() {
   }
 }
 
-function initializeMemberManager() {
-  try {
-    const manageSheet = getManageSheet();
-    const memberManager = getMemberManager(manageSheet);
-
-    if (!memberManager.ensureInitialized()) {
-      Logger.log("❌ メンバーデータの初期化に失敗しました");
-      return null;
-    }
-
-    const memberMap = memberManager.memberMap;
-    if (!memberMap || Object.keys(memberMap).length === 0) {
-      Logger.log("❌ メンバーデータが取得できませんでした");
-      return null;
-    }
-
-    return memberManager;
-  } catch (e) {
-    Logger.log(`❌ メンバー管理初期化エラー: ${e.message}`);
-    return null;
-  }
-}
+// initializeMemberManager()関数は03_utils.jsで定義済み
 
 function getSubmitStatusValues() {
   const manageSheet = getManageSheet();
@@ -212,50 +191,4 @@ function processShiftFormMemberSheet(
   }
 }
 
-// シート整理処理
-function organizeMemberSheets(memberSS, memberName) {
-  try {
-    const allSheets = memberSS.getSheets();
-    const targetSheetNames = [
-      SHEET_NAMES.SHIFT_FORM, // ①シフト希望表
-      SHEET_NAMES.SHIFT_FORM_INFO, // ②今後の勤務希望
-      SHEET_NAMES.SHIFT_FORM_PREVIOUS, // ③前回分
-    ];
-
-    // 不要なシートを削除
-    for (const sheet of allSheets) {
-      const sheetName = sheet.getName();
-      if (!targetSheetNames.includes(sheetName)) {
-        try {
-          memberSS.deleteSheet(sheet);
-          Logger.log(`🗑️ ${memberName} さんの不要シート削除: "${sheetName}"`);
-        } catch (deleteError) {
-          Logger.log(
-            `⚠️ ${memberName} さんのシート削除失敗: "${sheetName}" - ${deleteError.message}`
-          );
-        }
-      }
-    }
-
-    // シートの順番を整理
-    let currentPosition = 1;
-    for (const targetSheetName of targetSheetNames) {
-      const targetSheet = memberSS.getSheetByName(targetSheetName);
-      if (targetSheet) {
-        try {
-          memberSS.setActiveSheet(targetSheet);
-          memberSS.moveActiveSheet(currentPosition);
-          currentPosition++;
-        } catch (moveError) {
-          Logger.log(
-            `⚠️ ${memberName} さんのシート移動失敗: "${targetSheetName}" - ${moveError.message}`
-          );
-        }
-      }
-    }
-
-    Logger.log(`✅ ${memberName} さんのシート整理完了`);
-  } catch (e) {
-    Logger.log(`⚠️ ${memberName} さんのシート整理でエラー: ${e.message}`);
-  }
-}
+// organizeMemberSheets()関数は03_utils.jsで定義済み

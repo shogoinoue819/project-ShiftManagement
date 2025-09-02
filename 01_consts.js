@@ -372,3 +372,19 @@ const UTILS_CONSTANTS = {
     TIME_FORMAT: /^(\d{1,2}):(\d{2})$/, // 時間形式（H:mm または HH:mm）
   },
 };
+
+// ===== PDF出力設定 =====
+const PDF_EXPORT_CONFIG = {
+  PORTRAIT: false,
+  SIZE: "A4",
+  FIT_WIDTH: true,
+  SCALE: 4,
+  SHOW_SHEET_NAMES: false,
+  SHOW_TITLE: false,
+  SHOW_PAGE_NUMBERS: false,
+  SHOW_GRIDLINES: false,
+  FIX_ROW_HEIGHT: false,
+};
+
+// ===== 行高調整設定 =====
+const ROW_HEIGHT_MULTIPLIER = 1.5;

@@ -430,87 +430,15 @@ function findDateRow(manageSheet, dateStr) {
   return null;
 }
 
-/**
- * 日付文字列をDateオブジェクトに変換
- * @param {string} dateStr - 日付文字列 (例: "01/01")
- * @return {Date} Dateオブジェクト
- */
-function formatStringToDate(dateStr) {
-  const [month, day] = dateStr.split("/");
-  return new Date(`2023-${month}-${day}`); // 年は固定
-}
-
-/**
- * Dateオブジェクトをシート名用の日付文字列に変換
- * @param {Date} date - Dateオブジェクト
- * @return {string} 日付文字列 (例: "3/3")
- */
-function formatDateToString(date) {
-  return date.getMonth() + 1 + "/" + date.getDate();
-}
-
 // clearBackgrounds関数は03_utils.jsで定義済み
+// 重複関数は03_utils.jsのものを使用:
+// - getSpreadsheet()
+// - getAllSheets()
+// - getUI()
+// - getLastRowInColumn()
+// - formatStringToDate()
+// - formatDateToString()
 
-/**
- * スプレッドシートオブジェクトを取得
- * @return {GoogleAppsScript.Spreadsheet.Spreadsheet} スプレッドシートオブジェクト
- */
-function getSpreadsheet() {
-  return SpreadsheetApp.getActiveSpreadsheet();
-}
-
-/**
- * 全てのシートを取得
- * @return {GoogleAppsScript.Spreadsheet.Sheet[]} シートオブジェクトの配列
- */
-function getAllSheets() {
-  return getSpreadsheet().getSheets();
-}
-
-/**
- * UIオブジェクトを取得
- * @return {GoogleAppsScript.UI.Alert} UIオブジェクト
- */
-function getUI() {
-  return SpreadsheetApp.getUi();
-}
-
-/**
- * カラムの最終行を取得
- * @param {GoogleAppsScript.Spreadsheet.Sheet} sheet - 対象シート
- * @param {number} col - カラム番号
- * @return {number} 最終行番号
- */
-function getLastRowInColumn(sheet, col) {
-  const lastRow = sheet.getLastRow();
-  if (lastRow === 0) return 0;
-  const values = sheet.getRange(1, col, lastRow, 1).getValues();
-  for (let i = lastRow; i > 0; i--) {
-    if (values[i - 1][0] !== "") {
-      return i;
-    }
-  }
-  return 0;
-}
-
-/**
- * 定数
- */
-const PDF_EXPORT_CONFIG = {
-  PORTRAIT: false,
-  SIZE: "A4",
-  FIT_WIDTH: true,
-  SCALE: 4,
-  SHOW_SHEET_NAMES: false,
-  SHOW_TITLE: false,
-  SHOW_PAGE_NUMBERS: false,
-  SHOW_GRIDLINES: false,
-  FIX_ROW_HEIGHT: false,
-};
-
-/**
- * 行高調整倍率
- */
-const ROW_HEIGHT_MULTIPLIER = 1.5;
-
-// 定数は01_consts.jsで定義済み
+// 定数は01_consts.jsで定義済み:
+// - PDF_EXPORT_CONFIG
+// - ROW_HEIGHT_MULTIPLIER

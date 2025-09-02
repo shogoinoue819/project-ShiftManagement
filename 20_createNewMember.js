@@ -31,15 +31,6 @@ function createNewMember() {
   // 氏名をセット
   const name = inputName;
 
-  // // メールアドレスの入力
-  // const inputEmail = ui.prompt("追加するメンバーのメールアドレスを入力してください", ui.ButtonSet.OK_CANCEL);
-  // if (inputEmail.getSelectedButton() !== ui.Button.OK) {
-  //   ui.alert("キャンセルされました");
-  //   return;
-  // }
-  // // 空白などをトリミングして入力されたメールアドレスをセット
-  // const email = inputEmail.getResponseText().trim();
-
   // ===== 個別ファイルの作成 =====
 
   // シフト希望表個別フォルダを取得
@@ -49,15 +40,6 @@ function createNewMember() {
     `${SHEET_NAMES.SHIFT_FORM}_${name}`,
     folder
   );
-
-  // try {
-  //   // 編集権限を付加
-  //   newFile.addEditor(email);
-
-  // } catch (e) {
-  //   Logger.log(`❌ ${name} さんのファイル共有に失敗しました: ${e}`);
-  //   ui.alert(`❌ メールアドレスの空白もしくは不適により、${name} さんのファイル共有は未実行です。\nエラー内容: ${e.message}`);
-  // }
 
   // 提出用ファイルのSSを取得
   const newSS = SpreadsheetApp.openById(newFile.getId());
@@ -156,9 +138,6 @@ function createNewMember() {
     checkCell,
     infoCell
   );
-
-  // // メアドをセット
-  // manageSheet.getRange(newRow, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.EMAIL_COL).setValue(email);
 
   // ===== 前回用管理シート =====
 
