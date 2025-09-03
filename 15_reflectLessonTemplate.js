@@ -11,9 +11,13 @@ function reflectLessonTemplate() {
     const targetSheets = getTargetSheets(ss);
     Logger.log(`📋 対象シート数: ${targetSheets.length}`);
 
+    // 全曜日のテンプレートデータを事前にキャッシュ
+    const templateCache = buildTemplateCache(ss);
+    Logger.log("📦 テンプレートデータキャッシュ完了");
+
     // 各日程のシフト作成シートにおいて、
     targetSheets.forEach((dailySheet) => {
-      processDailySheet(dailySheet, ss);
+      processDailySheetWithCache(dailySheet, templateCache);
     });
 
     Logger.log("✅ 授業割テンプレ反映完了");
@@ -35,7 +39,102 @@ function getTargetSheets(ss) {
 }
 
 /**
- * 各日程シートの処理を実行
+ * 全曜日のテンプレートデータをキャッシュとして構築
+ * @param {GoogleAppsScript.Spreadsheet.Spreadsheet} ss - スプレッドシート
+ * @returns {Object} 曜日別のテンプレートデータキャッシュ
+ */
+function buildTemplateCache(ss) {
+  const cache = {};
+  const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+
+  weekdays.forEach((dayOfWeek) => {
+    const lessonTemplateSheet = getLessonTemplateSheet(ss, dayOfWeek);
+    if (lessonTemplateSheet) {
+      // 最大列数を取得（最初のシートから）
+      const firstTargetSheet = getTargetSheets(ss)[0];
+      if (firstTargetSheet) {
+        const columnCount =
+          firstTargetSheet.getLastColumn() -
+          SHIFT_TEMPLATE_SHEET.MEMBER_START_COL +
+          1;
+        const templateData = getTemplateData(lessonTemplateSheet, columnCount);
+        cache[dayOfWeek] = templateData;
+        Logger.log(`📦 ${dayOfWeek}のテンプレートデータをキャッシュしました`);
+      }
+    }
+  });
+
+  return cache;
+}
+
+/**
+ * テンプレートシートからデータを取得
+ * @param {GoogleAppsScript.Spreadsheet.Sheet} lessonTemplateSheet - 授業割テンプレートシート
+ * @param {number} columnCount - 列数
+ * @returns {Object} テンプレートデータ
+ */
+function getTemplateData(lessonTemplateSheet, columnCount) {
+  const rowCount =
+    SHIFT_TEMPLATE_SHEET.ROWS.DATA_END -
+    SHIFT_TEMPLATE_SHEET.ROWS.DATA_START +
+    1;
+
+  const sourceRange = lessonTemplateSheet.getRange(
+    SHIFT_TEMPLATE_SHEET.ROWS.DATA_START,
+    SHIFT_TEMPLATE_SHEET.MEMBER_START_COL,
+    rowCount,
+    columnCount
+  );
+
+  return {
+    values: sourceRange.getValues(),
+    backgrounds: sourceRange.getBackgrounds(),
+    fontColors: sourceRange.getFontColors(),
+    fontSizes: sourceRange.getFontSizes(),
+    fontWeights: sourceRange.getFontWeights(),
+    mergedRanges: sourceRange.getMergedRanges(),
+    rowCount: rowCount,
+    columnCount: columnCount,
+  };
+}
+
+/**
+ * 各日程シートの処理を実行（キャッシュ使用版）
+ * @param {GoogleAppsScript.Spreadsheet.Sheet} dailySheet - 日程シート
+ * @param {Object} templateCache - テンプレートデータキャッシュ
+ */
+function processDailySheetWithCache(dailySheet, templateCache) {
+  try {
+    // シート名を取得
+    const sheetName = dailySheet.getName();
+
+    // 日付から曜日を取得
+    const dayOfWeek = getDayOfWeekFromSheet(dailySheet);
+
+    // 月〜金に含まれる場合のみ処理
+    if (!isWeekday(dayOfWeek)) {
+      return;
+    }
+
+    // キャッシュから該当曜日のデータを取得
+    const templateData = templateCache[dayOfWeek];
+    if (!templateData) {
+      Logger.log(
+        `⚠️ ${dayOfWeek}のテンプレートデータが見つかりません: ${sheetName}`
+      );
+      return;
+    }
+
+    // キャッシュされたテンプレートデータをコピー
+    copyTemplateDataFromCache(dailySheet, templateData);
+  } catch (error) {
+    Logger.log(`❌ シート処理でエラー: ${sheetName} - ${error.message}`);
+    throw error;
+  }
+}
+
+/**
+ * 各日程シートの処理を実行（旧版 - 互換性のため残す）
  * @param {GoogleAppsScript.Spreadsheet.Sheet} dailySheet - 日程シート
  * @param {GoogleAppsScript.Spreadsheet.Spreadsheet} ss - スプレッドシート
  */
@@ -144,7 +243,28 @@ function getLessonTemplateSheet(ss, dayOfWeek) {
 }
 
 /**
- * テンプレートデータを日程シートにコピー
+ * キャッシュされたテンプレートデータを日程シートにコピー
+ * @param {GoogleAppsScript.Spreadsheet.Sheet} dailySheet - 日程シート
+ * @param {Object} templateData - キャッシュされたテンプレートデータ
+ */
+function copyTemplateDataFromCache(dailySheet, templateData) {
+  // ターゲット範囲を取得
+  const targetRange = dailySheet.getRange(
+    SHIFT_TEMPLATE_SHEET.ROWS.DATA_START,
+    SHIFT_TEMPLATE_SHEET.MEMBER_START_COL,
+    templateData.rowCount,
+    templateData.columnCount
+  );
+
+  // セルの書式とデータをコピー
+  copyCellPropertiesFromCache(templateData, targetRange);
+
+  // 結合セルの処理
+  handleMergedCellsFromCache(templateData, dailySheet);
+}
+
+/**
+ * テンプレートデータを日程シートにコピー（旧版 - 互換性のため残す）
  * @param {GoogleAppsScript.Spreadsheet.Sheet} dailySheet - 日程シート
  * @param {GoogleAppsScript.Spreadsheet.Sheet} lessonTemplateSheet - 授業割テンプレートシート
  */
@@ -165,9 +285,6 @@ function copyTemplateData(dailySheet, lessonTemplateSheet) {
 
   // 結合セルの処理
   handleMergedCells(sourceRange, targetRange, dailySheet);
-
-  // ボーダーの適用
-  applyBordersToRange(dailySheet, columnCount);
 }
 
 /**
@@ -201,7 +318,27 @@ function getDataRanges(dailySheet, lessonTemplateSheet, columnCount) {
 }
 
 /**
- * セルの書式とデータをコピー
+ * キャッシュされたセルの書式とデータをコピー
+ * @param {Object} templateData - キャッシュされたテンプレートデータ
+ * @param {GoogleAppsScript.Spreadsheet.Range} targetRange - ターゲット範囲
+ */
+function copyCellPropertiesFromCache(templateData, targetRange) {
+  // 背景色の処理（白背景は保持）
+  const processedBackgrounds = processBackgroundsFromCache(
+    templateData.backgrounds,
+    targetRange
+  );
+
+  // 一括でプロパティを設定
+  targetRange.setBackgrounds(processedBackgrounds);
+  targetRange.setValues(templateData.values);
+  targetRange.setFontColors(templateData.fontColors);
+  targetRange.setFontSizes(templateData.fontSizes);
+  targetRange.setFontWeights(templateData.fontWeights);
+}
+
+/**
+ * セルの書式とデータをコピー（旧版 - 互換性のため残す）
  * @param {GoogleAppsScript.Spreadsheet.Range} sourceRange - ソース範囲
  * @param {GoogleAppsScript.Spreadsheet.Range} targetRange - ターゲット範囲
  */
@@ -225,7 +362,29 @@ function copyCellProperties(sourceRange, targetRange) {
 }
 
 /**
- * 背景色を処理（白背景は元の背景を保持）
+ * キャッシュされた背景色を処理（白背景は元の背景を保持）
+ * @param {Array} sourceBackgrounds - ソースの背景色配列
+ * @param {GoogleAppsScript.Spreadsheet.Range} targetRange - ターゲット範囲
+ * @returns {Array} 処理済みの背景色配列
+ */
+function processBackgroundsFromCache(sourceBackgrounds, targetRange) {
+  // 元の背景色を取得
+  const currentBackgrounds = targetRange.getBackgrounds();
+
+  // 新しい背景色配列を作成
+  return sourceBackgrounds.map((row, i) =>
+    row.map((sourceColor, j) => {
+      // 白背景（#ffffff）またはnullの場合は元の背景を保持
+      if (sourceColor === "#ffffff" || sourceColor === null) {
+        return currentBackgrounds[i][j];
+      }
+      return sourceColor;
+    })
+  );
+}
+
+/**
+ * 背景色を処理（白背景は元の背景を保持）（旧版 - 互換性のため残す）
  * @param {Array} sourceBackgrounds - ソースの背景色配列
  * @param {GoogleAppsScript.Spreadsheet.Range} targetRange - ターゲット範囲
  * @returns {Array} 処理済みの背景色配列
@@ -247,7 +406,28 @@ function processBackgrounds(sourceBackgrounds, targetRange) {
 }
 
 /**
- * 結合セルの処理
+ * キャッシュされた結合セルの処理
+ * @param {Object} templateData - キャッシュされたテンプレートデータ
+ * @param {GoogleAppsScript.Spreadsheet.Sheet} dailySheet - 日程シート
+ */
+function handleMergedCellsFromCache(templateData, dailySheet) {
+  templateData.mergedRanges.forEach((range) => {
+    const rowOffset = range.getRow() - SHIFT_TEMPLATE_SHEET.ROWS.DATA_START;
+    const colOffset = range.getColumn() - SHIFT_TEMPLATE_SHEET.MEMBER_START_COL;
+
+    const targetRange = dailySheet.getRange(
+      SHIFT_TEMPLATE_SHEET.ROWS.DATA_START + rowOffset,
+      SHIFT_TEMPLATE_SHEET.MEMBER_START_COL + colOffset,
+      range.getNumRows(),
+      range.getNumColumns()
+    );
+
+    targetRange.merge();
+  });
+}
+
+/**
+ * 結合セルの処理（旧版 - 互換性のため残す）
  * @param {GoogleAppsScript.Spreadsheet.Range} sourceRange - ソース範囲
  * @param {GoogleAppsScript.Spreadsheet.Range} targetRange - ターゲット範囲
  * @param {GoogleAppsScript.Spreadsheet.Sheet} dailySheet - 日程シート
@@ -268,25 +448,4 @@ function handleMergedCells(sourceRange, targetRange, dailySheet) {
 
     targetRange.merge();
   });
-}
-
-/**
- * ボーダーを範囲に適用
- * @param {GoogleAppsScript.Spreadsheet.Sheet} dailySheet - 日程シート
- * @param {number} columnCount - 列数
- */
-function applyBordersToRange(dailySheet, columnCount) {
-  const rowCount =
-    SHIFT_TEMPLATE_SHEET.ROWS.DATA_END -
-    SHIFT_TEMPLATE_SHEET.ROWS.DATA_START +
-    1;
-
-  const targetRange = dailySheet.getRange(
-    SHIFT_TEMPLATE_SHEET.ROWS.DATA_START,
-    SHIFT_TEMPLATE_SHEET.MEMBER_START_COL,
-    rowCount,
-    columnCount
-  );
-
-  applyBorders(targetRange);
 }
