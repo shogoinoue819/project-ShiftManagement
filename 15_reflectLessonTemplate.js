@@ -1,3 +1,6 @@
+// ===== 設定定数 =====
+const ENABLE_BORDER_PROCESSING = false; // true: ボーダー処理あり, false: ボーダー処理なし
+
 // 曜日別授業割を反映
 function reflectLessonTemplate() {
   try {
@@ -261,6 +264,11 @@ function copyTemplateDataFromCache(dailySheet, templateData) {
 
   // 結合セルの処理
   handleMergedCellsFromCache(templateData, dailySheet);
+
+  // ボーダーの適用（設定に応じて）
+  if (ENABLE_BORDER_PROCESSING) {
+    applyBordersToRangeFromCache(dailySheet, templateData);
+  }
 }
 
 /**
@@ -424,6 +432,22 @@ function handleMergedCellsFromCache(templateData, dailySheet) {
 
     targetRange.merge();
   });
+}
+
+/**
+ * キャッシュ版のボーダーを範囲に適用
+ * @param {GoogleAppsScript.Spreadsheet.Sheet} dailySheet - 日程シート
+ * @param {Object} templateData - キャッシュされたテンプレートデータ
+ */
+function applyBordersToRangeFromCache(dailySheet, templateData) {
+  const targetRange = dailySheet.getRange(
+    SHIFT_TEMPLATE_SHEET.ROWS.DATA_START,
+    SHIFT_TEMPLATE_SHEET.MEMBER_START_COL,
+    templateData.rowCount,
+    templateData.columnCount
+  );
+
+  applyBorders(targetRange);
 }
 
 /**
