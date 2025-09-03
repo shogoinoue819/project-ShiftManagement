@@ -114,14 +114,38 @@ function deleteSelectedMember() {
 // ===== ヘルパー関数 =====
 function deleteMemberRowWithDateListPreservation(sheet, memberOrder) {
   try {
+    // 日程リストの行数を取得
+    const dateRowCount =
+      getLastRowInColumn(sheet, SHIFT_MANAGEMENT_SHEET.DATE_LIST.COL) -
+      SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW +
+      1;
+
     // A列（日程リスト）を保存
     const dateValues = sheet
       .getRange(
         SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW,
         SHIFT_MANAGEMENT_SHEET.DATE_LIST.COL,
-        getLastRowInColumn(sheet, SHIFT_MANAGEMENT_SHEET.DATE_LIST.COL) -
-          SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW +
-          1,
+        dateRowCount,
+        1
+      )
+      .getValues();
+
+    // B列（完了チェック）を保存
+    const completeValues = sheet
+      .getRange(
+        SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW,
+        SHIFT_MANAGEMENT_SHEET.DATE_LIST.COMPLETE_COL,
+        dateRowCount,
+        1
+      )
+      .getValues();
+
+    // C列（共有ステータス）を保存
+    const shareValues = sheet
+      .getRange(
+        SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW,
+        SHIFT_MANAGEMENT_SHEET.DATE_LIST.SHARE_COL,
+        dateRowCount,
         1
       )
       .getValues();
@@ -138,6 +162,28 @@ function deleteMemberRowWithDateListPreservation(sheet, memberOrder) {
         1
       )
       .setValues(dateValues);
+
+    // 完了チェックをB列に書き戻し
+    sheet
+      .getRange(
+        SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW,
+        SHIFT_MANAGEMENT_SHEET.DATE_LIST.COMPLETE_COL,
+        completeValues.length,
+        1
+      )
+      .setValues(completeValues);
+
+    // 共有ステータスをC列に書き戻し
+    sheet
+      .getRange(
+        SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW,
+        SHIFT_MANAGEMENT_SHEET.DATE_LIST.SHARE_COL,
+        shareValues.length,
+        1
+      )
+      .setValues(shareValues);
+
+    Logger.log(`✅ 日程リスト（A列・B列・C列）を保存・復元しました`);
   } catch (e) {
     Logger.log(`❌ メンバー行削除エラー (${sheet.getName()}): ${e.message}`);
     throw e;
