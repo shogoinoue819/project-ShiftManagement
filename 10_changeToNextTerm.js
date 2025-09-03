@@ -194,37 +194,11 @@ function generateAndReflectDateList(manageSheet, startDate, endDate) {
     throw new Error("❌ 日程リストが生成できませんでした");
   }
 
-  // 管理シートに日程リストを設定
-  manageSheet
-    .getRange(
-      SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW,
-      SHIFT_MANAGEMENT_SHEET.DATE_LIST.COL,
-      numDates,
-      1
-    )
-    .setValues(dateList);
+  // 管理シートの日程リスト部分をクリアしてから新しい日程を設定
+  clearAndSetDateList(manageSheet, dateList, numDates);
 
-  // B列（完了チェック）を FALSE で初期化
-  const falseValues = Array(numDates).fill([false]);
-  manageSheet
-    .getRange(
-      SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW,
-      SHIFT_MANAGEMENT_SHEET.DATE_LIST.COMPLETE_COL,
-      numDates,
-      1
-    )
-    .setValues(falseValues);
-
-  // C列（共有ステータス）を "未共有" で初期化
-  const shareValues = Array(numDates).fill([`${STATUS_STRINGS.SHARE.FALSE}`]);
-  manageSheet
-    .getRange(
-      SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW,
-      SHIFT_MANAGEMENT_SHEET.DATE_LIST.SHARE_COL,
-      numDates,
-      1
-    )
-    .setValues(shareValues);
+  // B列（完了チェック）とC列（共有ステータス）をクリアして初期化
+  clearAndInitializeDateStatusColumns(manageSheet, numDates);
 
   // テンプレートファイルを取得
   const templateFile = SpreadsheetApp.openById(TEMPLATE_FILE_ID);
@@ -281,6 +255,118 @@ function generateDateList(startDate, endDate) {
   }
 
   return dateList;
+}
+
+/**
+ * 管理シートの日程リスト部分をクリアしてから新しい日程を設定する
+ * 既存の日程が新しい日程より多い場合、余分な部分を完全にクリアする
+ *
+ * @param {Sheet} manageSheet - 管理シート
+ * @param {Array<Array<Date>>} dateList - 新しい日程リスト
+ * @param {number} numDates - 新しい日程数
+ */
+function clearAndSetDateList(manageSheet, dateList, numDates) {
+  const startRow = SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW;
+  const dateCol = SHIFT_MANAGEMENT_SHEET.DATE_LIST.COL;
+
+  // 既存の日程リストの範囲を取得（最大100行まで想定）
+  const maxExistingRows = 100;
+  const existingRange = manageSheet.getRange(
+    startRow,
+    dateCol,
+    maxExistingRows,
+    1
+  );
+
+  // 既存の日程を取得
+  const existingDates = existingRange.getValues();
+
+  // 既存の日程が新しい日程より多い場合、余分な部分を完全にクリア
+  if (existingDates.length > numDates) {
+    const clearStartRow = startRow + numDates;
+    const clearRowCount = existingDates.length - numDates;
+
+    // 余分な日程の内容のみをクリア（書式は保持）
+    const clearRange = manageSheet.getRange(
+      clearStartRow,
+      dateCol,
+      clearRowCount,
+      1
+    );
+    clearRange.clearContent();
+
+    Logger.log(`✅ 余分な日程 ${clearRowCount} 行の内容をクリアしました`);
+  }
+
+  // 新しい日程リストを設定
+  manageSheet.getRange(startRow, dateCol, numDates, 1).setValues(dateList);
+
+  Logger.log(`✅ 日程リスト ${numDates} 件を設定しました`);
+}
+
+/**
+ * 管理シートの完了チェックと共有ステータス列をクリアして初期化する
+ * 既存のデータが新しい日程より多い場合、余分な部分を完全にクリアする
+ *
+ * @param {Sheet} manageSheet - 管理シート
+ * @param {number} numDates - 新しい日程数
+ */
+function clearAndInitializeDateStatusColumns(manageSheet, numDates) {
+  const startRow = SHIFT_MANAGEMENT_SHEET.DATE_LIST.START_ROW;
+  const completeCol = SHIFT_MANAGEMENT_SHEET.DATE_LIST.COMPLETE_COL;
+  const shareCol = SHIFT_MANAGEMENT_SHEET.DATE_LIST.SHARE_COL;
+
+  // 既存の完了チェック列の範囲を取得（最大100行まで想定）
+  const maxExistingRows = 100;
+  const existingCompleteRange = manageSheet.getRange(
+    startRow,
+    completeCol,
+    maxExistingRows,
+    1
+  );
+
+  // 既存の完了チェックデータを取得
+  const existingCompleteData = existingCompleteRange.getValues();
+
+  // 既存のデータが新しい日程より多い場合、余分な部分を完全にクリア
+  if (existingCompleteData.length > numDates) {
+    const clearStartRow = startRow + numDates;
+    const clearRowCount = existingCompleteData.length - numDates;
+
+    // 余分な完了チェック列の内容のみをクリア（書式は保持）
+    const clearCompleteRange = manageSheet.getRange(
+      clearStartRow,
+      completeCol,
+      clearRowCount,
+      1
+    );
+    clearCompleteRange.clearContent();
+
+    // 余分な共有ステータス列の内容のみをクリア（書式は保持）
+    const clearShareRange = manageSheet.getRange(
+      clearStartRow,
+      shareCol,
+      clearRowCount,
+      1
+    );
+    clearShareRange.clearContent();
+
+    Logger.log(
+      `✅ 余分なステータス列 ${clearRowCount} 行の内容をクリアしました`
+    );
+  }
+
+  // B列（完了チェック）を FALSE で初期化
+  const falseValues = Array(numDates).fill([false]);
+  manageSheet
+    .getRange(startRow, completeCol, numDates, 1)
+    .setValues(falseValues);
+
+  // C列（共有ステータス）を "未共有" で初期化
+  const shareValues = Array(numDates).fill([`${STATUS_STRINGS.SHARE.FALSE}`]);
+  manageSheet.getRange(startRow, shareCol, numDates, 1).setValues(shareValues);
+
+  Logger.log(`✅ ステータス列 ${numDates} 件を初期化しました`);
 }
 
 /**
