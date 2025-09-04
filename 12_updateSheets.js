@@ -571,17 +571,33 @@ function setWorkingTimeFormulas(templateSheet, names) {
  * @param {string} colLetter - 列文字
  */
 function setWorkStartFormula(sheet, col, colLetter) {
-  sheet
-    .getRange(SHIFT_TEMPLATE_SHEET.ROWS.WORK_START, col)
-    .setFormula(
-      `=IFERROR(TO_TEXT(INDEX(${colLetter}${
-        SHIFT_TEMPLATE_SHEET.ROWS.DATA_START - 1
-      }:${colLetter}${
-        SHIFT_TEMPLATE_SHEET.ROWS.DATA_END + 1
-      }, MATCH(TRUE, ISNUMBER(SEARCH(":" , TO_TEXT(${colLetter}${
-        SHIFT_TEMPLATE_SHEET.ROWS.DATA_START - 1
-      }:${colLetter}${SHIFT_TEMPLATE_SHEET.ROWS.DATA_END + 1}))), 0))), "")`
-    );
+  sheet.getRange(SHIFT_TEMPLATE_SHEET.ROWS.WORK_START, col).setFormula(
+    `=LET(
+  r, ${colLetter}${SHIFT_TEMPLATE_SHEET.ROWS.DATA_START - 1}:${colLetter}${
+      SHIFT_TEMPLATE_SHEET.ROWS.DATA_END + 1
+    },
+  norm, MAP(r, LAMBDA(x,
+    IF(
+      TO_TEXT(x)="開室",
+      TIME(8,0,0) + (ROW(x)-ROW($${colLetter}$${
+      SHIFT_TEMPLATE_SHEET.ROWS.DATA_START - 1
+    }))*TIME(0,30,0),
+      IFERROR(
+        IF(REGEXMATCH(TO_TEXT(x),"^\\d{3,4}$"),
+          TIME(VALUE(LEFT(TO_TEXT(x), LEN(TO_TEXT(x))-2)), VALUE(RIGHT(TO_TEXT(x),2)), 0),
+          IF(ISNUMBER(x),
+            IF(x<1, x, TIME(INT(x/100), MOD(x,100), 0)),
+            TIMEVALUE(x)
+          )
+        ),
+        NA()
+      )
+    )
+  )),
+  t, FILTER(norm, ISNUMBER(norm)),
+  IFERROR(TEXT(INDEX(t, 1), "H:MM"), "")
+)`
+  );
 }
 
 /**
@@ -591,23 +607,33 @@ function setWorkStartFormula(sheet, col, colLetter) {
  * @param {string} colLetter - 列文字
  */
 function setWorkEndFormula(sheet, col, colLetter) {
-  sheet
-    .getRange(SHIFT_TEMPLATE_SHEET.ROWS.WORK_END, col)
-    .setFormula(
-      `=IFERROR(TO_TEXT(INDEX(${colLetter}${
-        SHIFT_TEMPLATE_SHEET.ROWS.DATA_START - 1
-      }:${colLetter}${
-        SHIFT_TEMPLATE_SHEET.ROWS.DATA_END + 1
-      }, MAX(FILTER(ROW(${colLetter}${
-        SHIFT_TEMPLATE_SHEET.ROWS.DATA_START - 1
-      }:${colLetter}${
-        SHIFT_TEMPLATE_SHEET.ROWS.DATA_END + 1
-      })-ROW(${colLetter}${
-        SHIFT_TEMPLATE_SHEET.ROWS.DATA_START - 1
-      })+1, ISNUMBER(SEARCH(":" , TO_TEXT(${colLetter}${
-        SHIFT_TEMPLATE_SHEET.ROWS.DATA_START - 1
-      }:${colLetter}${SHIFT_TEMPLATE_SHEET.ROWS.DATA_END + 1}))))))), "")`
-    );
+  sheet.getRange(SHIFT_TEMPLATE_SHEET.ROWS.WORK_END, col).setFormula(
+    `=LET(
+  r, ${colLetter}${SHIFT_TEMPLATE_SHEET.ROWS.DATA_START - 1}:${colLetter}${
+      SHIFT_TEMPLATE_SHEET.ROWS.DATA_END + 1
+    },
+  norm, MAP(r, LAMBDA(x,
+    IF(
+      TO_TEXT(x)="閉室",
+      TIME(8,0,0) + (ROW(x)-ROW($${colLetter}$${
+      SHIFT_TEMPLATE_SHEET.ROWS.DATA_START - 1
+    }) - 1)*TIME(0,30,0),
+      IFERROR(
+        IF(REGEXMATCH(TO_TEXT(x),"^\\d{3,4}$"),
+          TIME(VALUE(LEFT(TO_TEXT(x), LEN(TO_TEXT(x))-2)), VALUE(RIGHT(TO_TEXT(x),2)), 0),
+          IF(ISNUMBER(x),
+            IF(x<1, x, TIME(INT(x/100), MOD(x,100), 0)),
+            TIMEVALUE(x)
+          )
+        ),
+        NA()
+      )
+    )
+  )),
+  t, FILTER(norm, ISNUMBER(norm)),
+  IFERROR(TEXT(INDEX(t, ROWS(t)), "H:MM"), "")
+)`
+  );
 }
 
 /**
@@ -617,9 +643,15 @@ function setWorkEndFormula(sheet, col, colLetter) {
  * @param {string} colLetter - 列文字
  */
 function setWorkingTimeFormula(sheet, col, colLetter) {
-  sheet
-    .getRange(SHIFT_TEMPLATE_SHEET.ROWS.WORKING_TIME, col)
-    .setFormula(
-      `=IF(AND(ISNUMBER(TIMEVALUE(${colLetter}${SHIFT_TEMPLATE_SHEET.ROWS.WORK_END})), ISNUMBER(TIMEVALUE(${colLetter}${SHIFT_TEMPLATE_SHEET.ROWS.WORK_START}))), TEXT(TIMEVALUE(${colLetter}${SHIFT_TEMPLATE_SHEET.ROWS.WORK_END}) - TIMEVALUE(${colLetter}${SHIFT_TEMPLATE_SHEET.ROWS.WORK_START}), "h:mm"), "")`
-    );
+  sheet.getRange(SHIFT_TEMPLATE_SHEET.ROWS.WORKING_TIME, col).setFormula(
+    `=IF(
+  AND(ISNUMBER(TIMEVALUE(${colLetter}${SHIFT_TEMPLATE_SHEET.ROWS.WORK_END})), ISNUMBER(TIMEVALUE(${colLetter}${SHIFT_TEMPLATE_SHEET.ROWS.WORK_START}))),
+  IF(
+    (TIMEVALUE(${colLetter}${SHIFT_TEMPLATE_SHEET.ROWS.WORK_END}) - TIMEVALUE(${colLetter}${SHIFT_TEMPLATE_SHEET.ROWS.WORK_START})) > TIME(8,0,0),
+    TEXT((TIMEVALUE(${colLetter}${SHIFT_TEMPLATE_SHEET.ROWS.WORK_END}) - TIMEVALUE(${colLetter}${SHIFT_TEMPLATE_SHEET.ROWS.WORK_START})) - TIME(1,0,0), "h:mm"),
+    TEXT(TIMEVALUE(${colLetter}${SHIFT_TEMPLATE_SHEET.ROWS.WORK_END}) - TIMEVALUE(${colLetter}${SHIFT_TEMPLATE_SHEET.ROWS.WORK_START}), "h:mm")
+  ),
+  ""
+)`
+  );
 }
