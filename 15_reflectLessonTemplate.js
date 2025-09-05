@@ -60,7 +60,10 @@ function buildTemplateCache(ss) {
           firstTargetSheet.getLastColumn() -
           SHIFT_TEMPLATE_SHEET.MEMBER_START_COL +
           1;
-        const templateData = getTemplateData(lessonTemplateSheet, columnCount);
+        const templateData = getLessonTemplateData(
+          lessonTemplateSheet,
+          columnCount
+        );
         cache[dayOfWeek] = templateData;
         Logger.log(`📦 ${dayOfWeek}のテンプレートデータをキャッシュしました`);
       }
@@ -71,12 +74,12 @@ function buildTemplateCache(ss) {
 }
 
 /**
- * テンプレートシートからデータを取得
+ * 授業割テンプレートシートからデータを取得
  * @param {GoogleAppsScript.Spreadsheet.Sheet} lessonTemplateSheet - 授業割テンプレートシート
  * @param {number} columnCount - 列数
  * @returns {Object} テンプレートデータ
  */
-function getTemplateData(lessonTemplateSheet, columnCount) {
+function getLessonTemplateData(lessonTemplateSheet, columnCount) {
   const rowCount =
     SHIFT_TEMPLATE_SHEET.ROWS.DATA_END -
     SHIFT_TEMPLATE_SHEET.ROWS.DATA_START +
