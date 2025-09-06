@@ -412,4 +412,11 @@ const UI_DISPLAY = {
     PROCESSING: "⑤実行中...",
     COMPLETED: "完了！",
   },
+
+  // シート作成用のメッセージ
+  SHEET_MESSAGES: {
+    PREPARING: "③準備中...",
+    PROCESSING: "③実行中...",
+    COMPLETED: "完了！",
+  },
 };
