@@ -10,8 +10,26 @@ function reflectLessonTemplate() {
     const ss = getSpreadsheet();
     const ui = getUI();
 
-    // ターゲットはシフト作成シート
-    const targetSheets = getTargetSheets(ss);
+    // 管理シートから日程リストを取得
+    const manageSheet = getManageSheet();
+    const dateList = getDateList(manageSheet);
+    const dateStrList = dateList.map((row) =>
+      formatDateToString(row[0], "M/d")
+    );
+    const dateIndexMap = {};
+    dateStrList.forEach((s, i) => (dateIndexMap[s] = i));
+
+    // 管理リストに載っている日付名のシートのみ対象
+    const allSheets = ss.getSheets();
+    const targetSheets = allSheets.filter(
+      (s) => dateIndexMap[s.getName()] != null
+    );
+
+    if (targetSheets.length === 0) {
+      ui.alert("管理シートの日付に対応する日付シートが見つかりません。");
+      return;
+    }
+
     Logger.log(`📋 対象シート数: ${targetSheets.length}`);
 
     // 全曜日のテンプレートデータを事前にキャッシュ
@@ -21,6 +39,7 @@ function reflectLessonTemplate() {
     // 各日程のシフト作成シートにおいて、
     targetSheets.forEach((dailySheet) => {
       processDailySheetWithCache(dailySheet, templateCache);
+      Logger.log(`✅ 日程完了: ${dailySheet.getName()}`);
     });
 
     Logger.log("✅ 授業割テンプレ反映完了");
@@ -29,16 +48,6 @@ function reflectLessonTemplate() {
     Logger.log(`❌ エラーが発生しました: ${error.message}`);
     throw error;
   }
-}
-
-/**
- * 対象となるシフト作成シートを取得
- * @param {GoogleAppsScript.Spreadsheet.Spreadsheet} ss - スプレッドシート
- * @returns {GoogleAppsScript.Spreadsheet.Sheet[]} 対象シートの配列
- */
-function getTargetSheets(ss) {
-  const allSheets = ss.getSheets();
-  return allSheets.filter((s) => /^\d{1,2}\/\d{1,2}$/.test(s.getName()));
 }
 
 /**
@@ -54,12 +63,16 @@ function buildTemplateCache(ss) {
     const lessonTemplateSheet = getLessonTemplateSheet(ss, dayOfWeek);
     if (lessonTemplateSheet) {
       // 最大列数を取得（最初のシートから）
-      const firstTargetSheet = getTargetSheets(ss)[0];
+      const allSheets = ss.getSheets();
+      const firstTargetSheet = allSheets.find((s) =>
+        /^\d{1,2}\/\d{1,2}$/.test(s.getName())
+      );
       if (firstTargetSheet) {
-        const columnCount =
-          firstTargetSheet.getLastColumn() -
-          SHIFT_TEMPLATE_SHEET.MEMBER_START_COL +
-          1;
+        // メンバー数を取得して列数を計算
+        const manageSheet = getManageSheet();
+        const memberManager = getMemberManager(manageSheet);
+        const memberCount = memberManager.getMemberCount();
+        const columnCount = memberCount;
         const templateData = getLessonTemplateData(
           lessonTemplateSheet,
           columnCount
@@ -91,6 +104,8 @@ function getLessonTemplateData(lessonTemplateSheet, columnCount) {
     rowCount,
     columnCount
   );
+
+  // Logger.log(`📊 コピー範囲: ${SHIFT_TEMPLATE_SHEET.ROWS.DATA_START}行目〜${SHIFT_TEMPLATE_SHEET.ROWS.DATA_END}行目, ${SHIFT_TEMPLATE_SHEET.MEMBER_START_COL}列目〜${SHIFT_TEMPLATE_SHEET.MEMBER_START_COL + columnCount - 1}列目`);
 
   return {
     values: sourceRange.getValues(),
