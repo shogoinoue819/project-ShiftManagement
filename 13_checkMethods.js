@@ -200,19 +200,31 @@ function checkAllSubmittedMembers() {
     return;
   }
 
+  // 進捗表示の初期化
+  initializeCheckProgressDisplay(rowsToCheck.length);
+
   // 各対象メンバーをロック（先にロック処理を実行）
   const successfulRows = [];
   const failedRows = [];
 
   Logger.log(`🔒 対象メンバー数: ${rowsToCheck.length}人`);
 
-  rowsToCheck.forEach((rowIndex) => {
+  rowsToCheck.forEach((rowIndex, index) => {
     try {
       const success = lockSelectedMember(rowIndex);
       if (success) {
         successfulRows.push(rowIndex);
       } else {
         failedRows.push(rowIndex);
+      }
+
+      // 進捗を更新（設定された間隔ごと、または最後の処理）
+      const currentProcessed = index + 1;
+      if (
+        currentProcessed % UI_DISPLAY.PROGRESS_UPDATE_INTERVAL === 0 ||
+        currentProcessed === rowsToCheck.length
+      ) {
+        updateCheckProgressDisplay(currentProcessed, rowsToCheck.length);
       }
     } catch (e) {
       Logger.log(`❌ 行${rowIndex}のロック処理でエラー: ${e}`);
@@ -257,6 +269,9 @@ function checkAllSubmittedMembers() {
   // 一括更新
   checkRange.setValues(checkValues);
 
+  // 進捗表示をクリア
+  clearCheckProgressDisplay();
+
   // 結果の表示
   if (successfulRows.length === rowsToCheck.length) {
     ui.alert(
@@ -280,4 +295,68 @@ function checkAllSubmittedMembers() {
       }人はロック処理に失敗）\n\n失敗したメンバー: ${failedNames}`
     );
   }
+}
+
+// チェック処理進捗表示の初期化
+function initializeCheckProgressDisplay(totalMembers) {
+  try {
+    const { progressCell, statusCell } = getProgressCells();
+
+    // A1は空、B1に準備中を表示
+    progressCell.clearContent();
+    statusCell.setValue(UI_DISPLAY.PROGRESS_MESSAGES.MEMBER_CHECK.PREPARING);
+
+    SpreadsheetApp.flush();
+    Logger.log("📊 チェック処理進捗表示を初期化しました");
+  } catch (error) {
+    Logger.log(`⚠️ チェック処理進捗表示初期化でエラー: ${error.message}`);
+  }
+}
+
+// チェック処理進捗表示を更新
+function updateCheckProgressDisplay(current, total) {
+  try {
+    const { progressCell, statusCell } = getProgressCells();
+    const percentage = Math.round((current / total) * 100);
+
+    // A1に進捗、B1に実行中を表示
+    progressCell.setValue(`${current}/${total}人 (${percentage}%)`);
+    statusCell.setValue(UI_DISPLAY.PROGRESS_MESSAGES.MEMBER_CHECK.PROCESSING);
+
+    SpreadsheetApp.flush();
+  } catch (error) {
+    Logger.log(`⚠️ チェック処理進捗表示更新でエラー: ${error.message}`);
+  }
+}
+
+// チェック処理進捗表示をクリア
+function clearCheckProgressDisplay() {
+  try {
+    const { progressCell, statusCell } = getProgressCells();
+
+    // A1とB1の両方をクリア
+    progressCell.clearContent();
+    statusCell.clearContent();
+
+    SpreadsheetApp.flush();
+  } catch (error) {
+    Logger.log(`⚠️ チェック処理進捗表示クリアでエラー: ${error.message}`);
+  }
+}
+
+// 進捗表示用セルの取得（共通処理）
+function getProgressCells() {
+  const ss = getSpreadsheet();
+  const manageSheet = getManageSheet();
+
+  return {
+    progressCell: manageSheet.getRange(
+      UI_DISPLAY.PROGRESS.ROW,
+      UI_DISPLAY.PROGRESS.COL
+    ),
+    statusCell: manageSheet.getRange(
+      UI_DISPLAY.STATUS.ROW,
+      UI_DISPLAY.STATUS.COL
+    ),
+  };
 }

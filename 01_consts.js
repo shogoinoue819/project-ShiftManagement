@@ -407,16 +407,23 @@ const UI_DISPLAY = {
   },
 
   // 進捗表示のメッセージ
-  MESSAGES: {
-    PREPARING: "⑤準備中...",
-    PROCESSING: "⑤実行中...",
-    COMPLETED: "完了！",
-  },
+  PROGRESS_MESSAGES: {
+    // シフト希望表更新用
+    FORM_UPDATE: {
+      PREPARING: "②準備中...",
+      PROCESSING: "②実行中...",
+    },
 
-  // シート作成用のメッセージ
-  SHEET_MESSAGES: {
-    PREPARING: "③準備中...",
-    PROCESSING: "③実行中...",
-    COMPLETED: "完了！",
+    // シート作成用
+    SHEET_CREATE: {
+      PREPARING: "③準備中...",
+      PROCESSING: "③実行中...",
+    },
+
+    // チェック処理用
+    MEMBER_CHECK: {
+      PREPARING: "④準備中...",
+      PROCESSING: "④実行中...",
+    },
   },
 };

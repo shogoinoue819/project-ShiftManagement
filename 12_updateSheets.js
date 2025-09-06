@@ -680,7 +680,7 @@ function initializeSheetProgressDisplay(totalDates) {
 
     // A1は空、B1に準備中を表示
     progressCell.clearContent();
-    statusCell.setValue(UI_DISPLAY.SHEET_MESSAGES.PREPARING);
+    statusCell.setValue(UI_DISPLAY.PROGRESS_MESSAGES.SHEET_CREATE.PREPARING);
 
     SpreadsheetApp.flush();
     Logger.log("📊 シート作成進捗表示を初期化しました");
@@ -697,7 +697,7 @@ function updateSheetProgressDisplay(current, total, currentDate) {
 
     // A1に進捗、B1に実行中を表示
     progressCell.setValue(`${current}/${total}日 (${percentage}%)`);
-    statusCell.setValue(UI_DISPLAY.SHEET_MESSAGES.PROCESSING);
+    statusCell.setValue(UI_DISPLAY.PROGRESS_MESSAGES.SHEET_CREATE.PROCESSING);
 
     SpreadsheetApp.flush();
   } catch (error) {

@@ -582,7 +582,7 @@ function initializeProgressDisplay(totalMembers) {
 
     // A1は空、B1に準備中を表示
     progressCell.clearContent();
-    statusCell.setValue(UI_DISPLAY.MESSAGES.PREPARING);
+    statusCell.setValue(UI_DISPLAY.PROGRESS_MESSAGES.FORM_UPDATE.PREPARING);
 
     SpreadsheetApp.flush();
     Logger.log("📊 進捗表示を初期化しました");
@@ -599,7 +599,7 @@ function updateProgressDisplay(current, total) {
 
     // A1に進捗、B1に実行中を表示
     progressCell.setValue(`${current}/${total}人 (${percentage}%)`);
-    statusCell.setValue(UI_DISPLAY.MESSAGES.PROCESSING);
+    statusCell.setValue(UI_DISPLAY.PROGRESS_MESSAGES.FORM_UPDATE.PROCESSING);
 
     SpreadsheetApp.flush();
   } catch (error) {
