@@ -388,3 +388,28 @@ const PDF_EXPORT_CONFIG = {
 
 // ===== 行高調整設定 =====
 const ROW_HEIGHT_MULTIPLIER = 1.5;
+
+// ===== UI表示設定 =====
+const UI_DISPLAY = {
+  // 進捗表示の更新間隔（人単位）
+  PROGRESS_UPDATE_INTERVAL: 5,
+
+  // 進捗表示用のセル位置
+  PROGRESS: {
+    ROW: 1,
+    COL: 1,
+  },
+
+  // 実行状況表示用のセル位置
+  STATUS: {
+    ROW: 1,
+    COL: 2,
+  },
+
+  // 進捗表示のメッセージ
+  MESSAGES: {
+    PREPARING: "⑤準備中...",
+    PROCESSING: "⑤実行中...",
+    COMPLETED: "完了！",
+  },
+};

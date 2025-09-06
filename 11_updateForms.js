@@ -196,11 +196,24 @@ function updateAllMemberForms(memberMap, templateData) {
 
   Logger.log(`🚀 個別ファイルの更新を開始: ${totalMembers}件のメンバー`);
 
+  // 進捗表示の初期化
+  initializeProgressDisplay(totalMembers);
+
   for (const [id, { name, url }] of Object.entries(memberMap)) {
     try {
       updateIndividualForm(name, url, templateData);
       successCount++;
-      Logger.log(`✅ 処理完了: ${name}`);
+
+      // 進捗を更新（設定された間隔ごと、または最後の処理）
+      const currentProcessed = successCount + errorCount;
+      if (
+        currentProcessed % UI_DISPLAY.PROGRESS_UPDATE_INTERVAL === 0 ||
+        currentProcessed === totalMembers
+      ) {
+        updateProgressDisplay(currentProcessed, totalMembers);
+      }
+
+      Logger.log(`✅ ${name}完了`);
     } catch (e) {
       errorCount++;
       const errorInfo = { name, error: e.message };
@@ -220,6 +233,9 @@ function updateAllMemberForms(memberMap, templateData) {
       Logger.log(`  - ${name}: ${error}`);
     });
   }
+
+  // 進捗表示をクリア
+  clearProgressDisplay();
 }
 
 // 個別ファイルのアップデート処理
@@ -557,4 +573,68 @@ function initializeFormSheet(newFormSheet, memberName) {
   checkRange.setValue(false);
 
   // Logger.log(`✏️ フォームシートを初期化: ${memberName}`);
+}
+
+// 進捗表示の初期化
+function initializeProgressDisplay(totalMembers) {
+  try {
+    const { progressCell, statusCell } = getProgressCells();
+
+    // A1は空、B1に準備中を表示
+    progressCell.clearContent();
+    statusCell.setValue(UI_DISPLAY.MESSAGES.PREPARING);
+
+    SpreadsheetApp.flush();
+    Logger.log("📊 進捗表示を初期化しました");
+  } catch (error) {
+    Logger.log(`⚠️ 進捗表示初期化でエラー: ${error.message}`);
+  }
+}
+
+// 進捗表示を更新
+function updateProgressDisplay(current, total) {
+  try {
+    const { progressCell, statusCell } = getProgressCells();
+    const percentage = Math.round((current / total) * 100);
+
+    // A1に進捗、B1に実行中を表示
+    progressCell.setValue(`${current}/${total}人 (${percentage}%)`);
+    statusCell.setValue(UI_DISPLAY.MESSAGES.PROCESSING);
+
+    SpreadsheetApp.flush();
+  } catch (error) {
+    Logger.log(`⚠️ 進捗表示更新でエラー: ${error.message}`);
+  }
+}
+
+// 進捗表示をクリア
+function clearProgressDisplay() {
+  try {
+    const { progressCell, statusCell } = getProgressCells();
+
+    // A1とB1の両方をクリア
+    progressCell.clearContent();
+    statusCell.clearContent();
+
+    SpreadsheetApp.flush();
+  } catch (error) {
+    Logger.log(`⚠️ 進捗表示クリアでエラー: ${error.message}`);
+  }
+}
+
+// 進捗表示用セルの取得（共通処理）
+function getProgressCells() {
+  const ss = getSpreadsheet();
+  const manageSheet = getManageSheet();
+
+  return {
+    progressCell: manageSheet.getRange(
+      UI_DISPLAY.PROGRESS.ROW,
+      UI_DISPLAY.PROGRESS.COL
+    ),
+    statusCell: manageSheet.getRange(
+      UI_DISPLAY.STATUS.ROW,
+      UI_DISPLAY.STATUS.COL
+    ),
+  };
 }
