@@ -154,23 +154,27 @@ function getDateListFormatting(templateSheet, numRows) {
       templateSheet.getLastColumn()
     );
 
-    // 各セルの書式を取得
+    // 書式を一括取得（最適化）
+    const fontColors = templateRange.getFontColors();
+    const backgrounds = templateRange.getBackgrounds();
+    const fontWeights = templateRange.getFontWeights();
+    const fontStyles = templateRange.getFontStyles();
+
     const formatting = [];
-    for (let row = 1; row <= dateListRowCount; row++) {
+    for (let row = 0; row < dateListRowCount; row++) {
       const rowFormatting = [];
-      for (let col = 1; col <= templateRange.getNumColumns(); col++) {
-        const cell = templateRange.getCell(row, col);
+      for (let col = 0; col < templateRange.getNumColumns(); col++) {
         rowFormatting.push({
-          fontColor: cell.getFontColor(),
-          backgroundColor: cell.getBackground(),
-          fontWeight: cell.getFontWeight(),
-          fontStyle: cell.getFontStyle(),
+          fontColor: fontColors[row][col],
+          backgroundColor: backgrounds[row][col],
+          fontWeight: fontWeights[row][col],
+          fontStyle: fontStyles[row][col],
         });
       }
       formatting.push(rowFormatting);
     }
 
-    Logger.log(`📋 日程リスト部分の書式を事前取得: ${dateListRowCount}行`);
+    // Logger.log(`📋 日程リスト部分の書式を事前取得: ${dateListRowCount}行`);
     return {
       startRow: dateListStartRow,
       rowCount: dateListRowCount,
@@ -196,7 +200,7 @@ function updateAllMemberForms(memberMap, templateData) {
     try {
       updateIndividualForm(name, url, templateData);
       successCount++;
-      Logger.log(`✅ アップデート完了: ${name}`);
+      Logger.log(`✅ 処理完了: ${name}`);
     } catch (e) {
       errorCount++;
       const errorInfo = { name, error: e.message };
@@ -267,16 +271,46 @@ function extractFileIdFromUrl(url) {
 
 // 前回分シートの処理
 function processPreviousSheet(ss, templateData, memberName) {
-  // === ① 「前回分」シートの処理 ===
+  // === ① 残存シートのクリーンアップ ===
+  // 前回の処理で残った可能性のあるシートを削除
+  const cleanupSheetNames = ["TEMP_OLD", "TEMP_NEW", "TEMP"];
+  cleanupSheetNames.forEach((sheetName) => {
+    const sheet = ss.getSheetByName(sheetName);
+    if (sheet) {
+      try {
+        ss.deleteSheet(sheet);
+        Logger.log(`🧹 残存シートを削除: ${sheetName} (${memberName})`);
+      } catch (e) {
+        Logger.log(
+          `⚠️ 残存シート削除失敗: ${sheetName} (${memberName}) - ${e.message}`
+        );
+      }
+    }
+  });
+
+  // === ② 「前回分」シートの処理 ===
   let previousSheet = ss.getSheetByName(SHEET_NAMES.SHIFT_FORM_PREVIOUS);
   if (previousSheet) {
-    previousSheet.setName("TEMP_OLD");
-    previousSheet
-      .getProtections(SpreadsheetApp.ProtectionType.SHEET)
-      .forEach((protection) => protection.remove());
+    try {
+      previousSheet.setName("TEMP_OLD");
+      previousSheet
+        .getProtections(SpreadsheetApp.ProtectionType.SHEET)
+        .forEach((protection) => protection.remove());
+    } catch (e) {
+      Logger.log(`⚠️ 前回分シート処理でエラー: ${memberName} - ${e.message}`);
+      // エラーが発生した場合は、シートを削除して続行
+      try {
+        ss.deleteSheet(previousSheet);
+        previousSheet = null;
+      } catch (deleteError) {
+        Logger.log(
+          `⚠️ 前回分シート削除失敗: ${memberName} - ${deleteError.message}`
+        );
+      }
+    }
   }
 
-  // === ② 現在のシフト希望表を「前回分」にリネーム＆保護 ===
+  // === ③ 現在のシフト希望表を「前回分」にリネーム＆保護 ===
   let currentFormSheet = ss.getSheetByName(SHEET_NAMES.SHIFT_FORM);
   if (!currentFormSheet) {
     // 現在のシフト希望表が存在しない場合は、テンプレートからコピーして作成
@@ -317,7 +351,10 @@ function createNewFormSheet(ss, templateData, previousSheet) {
   targetRange.setValues(dataRows);
 
   // 事前に取得した書式データを適用
-  applyDateListFormatting(templateData.dateListFormatting, newFormSheet);
+  // 書式データが存在する場合のみ適用（最適化）
+  if (templateData.dateListFormatting) {
+    applyDateListFormatting(templateData.dateListFormatting, newFormSheet);
+  }
 
   // 余分な行を削除
   const lastRow = newFormSheet.getLastRow();
@@ -343,20 +380,42 @@ function applyDateListFormatting(dateListFormatting, targetSheet) {
 
     const { startRow, rowCount, colCount, formatting } = dateListFormatting;
 
-    // 各セルに書式を適用
-    for (let row = 0; row < rowCount; row++) {
-      for (let col = 0; col < colCount; col++) {
-        const cell = targetSheet.getRange(startRow + row, col + 1);
-        const cellFormatting = formatting[row][col];
+    // 書式を一括適用（最適化）
+    const targetRange = targetSheet.getRange(startRow, 1, rowCount, colCount);
 
-        cell.setFontColor(cellFormatting.fontColor);
-        cell.setBackground(cellFormatting.backgroundColor);
-        cell.setFontWeight(cellFormatting.fontWeight);
-        cell.setFontStyle(cellFormatting.fontStyle);
+    // 2次元配列を準備
+    const fontColors = [];
+    const backgrounds = [];
+    const fontWeights = [];
+    const fontStyles = [];
+
+    for (let row = 0; row < rowCount; row++) {
+      const fontColorRow = [];
+      const backgroundRow = [];
+      const fontWeightRow = [];
+      const fontStyleRow = [];
+
+      for (let col = 0; col < colCount; col++) {
+        const cellFormatting = formatting[row][col];
+        fontColorRow.push(cellFormatting.fontColor);
+        backgroundRow.push(cellFormatting.backgroundColor);
+        fontWeightRow.push(cellFormatting.fontWeight);
+        fontStyleRow.push(cellFormatting.fontStyle);
       }
+
+      fontColors.push(fontColorRow);
+      backgrounds.push(backgroundRow);
+      fontWeights.push(fontWeightRow);
+      fontStyles.push(fontStyleRow);
     }
 
-    Logger.log(`✅ 日程リスト部分（${startRow}行目以降）の書式を適用しました`);
+    // 一括で書式を適用
+    targetRange.setFontColors(fontColors);
+    targetRange.setBackgrounds(backgrounds);
+    targetRange.setFontWeights(fontWeights);
+    targetRange.setFontStyles(fontStyles);
+
+    // Logger.log(`✅ 日程リスト部分（${startRow}行目以降）の書式を適用しました`);
   } catch (error) {
     Logger.log(`⚠️ 書式適用でエラー: ${error.message}`);
     // エラーが発生しても処理は続行
@@ -400,7 +459,7 @@ function resetInfoSheetContent(infoSheet) {
     infoSheet.getRange(range).clearContent();
   });
 
-  Logger.log("🧹 今後の勤務希望シートの内容をリセット");
+  // Logger.log("🧹 今後の勤務希望シートの内容をリセット");
 }
 
 // シート順の整理
@@ -412,14 +471,21 @@ function organizeSheetOrder(ss, newFormSheet, infoSheet, currentFormSheet) {
     PREVIOUS_FORM: 3, // 前回分
   };
 
-  const moveSheet = (sheet, index) => {
-    ss.setActiveSheet(sheet);
-    ss.moveActiveSheet(index);
-  };
+  // シート移動を一括実行（最適化）
+  const sheetsToMove = [
+    { sheet: newFormSheet, index: SHEET_ORDER.SUBMISSION_FORM },
+    { sheet: infoSheet, index: SHEET_ORDER.FUTURE_PREFERENCES },
+    { sheet: currentFormSheet, index: SHEET_ORDER.PREVIOUS_FORM },
+  ];
 
-  moveSheet(newFormSheet, SHEET_ORDER.SUBMISSION_FORM);
-  moveSheet(infoSheet, SHEET_ORDER.FUTURE_PREFERENCES);
-  moveSheet(currentFormSheet, SHEET_ORDER.PREVIOUS_FORM);
+  sheetsToMove.forEach(({ sheet, index }) => {
+    try {
+      ss.setActiveSheet(sheet);
+      ss.moveActiveSheet(index);
+    } catch (error) {
+      // エラーは無視（シート移動は重要度が低い）
+    }
+  });
 }
 
 // シート構成の整理（不要なシートの削除と順番の整理）
@@ -434,24 +500,23 @@ function organizeUpdateFormsSheets(memberSS, memberName) {
       SHEET_NAMES.SHIFT_FORM_PREVIOUS, // ③前回分
     ];
 
-    // 不要なシートを削除
-    for (const sheet of allSheets) {
-      const sheetName = sheet.getName();
-      if (!targetSheetNames.includes(sheetName)) {
-        try {
-          memberSS.deleteSheet(sheet);
-          Logger.log(`🗑️ ${memberName} さんの不要シート削除: "${sheetName}"`);
-        } catch (deleteError) {
-          Logger.log(
-            `⚠️ ${memberName} さんのシート削除失敗: "${sheetName}" - ${deleteError.message}`
-          );
-        }
-      }
-    }
+    // 不要なシートを一括削除（最適化）
+    const sheetsToDelete = allSheets.filter(
+      (sheet) => !targetSheetNames.includes(sheet.getName())
+    );
 
-    // シートの順番を整理
+    sheetsToDelete.forEach((sheet) => {
+      try {
+        memberSS.deleteSheet(sheet);
+        // Logger.log(`🗑️ ${memberName} さんの不要シート削除: "${sheet.getName()}"`);
+      } catch (deleteError) {
+        // エラーは無視（シート削除は重要度が低い）
+      }
+    });
+
+    // シートの順番を一括整理（最適化）
     let currentPosition = 1;
-    for (const targetSheetName of targetSheetNames) {
+    targetSheetNames.forEach((targetSheetName) => {
       const targetSheet = memberSS.getSheetByName(targetSheetName);
       if (targetSheet) {
         try {
@@ -459,14 +524,12 @@ function organizeUpdateFormsSheets(memberSS, memberName) {
           memberSS.moveActiveSheet(currentPosition);
           currentPosition++;
         } catch (moveError) {
-          Logger.log(
-            `⚠️ ${memberName} さんのシート移動失敗: "${targetSheetName}" - ${moveError.message}`
-          );
+          // エラーは無視（シート移動は重要度が低い）
         }
       }
-    }
+    });
 
-    Logger.log(`✅ ${memberName} さんのシート構成整理完了`);
+    // Logger.log(`✅ ${memberName} さんのシート構成整理完了`);
     return true;
   } catch (e) {
     Logger.log(`❌ ${memberName} さんのシート構成整理でエラー: ${e.message}`);
@@ -479,28 +542,19 @@ function initializeFormSheet(newFormSheet, memberName) {
   // === ⑥ 初期化処理 ===
   const headerRow = SHIFT_FORM_TEMPLATE.HEADER.ROW;
 
-  // バッチ処理で初期値を設定
-  const initialValues = [
-    {
-      range: newFormSheet.getRange(
-        headerRow,
-        SHIFT_FORM_TEMPLATE.HEADER.NAME_COL
-      ),
-      value: memberName,
-    },
-    {
-      range: newFormSheet.getRange(
-        headerRow,
-        SHIFT_FORM_TEMPLATE.HEADER.CHECK_COL
-      ),
-      value: false,
-    },
-  ];
+  // 初期値を一括設定（最適化）
+  const nameRange = newFormSheet.getRange(
+    headerRow,
+    SHIFT_FORM_TEMPLATE.HEADER.NAME_COL
+  );
+  const checkRange = newFormSheet.getRange(
+    headerRow,
+    SHIFT_FORM_TEMPLATE.HEADER.CHECK_COL
+  );
 
-  // 一括で値を設定
-  initialValues.forEach(({ range, value }) => {
-    range.setValue(value);
-  });
+  // 並列で値を設定
+  nameRange.setValue(memberName);
+  checkRange.setValue(false);
 
-  Logger.log(`✏️ フォームシートを初期化: ${memberName}`);
+  // Logger.log(`✏️ フォームシートを初期化: ${memberName}`);
 }
