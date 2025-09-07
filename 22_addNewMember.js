@@ -21,6 +21,12 @@ function addNewMember() {
     return;
   }
 
+  // 表示名の空白チェック（最初に実行）
+  if (!validateMemberNames(manageSheet, ui)) {
+    Logger.log("❌ 表示名の検証に失敗したため、処理を中断します");
+    return;
+  }
+
   // 2. 管理シートから表示名と背景色を取得
   const memberInfo = findMemberInfo(manageSheet, inputName);
   if (!memberInfo) {
@@ -200,4 +206,100 @@ function generateWorkingTimeFormula(colLetter) {
   const workEnd = `${colLetter}${SHIFT_TEMPLATE_SHEET.ROWS.WORK_END}`;
 
   return `=IF(AND(ISNUMBER(TIMEVALUE(${workEnd})), ISNUMBER(TIMEVALUE(${workStart}))), TEXT(TIMEVALUE(${workEnd}) - TIMEVALUE(${workStart}), "h:mm"), "")`;
+}
+
+/**
+ * 表示名の空白チェック
+ * 管理シートと前回分シートの両方で表示名の空白をチェックします
+ * @param {GoogleAppsScript.Spreadsheet.Sheet} manageSheet - 管理シート
+ * @param {GoogleAppsScript.Base.UI} ui - UIオブジェクト
+ * @return {boolean} 検証が成功した場合はtrue、失敗した場合はfalse
+ */
+function validateMemberNames(manageSheet, ui) {
+  // 管理シートのチェック
+  const currentSheetResult = checkMemberNamesInSheet(manageSheet, "管理シート");
+  if (!currentSheetResult.isValid) {
+    ui.alert(
+      "⚠️ 表示名リストに空白のセルがあります！",
+      `管理シートの${currentSheetResult.blankRows.join(
+        ", "
+      )}行目に空白があります。\n` +
+        "すべてのメンバーに名前を入力してください。",
+      ui.ButtonSet.OK
+    );
+    return false;
+  }
+
+  // 前回分シートのチェック
+  const ss = getSpreadsheet();
+  const previousSheet = ss.getSheetByName(
+    SHEET_NAMES.SHIFT_MANAGEMENT_PREVIOUS
+  );
+  if (previousSheet) {
+    const previousSheetResult = checkMemberNamesInSheet(
+      previousSheet,
+      "管理シート<前回分>"
+    );
+    if (!previousSheetResult.isValid) {
+      ui.alert(
+        "⚠️ 表示名リストに空白のセルがあります！",
+        `管理シート<前回分>の${previousSheetResult.blankRows.join(
+          ", "
+        )}行目に空白があります。\n` +
+          "すべてのメンバーに名前を入力してください。",
+        ui.ButtonSet.OK
+      );
+      return false;
+    }
+  }
+
+  return true;
+}
+
+/**
+ * 指定されたシートの表示名の空白チェック
+ * @param {GoogleAppsScript.Spreadsheet.Sheet} sheet - チェック対象のシート
+ * @param {string} sheetName - シート名（ログ用）
+ * @return {Object} チェック結果 {isValid: boolean, blankRows: Array<number>}
+ */
+function checkMemberNamesInSheet(sheet, sheetName) {
+  try {
+    // 最終行を取得
+    const lastRow = getLastRowInColumn(
+      sheet,
+      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_COL
+    );
+
+    if (lastRow < SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW) {
+      Logger.log(`⚠️ ${sheetName}: メンバーリストが存在しません`);
+      return { isValid: true, blankRows: [] };
+    }
+
+    // 表示名リストを取得
+    const nameRange = sheet.getRange(
+      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW,
+      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.DISPLAY_NAME_COL,
+      lastRow - SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW + 1,
+      1
+    );
+    const rawNames = nameRange.getValues().flat();
+
+    // 空白セルの行番号を特定
+    const blankRows = [];
+    rawNames.forEach((name, index) => {
+      if (name === "" || name === null || name === undefined) {
+        const actualRow = SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW + index;
+        blankRows.push(actualRow);
+      }
+    });
+
+    if (blankRows.length > 0) {
+      return { isValid: false, blankRows: blankRows };
+    }
+
+    return { isValid: true, blankRows: [] };
+  } catch (error) {
+    Logger.log(`⚠️ ${sheetName}: 表示名チェックでエラー: ${error.message}`);
+    return { isValid: false, blankRows: [] };
+  }
 }
