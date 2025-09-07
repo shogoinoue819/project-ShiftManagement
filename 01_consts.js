@@ -431,5 +431,11 @@ const UI_DISPLAY = {
       PREPARING: "⑤準備中...",
       PROCESSING: "⑤実行中...",
     },
+
+    // 授業テンプレ反映用
+    LESSON_TEMPLATE: {
+      PREPARING: "⑥準備中...",
+      PROCESSING: "⑥実行中...",
+    },
   },
 };

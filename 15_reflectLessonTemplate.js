@@ -32,15 +32,35 @@ function reflectLessonTemplate() {
 
     Logger.log(`📋 対象シート数: ${targetSheets.length}`);
 
+    // 進捗表示の初期化
+    initializeLessonTemplateProgressDisplay(targetSheets.length);
+
     // 全曜日のテンプレートデータを事前にキャッシュ
     const templateCache = buildTemplateCache(ss);
     Logger.log("📦 テンプレートデータキャッシュ完了");
 
     // 各日程のシフト作成シートにおいて、
-    targetSheets.forEach((dailySheet) => {
+    targetSheets.forEach((dailySheet, index) => {
       processDailySheetWithCache(dailySheet, templateCache);
+
+      // 進捗を更新（設定された間隔ごと、または最後の処理）
+      const currentProcessed = index + 1;
+      if (
+        currentProcessed % UI_DISPLAY.PROGRESS_UPDATE_INTERVAL === 0 ||
+        currentProcessed === targetSheets.length
+      ) {
+        updateLessonTemplateProgressDisplay(
+          currentProcessed,
+          targetSheets.length,
+          dailySheet.getName()
+        );
+      }
+
       Logger.log(`✅ 日程完了: ${dailySheet.getName()}`);
     });
+
+    // 進捗表示をクリア
+    clearLessonTemplateProgressDisplay();
 
     Logger.log("✅ 授業割テンプレ反映完了");
     ui.alert("✅ 授業割テンプレを反映しました！");
@@ -490,4 +510,70 @@ function handleMergedCells(sourceRange, targetRange, dailySheet) {
 
     targetRange.merge();
   });
+}
+
+// 授業テンプレ反映進捗表示の初期化
+function initializeLessonTemplateProgressDisplay(totalDates) {
+  try {
+    const { progressCell, statusCell } = getProgressCells();
+
+    // A1は空、B1に準備中を表示
+    progressCell.clearContent();
+    statusCell.setValue(UI_DISPLAY.PROGRESS_MESSAGES.LESSON_TEMPLATE.PREPARING);
+
+    SpreadsheetApp.flush();
+    Logger.log("📊 授業テンプレ反映進捗表示を初期化しました");
+  } catch (error) {
+    Logger.log(`⚠️ 授業テンプレ反映進捗表示初期化でエラー: ${error.message}`);
+  }
+}
+
+// 授業テンプレ反映進捗表示を更新
+function updateLessonTemplateProgressDisplay(current, total, currentDate) {
+  try {
+    const { progressCell, statusCell } = getProgressCells();
+    const percentage = Math.round((current / total) * 100);
+
+    // A1に進捗、B1に実行中を表示
+    progressCell.setValue(`${current}/${total}日 (${percentage}%)`);
+    statusCell.setValue(
+      UI_DISPLAY.PROGRESS_MESSAGES.LESSON_TEMPLATE.PROCESSING
+    );
+
+    SpreadsheetApp.flush();
+  } catch (error) {
+    Logger.log(`⚠️ 授業テンプレ反映進捗表示更新でエラー: ${error.message}`);
+  }
+}
+
+// 授業テンプレ反映進捗表示をクリア
+function clearLessonTemplateProgressDisplay() {
+  try {
+    const { progressCell, statusCell } = getProgressCells();
+
+    // A1とB1の両方をクリア
+    progressCell.clearContent();
+    statusCell.clearContent();
+
+    SpreadsheetApp.flush();
+  } catch (error) {
+    Logger.log(`⚠️ 授業テンプレ反映進捗表示クリアでエラー: ${error.message}`);
+  }
+}
+
+// 進捗表示用セルの取得（共通処理）
+function getProgressCells() {
+  const ss = getSpreadsheet();
+  const manageSheet = getManageSheet();
+
+  return {
+    progressCell: manageSheet.getRange(
+      UI_DISPLAY.PROGRESS.ROW,
+      UI_DISPLAY.PROGRESS.COL
+    ),
+    statusCell: manageSheet.getRange(
+      UI_DISPLAY.STATUS.ROW,
+      UI_DISPLAY.STATUS.COL
+    ),
+  };
 }
