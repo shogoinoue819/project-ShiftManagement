@@ -102,6 +102,9 @@ function reflectShiftForms() {
     return;
   }
 
+  // 進捗表示の初期化
+  initializeShiftReflectProgressDisplay(targetSheets.length);
+
   // ===== "読み取り" をメンバー単位で一括キャッシュ =====
   const memberData = {};
   filtered.forEach(({ name }) => {
@@ -124,7 +127,7 @@ function reflectShiftForms() {
   const timeCount = TIME_SETTINGS.TIME_LIST.length;
 
   // ===== 反映ループ（書き込みは従来どおり列ごと。ただし読み取りはキャッシュ済み） =====
-  targetSheets.forEach((dailySheet) => {
+  targetSheets.forEach((dailySheet, index) => {
     const dateStr = dailySheet.getName();
     const dateIndex = dateIndexMap[dateStr]; // 0始まり
     if (dateIndex == null) {
@@ -248,6 +251,19 @@ function reflectShiftForms() {
         .setBackgrounds(bgArray.map((c) => [c]));
     });
 
+    // 進捗を更新（設定された間隔ごと、または最後の処理）
+    const currentProcessed = index + 1;
+    if (
+      currentProcessed % UI_DISPLAY.PROGRESS_UPDATE_INTERVAL === 0 ||
+      currentProcessed === targetSheets.length
+    ) {
+      updateShiftReflectProgressDisplay(
+        currentProcessed,
+        targetSheets.length,
+        dateStr
+      );
+    }
+
     Logger.log(`✅ ${dateStr} の反映完了`);
   });
 
@@ -261,7 +277,74 @@ function reflectShiftForms() {
       .setValue(STATUS_STRINGS.REFLECT.TRUE);
   });
 
+  // 進捗表示をクリア
+  clearShiftReflectProgressDisplay();
+
   ui.alert(
     `✅ チェック済みのシフト希望（${filtered.length}名）を反映しました！`
   );
+}
+
+// シフト希望反映進捗表示の初期化
+function initializeShiftReflectProgressDisplay(totalDates) {
+  try {
+    const { progressCell, statusCell } = getProgressCells();
+
+    // A1は空、B1に準備中を表示
+    progressCell.clearContent();
+    statusCell.setValue(UI_DISPLAY.PROGRESS_MESSAGES.SHIFT_REFLECT.PREPARING);
+
+    SpreadsheetApp.flush();
+    Logger.log("📊 シフト希望反映進捗表示を初期化しました");
+  } catch (error) {
+    Logger.log(`⚠️ シフト希望反映進捗表示初期化でエラー: ${error.message}`);
+  }
+}
+
+// シフト希望反映進捗表示を更新
+function updateShiftReflectProgressDisplay(current, total, currentDate) {
+  try {
+    const { progressCell, statusCell } = getProgressCells();
+    const percentage = Math.round((current / total) * 100);
+
+    // A1に進捗、B1に実行中を表示
+    progressCell.setValue(`${current}/${total}日 (${percentage}%)`);
+    statusCell.setValue(UI_DISPLAY.PROGRESS_MESSAGES.SHIFT_REFLECT.PROCESSING);
+
+    SpreadsheetApp.flush();
+  } catch (error) {
+    Logger.log(`⚠️ シフト希望反映進捗表示更新でエラー: ${error.message}`);
+  }
+}
+
+// シフト希望反映進捗表示をクリア
+function clearShiftReflectProgressDisplay() {
+  try {
+    const { progressCell, statusCell } = getProgressCells();
+
+    // A1とB1の両方をクリア
+    progressCell.clearContent();
+    statusCell.clearContent();
+
+    SpreadsheetApp.flush();
+  } catch (error) {
+    Logger.log(`⚠️ シフト希望反映進捗表示クリアでエラー: ${error.message}`);
+  }
+}
+
+// 進捗表示用セルの取得（共通処理）
+function getProgressCells() {
+  const ss = getSpreadsheet();
+  const manageSheet = getManageSheet();
+
+  return {
+    progressCell: manageSheet.getRange(
+      UI_DISPLAY.PROGRESS.ROW,
+      UI_DISPLAY.PROGRESS.COL
+    ),
+    statusCell: manageSheet.getRange(
+      UI_DISPLAY.STATUS.ROW,
+      UI_DISPLAY.STATUS.COL
+    ),
+  };
 }

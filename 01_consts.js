@@ -425,5 +425,11 @@ const UI_DISPLAY = {
       PREPARING: "④準備中...",
       PROCESSING: "④実行中...",
     },
+
+    // シフト希望反映用
+    SHIFT_REFLECT: {
+      PREPARING: "⑤準備中...",
+      PROCESSING: "⑤実行中...",
+    },
   },
 };
