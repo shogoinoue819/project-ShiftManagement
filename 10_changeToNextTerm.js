@@ -100,7 +100,11 @@ function changeToNextTerm() {
   const newManageSheet = ss.getSheetByName(SHEET_NAMES.SHIFT_MANAGEMENT);
   generateAndReflectDateList(newManageSheet, startDate, endDate);
 
-  Logger.log("✅ 管理シートの更新と日程リストの反映が完了しました");
+  Logger.log("✅ シフト期間の更新が完了しました");
+  ui.alert(
+    "✅ シフト期間の更新が完了しました！\n\n" +
+      "テンプレートファイルを編集し、②シフト希望表配布を行ってください！"
+  );
 }
 
 /**
@@ -128,8 +132,6 @@ function swapManagementSheets(ss, sheetNow, sheetPre) {
   ss.moveActiveSheet(1); // 一番左へ
   ss.setActiveSheet(manageSheetPre);
   ss.moveActiveSheet(2); // 次に移動
-
-  Logger.log("✅ 管理シートと前回分シートを入れ替えました");
 }
 
 /**
@@ -228,14 +230,7 @@ function generateAndReflectDateList(manageSheet, startDate, endDate) {
   if (deleteStart <= maxRow) {
     const numToDelete = maxRow - deleteStart + 1;
     targetSheet.deleteRows(deleteStart, numToDelete);
-    Logger.log(`✅ ${deleteStart}行目から ${numToDelete}行分 を削除`);
-  } else {
-    Logger.log(
-      "⚠️ 削除対象の行がシート範囲外だったため、削除をスキップしました"
-    );
   }
-
-  Logger.log(`✅ 日程 ${numDates} 件を生成し、テンプレートに反映しました`);
 }
 
 /**
@@ -294,14 +289,10 @@ function clearAndSetDateList(manageSheet, dateList, numDates) {
       1
     );
     clearRange.clearContent();
-
-    Logger.log(`✅ 余分な日程 ${clearRowCount} 行の内容をクリアしました`);
   }
 
   // 新しい日程リストを設定
   manageSheet.getRange(startRow, dateCol, numDates, 1).setValues(dateList);
-
-  Logger.log(`✅ 日程リスト ${numDates} 件を設定しました`);
 }
 
 /**
@@ -350,10 +341,6 @@ function clearAndInitializeDateStatusColumns(manageSheet, numDates) {
       1
     );
     clearShareRange.clearContent();
-
-    Logger.log(
-      `✅ 余分なステータス列 ${clearRowCount} 行の内容をクリアしました`
-    );
   }
 
   // B列（完了チェック）を FALSE で初期化
@@ -365,8 +352,6 @@ function clearAndInitializeDateStatusColumns(manageSheet, numDates) {
   // C列（共有ステータス）を "未共有" で初期化
   const shareValues = Array(numDates).fill([`${STATUS_STRINGS.SHARE.FALSE}`]);
   manageSheet.getRange(startRow, shareCol, numDates, 1).setValues(shareValues);
-
-  Logger.log(`✅ ステータス列 ${numDates} 件を初期化しました`);
 }
 
 /**
@@ -486,8 +471,4 @@ function resetMemberListColumns(manageSheet) {
       1
     )
     .setValues(reflectValues);
-
-  Logger.log(
-    `✅ メンバー ${memberCount} 名のチェック欄と反映欄をリセットしました`
-  );
 }
