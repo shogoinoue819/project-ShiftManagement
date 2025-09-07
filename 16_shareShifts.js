@@ -227,20 +227,10 @@ function shareShiftsFromManageSheet(manageSheetName) {
       const dateStr = formatDateToString(date);
       const sheetName = dateStr;
 
-      // デバッグ用：日付とシート名をログ出力
-      Logger.log(
-        `デバッグ: 元の日付=${date}, 変換後=${dateStr}, シート名=${sheetName}`
-      );
-
       try {
         // 元のシート
         const dailySheet = ss.getSheetByName(sheetName);
         if (!dailySheet) {
-          // デバッグ用：利用可能なシート名をログ出力
-          const availableSheets = ss.getSheets().map((s) => s.getName());
-          Logger.log(
-            `デバッグ: 利用可能なシート名=${availableSheets.join(", ")}`
-          );
           throw new Error(`シート「${sheetName}」が見つかりません`);
         }
 
@@ -265,10 +255,9 @@ function shareShiftsFromManageSheet(manageSheetName) {
           .setValue(STATUS_STRINGS.SHARE.TRUE);
         sharedCount++;
         successDates.push(dateStr);
-        Logger.log(`${manageSheetName} / ${dateStr}: 共有完了`);
+        Logger.log(`✅ ${dateStr}: 共有完了`);
       } catch (e) {
-        Logger.log(`エラー (${manageSheetName} / ${sheetName}): ${e.message}`);
-        Logger.log(`スタックトレース: ${e.stack}`);
+        Logger.log(`❌ ${dateStr}: 共有失敗 - ${e.message}`);
         failedDates.push(dateStr);
         failedReasons.push(e.message);
       }
@@ -292,9 +281,7 @@ function shareShiftsFromManageSheet(manageSheetName) {
       SHIFT_PDF_FOLDER_ID
     );
 
-    Logger.log(
-      `✅ 「${manageSheetName}」から ${sharedCount} 日分を共有しました。`
-    );
+    Logger.log(`✅ ${sharedCount} 日分を共有しました`);
   } else {
     // 共有対象なし → ワークSSは削除
     DriveApp.getFileById(workId).setTrashed(true);

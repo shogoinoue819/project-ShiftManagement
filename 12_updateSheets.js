@@ -11,8 +11,6 @@ function updateSheets() {
   const manageSheet = getManageSheet();
   const ui = getUI();
 
-  Logger.log("📋 スプレッドシートとシートの取得完了");
-
   // 表示名の空白チェック（最初に実行）
   if (!validateMemberNames(manageSheet, ui)) {
     Logger.log("❌ 表示名の検証に失敗したため、処理を中断します");
@@ -37,12 +35,17 @@ function updateSheets() {
     Logger.log("❌ メンバーリスト表示の更新に失敗したため、処理を中断します");
     return;
   }
+  Logger.log("📄 メンバーリスト表示の更新が完了しました");
 
   // 各日程のシートを処理
   processDateSheets(dateList);
 
   Logger.log("🎉 シフト作成シートアップデート処理が完了しました");
-  ui.alert("✅ シフト作成シートをすべて更新しました！");
+  ui.alert(
+    "✅ シフト作成シートをすべて更新しました！\n\n" +
+      "これで新たな期間のシフト作成準備は整いました！\n" +
+      "メンバーにシフト希望表の提出をお願いしてください！"
+  );
 }
 
 /**
@@ -75,8 +78,6 @@ function confirmSheetUpdate(ui) {
  * @return {boolean} 検証が成功した場合はtrue、失敗した場合はfalse
  */
 function validateMemberNames(manageSheet, ui) {
-  Logger.log("🔍 表示名の空白チェックを開始");
-
   // 管理シートのチェック
   const currentSheetResult = checkMemberNamesInSheet(manageSheet, "管理シート");
   if (!currentSheetResult.isValid) {
@@ -114,7 +115,6 @@ function validateMemberNames(manageSheet, ui) {
     }
   }
 
-  Logger.log("✅ 表示名の空白チェックが完了しました");
   return true;
 }
 
@@ -156,15 +156,9 @@ function checkMemberNamesInSheet(sheet, sheetName) {
     });
 
     if (blankRows.length > 0) {
-      Logger.log(
-        `❌ ${sheetName}: ${
-          blankRows.length
-        }箇所に空白があります (行: ${blankRows.join(", ")})`
-      );
       return { isValid: false, blankRows: blankRows };
     }
 
-    Logger.log(`✅ ${sheetName}: 表示名に空白はありません`);
     return { isValid: true, blankRows: [] };
   } catch (error) {
     Logger.log(`⚠️ ${sheetName}: 表示名チェックでエラー: ${error.message}`);
@@ -178,13 +172,7 @@ function checkMemberNamesInSheet(sheet, sheetName) {
  * @return {boolean} 成功した場合はtrue、失敗した場合はfalse
  */
 function updateMemberDisplay() {
-  Logger.log("👥 メンバーリスト表示の更新を開始");
   const success = linkMemberDisplay();
-  if (success) {
-    Logger.log("✅ メンバーリスト表示の更新が完了しました");
-  } else {
-    Logger.log("❌ メンバーリスト表示の更新に失敗しました");
-  }
   return success;
 }
 
@@ -266,13 +254,10 @@ function createDateSheet(ss, date, dateStr, templateSheet) {
   if (existingSheet) {
     try {
       ss.deleteSheet(existingSheet);
-      Logger.log(`${dateStr}: 既存シートを削除して更新します`);
     } catch (e) {
       Logger.log(`⚠️ ${dateStr}: 既存シートの削除に失敗: ${e.message}`);
       throw new Error(`既存シートの削除に失敗: ${e.message}`);
     }
-  } else {
-    Logger.log(`${dateStr}: 新規シートを作成します`);
   }
 
   // テンプレートシートをコピーし、日程をシート名にセットしてシフト作成シートを生成
@@ -313,7 +298,6 @@ function initializeDateSheet(sheet, date, dateStr) {
   INITIALIZATION_TASKS.forEach(({ task, description }) => {
     try {
       task();
-      Logger.log(`✅ ${dateStr}: ${description}完了`);
     } catch (e) {
       Logger.log(`❌ ${dateStr}: ${description}失敗 - ${e.message}`);
       throw e; // エラーを上位に伝播
@@ -355,8 +339,6 @@ function protectWorkingTimeRange(sheet) {
  * @return {boolean} 成功した場合はtrue、失敗した場合はfalse
  */
 function linkMemberDisplay() {
-  Logger.log("👥 メンバーリスト表示のリンク処理を開始");
-
   // SSをまとめて取得
   const ss = getSpreadsheet();
   const manageSheet = getManageSheet();
@@ -371,7 +353,6 @@ function linkMemberDisplay() {
   }
 
   const { names, bgColors } = memberInfo;
-  Logger.log(`📋 メンバー情報取得成功: ${names.length}名`);
 
   try {
     // メインシートの更新
@@ -383,7 +364,6 @@ function linkMemberDisplay() {
     // 数式の設定
     setWorkingTimeFormulas(templateSheet, names);
 
-    Logger.log("✅ メンバーリスト表示のリンク処理が完了しました");
     return true;
   } catch (error) {
     Logger.log(`❌ メンバーリスト表示の更新でエラー: ${error.message}`);
@@ -491,8 +471,6 @@ function updateMainTemplateSheet(templateSheet, names, bgColors) {
       names.length
     )
     .setBackground(TIME_SETTINGS.UNAVAILABLE_BACKGROUND_COLOR);
-
-  Logger.log("📝 メインシートの更新が完了しました");
 }
 
 /**
@@ -520,8 +498,6 @@ function updateWeekdayTemplateSheets(names, bgColors) {
 
     updateWeekdaySheet(sheet, names, bgColors);
   }
-
-  Logger.log("📅 曜日別テンプレートシートの更新が完了しました");
 }
 
 /**
@@ -577,8 +553,6 @@ function setWorkingTimeFormulas(templateSheet, names) {
     setWorkEndFormula(templateSheet, col, colLetter);
     setWorkingTimeFormula(templateSheet, col, colLetter);
   }
-
-  Logger.log("🧮 勤務時間の数式設定が完了しました");
 }
 
 /**
@@ -683,7 +657,6 @@ function initializeSheetProgressDisplay(totalDates) {
     statusCell.setValue(UI_DISPLAY.PROGRESS_MESSAGES.SHEET_CREATE.PREPARING);
 
     SpreadsheetApp.flush();
-    Logger.log("📊 シート作成進捗表示を初期化しました");
   } catch (error) {
     Logger.log(`⚠️ シート作成進捗表示初期化でエラー: ${error.message}`);
   }

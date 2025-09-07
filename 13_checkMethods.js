@@ -22,8 +22,6 @@ function onEdit(e) {
 // シート保護の共通処理
 function protectMemberSheets(fileId, memberName, isLock) {
   try {
-    Logger.log(`🔒 ${isLock ? "ロック" : "アンロック"}処理開始: ${memberName}`);
-
     // ファイルIDから提出用SSを取得
     const targetFile = SpreadsheetApp.openById(fileId);
 
@@ -44,7 +42,7 @@ function protectMemberSheets(fileId, memberName, isLock) {
       );
 
       if (formSuccess && infoSuccess) {
-        Logger.log(`🔒 ${memberName} をロックしました`);
+        // ロック成功（ログなし）
       } else {
         Logger.log(
           `⚠️ ${memberName} のロックが部分的に失敗しました (form: ${formSuccess}, info: ${infoSuccess})`
@@ -66,7 +64,7 @@ function protectMemberSheets(fileId, memberName, isLock) {
       );
 
       if (formSuccess && infoSuccess) {
-        Logger.log(`🔓 ${memberName} のロックを解除しました`);
+        // アンロック成功（ログなし）
       } else {
         Logger.log(
           `⚠️ ${memberName} のロック解除が部分的に失敗しました (form: ${formSuccess}, info: ${infoSuccess})`
@@ -94,8 +92,6 @@ function lockSelectedMember(row) {
       return false;
     }
 
-    Logger.log(`🔒 ロック処理開始: ${memberInfo.name}`);
-
     const success = protectMemberSheets(
       memberInfo.fileId,
       memberInfo.name,
@@ -104,8 +100,6 @@ function lockSelectedMember(row) {
 
     if (!success) {
       Logger.log(`⚠️ メンバーロックに失敗: ${memberInfo.name}`);
-    } else {
-      Logger.log(`✅ メンバーロック成功: ${memberInfo.name}`);
     }
 
     return success;
@@ -214,6 +208,10 @@ function checkAllSubmittedMembers() {
       const success = lockSelectedMember(rowIndex);
       if (success) {
         successfulRows.push(rowIndex);
+        // メンバー名を取得してログに表示
+        const memberInfo = getMemberInfo(rowIndex, manageSheet);
+        const memberName = memberInfo ? memberInfo.name : `行${rowIndex}`;
+        Logger.log(`✅ ${memberName}のロック処理完了`);
       } else {
         failedRows.push(rowIndex);
       }

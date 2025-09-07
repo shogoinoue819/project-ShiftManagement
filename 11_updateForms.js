@@ -33,7 +33,10 @@ function updateForms() {
   updateAllMemberForms(memberMap, templateData);
 
   Logger.log("🎉 シフト希望表アップデート処理が完了しました");
-  ui.alert("✅ シフト希望表の個別ファイルをすべて更新しました！");
+  ui.alert(
+    "✅ シフト希望表の個別ファイルをすべて更新しました！\n\n" +
+      "続いて、③各日程シート作成を行ってください！"
+  );
 }
 
 // 更新操作の確認
