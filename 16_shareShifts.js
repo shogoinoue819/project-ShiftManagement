@@ -220,7 +220,7 @@ function shareShiftsFromManageSheet(manageSheetName) {
   let failedReasons = [];
 
   data.forEach((row, i) => {
-    const [date, isComplete, isShare] = row;
+    const [date, , isComplete, isShare] = row;
 
     // 完成済み & 未共有のみ対象
     if (isComplete === true && isShare === STATUS_STRINGS.SHARE.FALSE) {
