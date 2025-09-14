@@ -31,6 +31,30 @@ function createNewMember() {
   // 氏名をセット
   const name = inputName;
 
+  // メールアドレスの入力
+  const responseEmail = ui.prompt(
+    "追加するメンバーのメールアドレスを入力してください（空白の場合は従来通りの処理を行います）",
+    ui.ButtonSet.OK_CANCEL
+  );
+  if (responseEmail.getSelectedButton() !== ui.Button.OK) {
+    ui.alert("キャンセルされました");
+    return;
+  }
+  // 空白などをトリミングして入力されたメールアドレスを取得
+  const inputEmail = responseEmail.getResponseText().trim();
+
+  // メールアドレスが入力されている場合のみバリデーション
+  let email = null;
+  if (inputEmail) {
+    // メールアドレスの形式をチェック
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(inputEmail)) {
+      ui.alert("❌ 正しいメールアドレスの形式で入力してください");
+      return;
+    }
+    email = inputEmail;
+  }
+
   // ===== 個別ファイルの作成 =====
 
   // シフト希望表個別フォルダを取得
@@ -91,6 +115,18 @@ function createNewMember() {
   newSS.setActiveSheet(previousSheet);
   newSS.moveActiveSheet(3); // 三番目
 
+  // メールアドレスに編集権限を付与（メールアドレスが入力されている場合のみ）
+  let permissionSuccess = true;
+  if (email) {
+    try {
+      newFile.addEditor(email);
+      Logger.log(`✅ ${email} に編集権限を付与しました`);
+    } catch (error) {
+      Logger.log(`⚠️ 編集権限付与でエラー: ${error.message}`);
+      permissionSuccess = false;
+    }
+  }
+
   // ===== 個別シートの作成 =====
 
   // 個別シートを作成
@@ -134,6 +170,7 @@ function createNewMember() {
     uniqueId,
     name,
     personalUrl,
+    email,
     nameColLetter,
     checkCell,
     infoCell
@@ -160,6 +197,7 @@ function createNewMember() {
       uniqueId,
       name,
       personalUrl,
+      email,
       nameColLetter,
       checkCell,
       infoCell
@@ -170,7 +208,20 @@ function createNewMember() {
     );
   }
 
-  ui.alert(`✅「${name}」さんの個別ファイルと個別シートを作成しました！`);
+  // 完了アラート（権限共有の結果に応じて変更）
+  if (email) {
+    if (permissionSuccess) {
+      ui.alert(
+        `✅「${name}」さんの個別ファイルと個別シートを作成しました！\n📧 ${email} に編集権限も付与しました。`
+      );
+    } else {
+      ui.alert(
+        `✅「${name}」さんの個別ファイルと個別シートを作成しました！\n⚠️ ただし、${email} への編集権限付与に失敗しました。手動で権限を設定してください。`
+      );
+    }
+  } else {
+    ui.alert(`✅「${name}」さんの個別ファイルと個別シートを作成しました！`);
+  }
 }
 
 // ===== ヘルパー関数 =====
@@ -180,6 +231,7 @@ function setupMemberRow(
   uniqueId,
   name,
   personalUrl,
+  email,
   nameColLetter,
   checkCell,
   infoCell
@@ -211,6 +263,13 @@ function setupMemberRow(
   sheet
     .getRange(row, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.URL_COL)
     .setFormula(`=HYPERLINK("${personalUrl}", "シートリンク")`);
+
+  // メールアドレス（入力されている場合のみ）
+  if (email) {
+    sheet
+      .getRange(row, SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.EMAIL_COL)
+      .setValue(email);
+  }
 
   // 勤務日数・労働時間（週1〜4）
   sheet
