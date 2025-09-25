@@ -125,15 +125,52 @@ function getLessonTemplateData(lessonTemplateSheet, columnCount) {
     columnCount
   );
 
-  // Logger.log(`📊 コピー範囲: ${SHIFT_TEMPLATE_SHEET.ROWS.DATA_START}行目〜${SHIFT_TEMPLATE_SHEET.ROWS.DATA_END}行目, ${SHIFT_TEMPLATE_SHEET.MEMBER_START_COL}列目〜${SHIFT_TEMPLATE_SHEET.MEMBER_START_COL + columnCount - 1}列目`);
+  // 全データを取得
+  const values = sourceRange.getValues();
+  const backgrounds = sourceRange.getBackgrounds();
+  const fontColors = sourceRange.getFontColors();
+  const fontSizes = sourceRange.getFontSizes();
+  const fontWeights = sourceRange.getFontWeights();
+  const mergedRanges = sourceRange.getMergedRanges();
+
+  // 空でないセルのみを抽出（値がある、または色がついている、またはフォントが設定されている）
+  const nonEmptyCells = [];
+  for (let row = 0; row < rowCount; row++) {
+    for (let col = 0; col < columnCount; col++) {
+      const value = values[row][col];
+      const background = backgrounds[row][col];
+      const fontColor = fontColors[row][col];
+      const fontSize = fontSizes[row][col];
+      const fontWeight = fontWeights[row][col];
+
+      // 値がある、または色がついている、またはフォントが設定されている場合
+      if (
+        value !== "" ||
+        (background !== "#ffffff" && background !== null) ||
+        fontColor !== "#000000" ||
+        fontSize !== 10 ||
+        fontWeight !== "normal"
+      ) {
+        nonEmptyCells.push({
+          row: row + SHIFT_TEMPLATE_SHEET.ROWS.DATA_START,
+          col: col + SHIFT_TEMPLATE_SHEET.MEMBER_START_COL,
+          value: value,
+          background: background,
+          fontColor: fontColor,
+          fontSize: fontSize,
+          fontWeight: fontWeight,
+        });
+      }
+    }
+  }
+
+  Logger.log(
+    `📊 テンプレートデータ: ${nonEmptyCells.length}個の非空セルをキャッシュ`
+  );
 
   return {
-    values: sourceRange.getValues(),
-    backgrounds: sourceRange.getBackgrounds(),
-    fontColors: sourceRange.getFontColors(),
-    fontSizes: sourceRange.getFontSizes(),
-    fontWeights: sourceRange.getFontWeights(),
-    mergedRanges: sourceRange.getMergedRanges(),
+    nonEmptyCells: nonEmptyCells,
+    mergedRanges: mergedRanges,
     rowCount: rowCount,
     columnCount: columnCount,
   };
@@ -289,16 +326,35 @@ function getLessonTemplateSheet(ss, dayOfWeek) {
  * @param {Object} templateData - キャッシュされたテンプレートデータ
  */
 function copyTemplateDataFromCache(dailySheet, templateData) {
-  // ターゲット範囲を取得
-  const targetRange = dailySheet.getRange(
-    SHIFT_TEMPLATE_SHEET.ROWS.DATA_START,
-    SHIFT_TEMPLATE_SHEET.MEMBER_START_COL,
-    templateData.rowCount,
-    templateData.columnCount
-  );
+  // 空でないセルのみを個別に貼り付け（既存の編集を保持）
+  templateData.nonEmptyCells.forEach((cell) => {
+    const targetCell = dailySheet.getRange(cell.row, cell.col);
 
-  // セルの書式とデータをコピー
-  copyCellPropertiesFromCache(templateData, targetRange);
+    // 値の設定（空でない場合のみ）
+    if (cell.value !== "") {
+      targetCell.setValue(cell.value);
+    }
+
+    // 背景色の設定（白以外の場合のみ）
+    if (cell.background !== "#ffffff" && cell.background !== null) {
+      targetCell.setBackground(cell.background);
+    }
+
+    // フォント色の設定（黒以外の場合のみ）
+    if (cell.fontColor !== "#000000") {
+      targetCell.setFontColor(cell.fontColor);
+    }
+
+    // フォントサイズの設定（デフォルト以外の場合のみ）
+    if (cell.fontSize !== 10) {
+      targetCell.setFontSize(cell.fontSize);
+    }
+
+    // フォントウェイトの設定（通常以外の場合のみ）
+    if (cell.fontWeight !== "normal") {
+      targetCell.setFontWeight(cell.fontWeight);
+    }
+  });
 
   // 結合セルの処理
   handleMergedCellsFromCache(templateData, dailySheet);
@@ -363,25 +419,7 @@ function getDataRanges(dailySheet, lessonTemplateSheet, columnCount) {
   return { sourceRange, targetRange };
 }
 
-/**
- * キャッシュされたセルの書式とデータをコピー
- * @param {Object} templateData - キャッシュされたテンプレートデータ
- * @param {GoogleAppsScript.Spreadsheet.Range} targetRange - ターゲット範囲
- */
-function copyCellPropertiesFromCache(templateData, targetRange) {
-  // 背景色の処理（白背景は保持）
-  const processedBackgrounds = processBackgroundsFromCache(
-    templateData.backgrounds,
-    targetRange
-  );
-
-  // 一括でプロパティを設定
-  targetRange.setBackgrounds(processedBackgrounds);
-  targetRange.setValues(templateData.values);
-  targetRange.setFontColors(templateData.fontColors);
-  targetRange.setFontSizes(templateData.fontSizes);
-  targetRange.setFontWeights(templateData.fontWeights);
-}
+// copyCellPropertiesFromCache関数は個別セル処理に変更されたため削除
 
 /**
  * セルの書式とデータをコピー（旧版 - 互換性のため残す）
@@ -407,27 +445,7 @@ function copyCellProperties(sourceRange, targetRange) {
   targetRange.setFontWeights(fontWeights);
 }
 
-/**
- * キャッシュされた背景色を処理（白背景は元の背景を保持）
- * @param {Array} sourceBackgrounds - ソースの背景色配列
- * @param {GoogleAppsScript.Spreadsheet.Range} targetRange - ターゲット範囲
- * @returns {Array} 処理済みの背景色配列
- */
-function processBackgroundsFromCache(sourceBackgrounds, targetRange) {
-  // 元の背景色を取得
-  const currentBackgrounds = targetRange.getBackgrounds();
-
-  // 新しい背景色配列を作成
-  return sourceBackgrounds.map((row, i) =>
-    row.map((sourceColor, j) => {
-      // 白背景（#ffffff）またはnullの場合は元の背景を保持
-      if (sourceColor === "#ffffff" || sourceColor === null) {
-        return currentBackgrounds[i][j];
-      }
-      return sourceColor;
-    })
-  );
-}
+// processBackgroundsFromCache関数は個別セル処理に変更されたため削除
 
 /**
  * 背景色を処理（白背景は元の背景を保持）（旧版 - 互換性のため残す）
@@ -457,6 +475,7 @@ function processBackgrounds(sourceBackgrounds, targetRange) {
  * @param {GoogleAppsScript.Spreadsheet.Sheet} dailySheet - 日程シート
  */
 function handleMergedCellsFromCache(templateData, dailySheet) {
+  // テンプレートの結合セルのみを適用（既存の結合は保持）
   templateData.mergedRanges.forEach((range) => {
     const rowOffset = range.getRow() - SHIFT_TEMPLATE_SHEET.ROWS.DATA_START;
     const colOffset = range.getColumn() - SHIFT_TEMPLATE_SHEET.MEMBER_START_COL;
@@ -468,7 +487,21 @@ function handleMergedCellsFromCache(templateData, dailySheet) {
       range.getNumColumns()
     );
 
-    targetRange.merge();
+    // 既存の結合セルをチェックして、必要に応じて解除してから結合
+    try {
+      const existingMergedRanges = targetRange.getMergedRanges();
+      if (existingMergedRanges.length > 0) {
+        // 既存の結合セルを解除
+        existingMergedRanges.forEach((existingRange) => {
+          existingRange.breakApart();
+        });
+      }
+      // テンプレートの結合セルを適用
+      targetRange.merge();
+    } catch (error) {
+      Logger.log(`⚠️ 結合セル処理でエラー: ${error.message}`);
+      // エラーが発生しても処理を継続
+    }
   });
 }
 
