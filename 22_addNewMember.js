@@ -8,7 +8,7 @@ function addNewMember() {
 
   // 1. 氏名を入力
   const response = ui.prompt(
-    "新規追加するメンバーの表示名を入力してください",
+    "新規追加するメンバーの氏名を入力してください",
     ui.ButtonSet.OK_CANCEL
   );
   if (response.getSelectedButton() !== ui.Button.OK) {
@@ -17,7 +17,7 @@ function addNewMember() {
   }
   const inputName = response.getResponseText().trim();
   if (!inputName) {
-    ui.alert("❌ 表示名が入力されていません");
+    ui.alert("❌ 氏名が入力されていません");
     return;
   }
 
@@ -27,10 +27,10 @@ function addNewMember() {
     return;
   }
 
-  // 2. 管理シートから表示名と背景色を取得
+  // 2. 管理シートから氏名と背景色を取得
   const memberInfo = findMemberInfo(manageSheet, inputName);
   if (!memberInfo) {
-    ui.alert("⚠️ 入力された表示名が管理シートに存在しません");
+    ui.alert("⚠️ 入力された氏名が管理シートに存在しません");
     return;
   }
 
