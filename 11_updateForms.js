@@ -1,3 +1,7 @@
+// ===== 処理上限設定 =====
+// 一度に処理するメンバー数の上限（時間制限対策）
+const UPDATE_FORMS_BATCH_SIZE = 30;
+
 // 個別ファイルのシフト希望表をアップデート
 function updateForms() {
   Logger.log("🔄 シフト希望表アップデート処理を開始");
@@ -14,13 +18,22 @@ function updateForms() {
   }
 
   // メンバーデータの初期化と検証
-  const memberMap = initializeAndValidateMembers(ui);
-  if (!memberMap) {
+  const memberManager = initializeAndValidateMembers(ui);
+  if (!memberManager) {
     Logger.log("❌ メンバーデータの初期化に失敗しました");
     return;
   }
 
+  const memberMap = memberManager.memberMap;
   Logger.log(`📋 メンバーデータ取得成功: ${Object.keys(memberMap).length}件`);
+
+  // 処理範囲の決定（リセット前に実行）
+  const processingRange = determineProcessingRange(manageSheet, memberManager);
+  if (!processingRange) {
+    Logger.log("❌ 処理範囲の決定に失敗しました");
+    ui.alert("❌ 処理範囲の決定に失敗しました");
+    return;
+  }
 
   // 管理シートのリセット
   resetManagementSheet(manageSheet, memberMap);
@@ -30,13 +43,19 @@ function updateForms() {
   Logger.log("📄 テンプレートデータ取得成功");
 
   // 各メンバーの個別ファイルをアップデート
-  updateAllMemberForms(memberMap, templateData);
+  const processedCount = updateAllMemberForms(
+    memberManager,
+    templateData,
+    processingRange
+  );
+
+  // 未処理人数を計算
+  const remainingCount = processingRange.remainingCount;
 
   Logger.log("🎉 シフト希望表アップデート処理が完了しました");
-  ui.alert(
-    "✅ シフト希望表の個別ファイルをすべて更新しました！\n\n" +
-      "続いて、③各日程シート作成を行ってください！"
-  );
+
+  // UI表示の変更
+  showCompletionMessage(ui, remainingCount, processedCount);
 }
 
 // 更新操作の確認
@@ -73,7 +92,64 @@ function initializeAndValidateMembers(ui) {
     return null;
   }
 
-  return memberMap;
+  return memberManager;
+}
+
+// 処理範囲の決定
+function determineProcessingRange(manageSheet, memberManager) {
+  try {
+    const totalMembers = Object.keys(memberManager.memberMap).length;
+    const startRow = SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.START_ROW;
+
+    // 提出ステータスを一括取得
+    const submitRange = manageSheet.getRange(
+      startRow,
+      SHIFT_MANAGEMENT_SHEET.MEMBER_LIST.SUBMIT_COL,
+      totalMembers,
+      1
+    );
+    const submitValues = submitRange.getValues();
+
+    // 最初の提出済みメンバーを探す
+    let startMemberIndex = -1;
+    for (let i = 0; i < submitValues.length; i++) {
+      if (submitValues[i][0] === STATUS_STRINGS.SUBMIT.TRUE) {
+        startMemberIndex = i;
+        break;
+      }
+    }
+
+    // 提出済みメンバーが見つからない場合はエラー
+    if (startMemberIndex === -1) {
+      Logger.log("❌ 提出済みメンバーが見つかりません");
+      return null;
+    }
+
+    // 処理範囲の計算
+    const processCount = Math.min(
+      UPDATE_FORMS_BATCH_SIZE,
+      totalMembers - startMemberIndex
+    );
+    const remainingCount = Math.max(
+      0,
+      totalMembers - startMemberIndex - processCount
+    );
+
+    Logger.log(
+      `📍 処理範囲: スタートメンバー ${
+        startMemberIndex + 1
+      }番目から ${processCount}人処理、残り ${remainingCount}人`
+    );
+
+    return {
+      startIndex: startMemberIndex,
+      count: processCount,
+      remainingCount: remainingCount,
+    };
+  } catch (error) {
+    Logger.log(`❌ 処理範囲決定でエラー: ${error.message}`);
+    return null;
+  }
 }
 
 // 管理シートのリセット
@@ -190,19 +266,49 @@ function getDateListFormatting(templateSheet, numRows) {
   }
 }
 
+// 完了メッセージの表示
+function showCompletionMessage(ui, remainingCount, processedCount) {
+  if (remainingCount > 0) {
+    ui.alert(
+      `✅ ${processedCount}人のシフト希望表を更新しました！\n\n` +
+        `あと${remainingCount}人の処理が必要です。\n` +
+        "再度②シフト希望表配布を実行してください！"
+    );
+  } else {
+    ui.alert(
+      "✅ シフト希望表の個別ファイルをすべて更新しました！\n\n" +
+        "続いて、③各日程シート作成を行ってください！"
+    );
+  }
+}
+
 // 全メンバーの個別ファイルをアップデート
-function updateAllMemberForms(memberMap, templateData) {
-  const totalMembers = Object.keys(memberMap).length;
+function updateAllMemberForms(memberManager, templateData, processingRange) {
+  const processCount = processingRange.count;
+  const startIndex = processingRange.startIndex;
   let successCount = 0;
   let errorCount = 0;
   const errors = [];
 
-  Logger.log(`🚀 個別ファイルの更新を開始: ${totalMembers}件のメンバー`);
+  Logger.log(`🚀 個別ファイルの更新を開始: ${processCount}件のメンバー`);
 
   // 進捗表示の初期化
-  initializeProgressDisplay(totalMembers);
+  initializeProgressDisplay(processCount);
 
-  for (const [id, { name, url }] of Object.entries(memberMap)) {
+  // メンバーデータを順序付き配列で取得（order順に並び替え）
+  const memberArray = Object.entries(memberManager.memberMap)
+    .map(([id, data]) => ({
+      id,
+      name: data.name,
+      url: data.url,
+      order: data.order,
+    }))
+    .sort((a, b) => a.order - b.order);
+
+  // 処理範囲のメンバーのみ処理
+  for (let i = startIndex; i < startIndex + processCount; i++) {
+    const { name, url } = memberArray[i];
+
     try {
       updateIndividualForm(name, url, templateData);
       successCount++;
@@ -211,9 +317,9 @@ function updateAllMemberForms(memberMap, templateData) {
       const currentProcessed = successCount + errorCount;
       if (
         currentProcessed % UI_DISPLAY.PROGRESS_UPDATE_INTERVAL === 0 ||
-        currentProcessed === totalMembers
+        currentProcessed === processCount
       ) {
-        updateProgressDisplay(currentProcessed, totalMembers);
+        updateProgressDisplay(currentProcessed, processCount);
       }
 
       Logger.log(`✅ ${name}完了`);
@@ -239,6 +345,9 @@ function updateAllMemberForms(memberMap, templateData) {
 
   // 進捗表示をクリア
   clearProgressDisplay();
+
+  // 成功した処理数を返す
+  return successCount;
 }
 
 // 個別ファイルのアップデート処理
