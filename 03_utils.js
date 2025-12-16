@@ -1223,8 +1223,19 @@ function isValidMonthAndDay(month, day) {
 }
 
 // 月と日から日付を作成
-function createDateFromMonthDay(month, day) {
-  const year = new Date().getFullYear(); // 今年の年
+function createDateFromMonthDay(month, day, referenceYear = null) {
+  // 基準年が指定されていない場合は現在日付基準で判定
+  let year;
+  if (referenceYear === null) {
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth() + 1; // 1-12
+
+    // 入力月が現在月より小さい場合は翌年
+    year = month < currentMonth ? currentYear + 1 : currentYear;
+  } else {
+    year = referenceYear;
+  }
   return new Date(year, month - 1, day); // JSの月は0始まり
 }
 

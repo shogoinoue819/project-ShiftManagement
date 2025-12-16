@@ -49,7 +49,9 @@ function changeToNextTerm() {
   }
 
   const endDateStr = endDateResponse.getResponseText().trim();
-  const endDate = parseMDDate(endDateStr);
+  // 終了日は開始日の年を基準に判定
+  const startYear = startDate.getFullYear();
+  const endDate = parseMDDate(endDateStr, startYear);
 
   if (!endDate) {
     ui.alert(
@@ -138,9 +140,10 @@ function swapManagementSheets(ss, sheetNow, sheetPre) {
  * M/d形式の文字列をDateオブジェクトに変換する
  *
  * @param {string} dateStr - M/d形式の日付文字列
+ * @param {number|null} referenceYear - 基準年（指定がない場合は現在日付基準で判定）
  * @returns {Date|null} 変換されたDateオブジェクト、無効な場合はnull
  */
-function parseMDDate(dateStr) {
+function parseMDDate(dateStr, referenceYear = null) {
   // M/d形式のパターンをチェック
   const pattern = /^(\d{1,2})\/(\d{1,2})$/;
   const match = dateStr.match(pattern);
@@ -162,12 +165,22 @@ function parseMDDate(dateStr) {
     return null;
   }
 
-  // 現在の年を取得
-  const currentYear = new Date().getFullYear();
+  // 基準年が指定されていない場合は現在日付基準で判定
+  let year;
+  if (referenceYear === null) {
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth() + 1; // 1-12
+
+    // 入力月が現在月より小さい場合は翌年
+    year = month < currentMonth ? currentYear + 1 : currentYear;
+  } else {
+    year = referenceYear;
+  }
 
   try {
     // Dateオブジェクトを作成（月は0ベースなので-1）
-    const date = new Date(currentYear, month - 1, day);
+    const date = new Date(year, month - 1, day);
 
     // 作成された日付が入力値と一致するかチェック（2月30日などの無効な日付を検出）
     if (date.getMonth() !== month - 1 || date.getDate() !== day) {

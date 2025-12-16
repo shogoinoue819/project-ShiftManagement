@@ -106,8 +106,6 @@ const SHIFT_TEMPLATE_SHEET = {
 
 // ===== 環境共通設定 =====
 const ENVIRONMENT = {
-  YEAR: 2025,
-
   // デフォルト開閉室時間
   DEFAULT_HOURS: {
     OPEN: {
